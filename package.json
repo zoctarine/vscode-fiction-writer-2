@@ -1,0 +1,83 @@
+{
+  "name": "fiction-writer-2",
+  "displayName": "Fiction Writer 2",
+  "description": "",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "fiction-writer-2.helloWorld",
+        "title": "Hello World"
+      }
+    ],
+    "customEditors": [
+      {
+        "viewType": "fictionWriter2.proseMirrorEditor",
+        "displayName": "Fiction Writer Editor",
+        "selector": [
+          {
+            "filenamePattern": "*.md"
+          }
+        ],
+        "priority": "option"
+      }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "metadataView",
+          "name": "Metadata"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile:editorview": "esbuild src/CustomEditorView/view.ts --bundle --minify --outfile=\"media/view.js\"",
+    "compile": "npm run check-types && npm run lint && node esbuild.js",
+    "watch": "npm-run-all -p watch:*",
+    "watch:editorview": "esbuild --watch src/CustomEditorView/view.ts --bundle --sourcemap --outfile=\"media/view.js\"",
+    "watch:esbuild": "node esbuild.js --watch",
+    "watch:all": "concurrently -n esbuild,editorview   \"npm run watch:esbuild\" \"npm run watch:editorview\"",
+    "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
+    "package": "npm run check-types && npm run lint && node esbuild.js --production",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint src --ext ts",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/markdown-it": "^14.1.1",
+    "@types/mocha": "^10.0.7",
+    "@types/node": "20.x",
+    "@types/vscode": "^1.90.0",
+    "@typescript-eslint/eslint-plugin": "^7.14.1",
+    "@typescript-eslint/parser": "^7.11.0",
+    "@vscode/test-cli": "^0.0.9",
+    "@vscode/test-electron": "^2.4.0",
+    "esbuild": "^0.21.5",
+    "eslint": "^8.57.0",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "prosemirror-example-setup": "^1.2.2",
+    "prosemirror-gapcursor": "^1.3.2",
+    "prosemirror-markdown": "^1.13.0",
+    "prosemirror-model": "^1.22.2",
+    "prosemirror-schema-basic": "^1.2.3",
+    "prosemirror-schema-list": "^1.4.1",
+    "prosemirror-state": "^1.4.3",
+    "prosemirror-view": "^1.33.9"
+  }
+}
