@@ -1,5 +1,9 @@
 import * as vscode from 'vscode';
 import {OrderHandler} from "./orderHandler";
+import {fileManager} from "./fileManager";
+import * as path from 'path';
+
+fileManager.initialize()
 
 interface Node {
     id: string;
@@ -16,13 +20,13 @@ export class ProjectExplorerTreeDataProvider implements vscode.TreeDataProvider<
     // We want to use an array as the event type, but the API for this is currently being finalized. Until it's finalized, use any.
     public onDidChangeTreeData: vscode.Event<any> = this._onDidChangeTreeData.event;
     public root = new Map<string, Node>([
-        ["1", {id: "1", name: "Chapter 1", order: OrderHandler.gap * 1, prevOrder:OrderHandler.gap * 1}],
-        ["2", {id: "2", name: "Chapter 2", order: OrderHandler.gap * 2, prevOrder:OrderHandler.gap * 2}],
-        ["3", {id: "3", name: "Chapter 2.1", order: OrderHandler.gap * 3, prevOrder:OrderHandler.gap * 3}],
-        ["4", {id: "4", name: "Chapter 3", order: OrderHandler.gap * 4, prevOrder:OrderHandler.gap * 4}],
-        ["5", {id: "5", name: "The End", order: OrderHandler.gap * 5, prevOrder:OrderHandler.gap * 5}],
-        ["6", {id: "6", name: "Annex", order: OrderHandler.gap * 6, prevOrder:OrderHandler.gap * 6}],
-        ["7", {id: "7", name: "Notes", order: OrderHandler.gap * 7, prevOrder:OrderHandler.gap * 7}],
+        ["1", {id: "1", name: "Chapter 1", order: OrderHandler.gap * 1, prevOrder: OrderHandler.gap * 1}],
+        ["2", {id: "2", name: "Chapter 2", order: OrderHandler.gap * 2, prevOrder: OrderHandler.gap * 2}],
+        ["3", {id: "3", name: "Chapter 2.1", order: OrderHandler.gap * 3, prevOrder: OrderHandler.gap * 3}],
+        ["4", {id: "4", name: "Chapter 3", order: OrderHandler.gap * 4, prevOrder: OrderHandler.gap * 4}],
+        ["5", {id: "5", name: "The End", order: OrderHandler.gap * 5, prevOrder: OrderHandler.gap * 5}],
+        ["6", {id: "6", name: "Annex", order: OrderHandler.gap * 6, prevOrder: OrderHandler.gap * 6}],
+        ["7", {id: "7", name: "Notes", order: OrderHandler.gap * 7, prevOrder: OrderHandler.gap * 7}],
     ]);
 
     constructor(context: vscode.ExtensionContext) {
@@ -33,6 +37,27 @@ export class ProjectExplorerTreeDataProvider implements vscode.TreeDataProvider<
             dragAndDropController: this
         });
         context.subscriptions.push(view);
+        fileManager.loadFiles()
+            .then(files => {
+                this.root = new Map<string, Node>();
+                let order = 0;
+                files.forEach((f, idx) => {
+                    const basename = path.posix.basename(f.path);
+                    const ext = path.posix.extname(f.path);
+                    for (let i = 1; i < 10; i++) {
+                        this.root.set(f.path + i, {
+                            id: f.path + i,
+                            name: basename.replace(/\.(_fw\.md)+$/, "") + order,
+                            order: OrderHandler.gap * (order + 1),
+                            prevOrder: OrderHandler.gap * (order + 1),
+                        });
+                        order++;
+                    }
+                });
+
+                this._onDidChangeTreeData.fire();
+
+            })
     }
 
     // Tree data provider
@@ -42,13 +67,15 @@ export class ProjectExplorerTreeDataProvider implements vscode.TreeDataProvider<
 
     public getTreeItem(element: Node): vscode.TreeItem {
         const tooltip = new vscode.MarkdownString(`$(zap) Tooltip for ${element.id}`, true);
-        const orderNr = element?.order.toString();//OrderHandler.toBase36(element?.order ?? 0);
-        const label = orderNr?.padStart(10,"0") + "__" + element?.name;
+        //const orderNr = element?.order.toString();//OrderHandler.toBase36(element?.order ?? 0);
+        const orderNr = OrderHandler.toBase36(element?.order ?? 0).padStart(6, "0");
+        const label = element?.order.toString().padStart(10, "0");
         return {
             label: <any>{
                 label: label,
-                highlights: element?.order !== element?.prevOrder ? [[0, label.length]] : void 0
+                highlights: element?.order !== element?.prevOrder ? [[0, 10]] : void 0
             },
+            description:  orderNr + "__" + element?.name,
             tooltip,
 
             collapsibleState: vscode.TreeItemCollapsibleState.None,
@@ -88,11 +115,11 @@ export class ProjectExplorerTreeDataProvider implements vscode.TreeDataProvider<
             orderHandler.move(source.id, dest?.id ?? "");
 
             orderHandler.get().forEach(e => {
-               const item = this.root.get(e.id);
-               if (item) {
-                   item.prevOrder = item.order;
-                   item.order = e.order;
-               }
+                const item = this.root.get(e.id);
+                if (item) {
+                    item.prevOrder = item.order;
+                    item.order = e.order;
+                }
             });
             this._onDidChangeTreeData.fire();
         }
@@ -103,7 +130,7 @@ export class ProjectExplorerTreeDataProvider implements vscode.TreeDataProvider<
     }
 
     _getChildren(key: string | undefined): Node[] {
-        let result:Node[] = [];
+        let result: Node[] = [];
         if (!key) {
             result = [...this.root.values()];
         } else {
@@ -119,9 +146,9 @@ export class ProjectExplorerTreeDataProvider implements vscode.TreeDataProvider<
 
     _getTreeElement(element: string | undefined, tree?: Map<string, Node>): Node | undefined {
         if (!element) {
-            return {id:"root", name:"test", order:0, children:this.root, prevOrder:0};
+            return {id: "root", name: "test", order: 0, children: this.root, prevOrder: 0};
         }
-        console.log("The tree: " , tree);
+        console.log("The tree: ", tree);
         const currentNode = tree ?? this.root;
         console.log("Current node", currentNode);
         for (const prop in currentNode.keys()) {

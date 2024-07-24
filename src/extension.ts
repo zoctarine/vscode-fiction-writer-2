@@ -5,10 +5,11 @@ import { MetadataTreeDataProvider } from './modules/metadata/metadataTreeDataPro
 import {ProjectExplorerTreeDataProvider} from './modules/projectExplorer/projectExplorerTreeDataProvider';
 import { ProseMirrorEditorProvider, commands as proseMirrorCommands} from './modules/proseMirrorEditorView';
 import { CodeMirrorEditorProvider, commands as codeMirrorCommands} from './modules/codeMirrorEditorView';
-
+import {fileManager} from "./modules/projectExplorer/fileManager";
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
+	context.subscriptions.push(fileManager); // Make sure we dispose of it
 
 	context.subscriptions.push(ProseMirrorEditorProvider.register(context));
 	context.subscriptions.push(CodeMirrorEditorProvider.register(context));

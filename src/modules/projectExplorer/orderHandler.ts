@@ -52,6 +52,8 @@ export class OrderHandler {
     }
 
     public redistribute(index:number) {
+        if (index >= this.fileNumbers.length) { return; }
+
         if (this.to(index + 1) - this.from(index) <= 1) {
             this.redistribute(index + 1);
         }
