@@ -60962,6 +60962,7 @@
   var require_codeMirrorClient = __commonJS({
     "src/modules/codeMirrorEditorView/codeMirrorClient.ts"(exports) {
       init_dist2();
+      init_dist();
       init_dist15();
       init_dist41();
       init_dist2();
@@ -60971,7 +60972,6 @@
       init_dist43();
       init_dist6();
       init_dist44();
-      Object.defineProperty(exports, "__esModule", { value: true });
       var basicSetup = [
         //view.lineNumbers(),
         //view.highlightActiveLineGutter(),
@@ -61013,21 +61013,46 @@
         }
       });
       var vscode = globalThis.acquireVsCodeApi();
-      var previousState = vscode.getState()?.text || "";
+      var doc2 = vscode.getState()?.text || "";
+      var typing = window.performance.now();
+      var extensions = [
+        basicSetup,
+        markdown({ codeLanguages: languages }),
+        EditorView.lineWrapping,
+        drawSelection({ cursorBlinkRate: 0 }),
+        EditorView.updateListener.of((v) => {
+          if (v.docChanged) {
+            typing = window.performance.now();
+            let changes = v.transactions.map((t2) => t2.changes.toJSON());
+            vscode.setState({ text: v.state.doc.toString() });
+            vscode.postMessage({
+              command: "update",
+              text: changes
+            });
+          }
+        })
+      ];
       var myView = new EditorView({
-        doc: "# Hello\n\nThis is a simple example of a CodeMirror editor in a webview.",
-        extensions: [
-          basicSetup,
-          markdown({ codeLanguages: languages }),
-          EditorView.lineWrapping,
-          drawSelection({ cursorBlinkRate: 0 })
-        ],
+        doc: doc2,
+        extensions,
         parent: document.querySelector("#editor")
       });
-      Array.prototype.forEach.call(
-        document.querySelectorAll(".CodeMirror"),
-        (e) => e.CodeMirror.setOption("cursorBlinkRate", 0)
-      );
+      function updateContent(text4) {
+        myView.setState(EditorState.create({
+          doc: text4,
+          extensions
+        }));
+        vscode.setState({ text: text4 });
+      }
+      window.addEventListener("message", (event) => {
+        const message = event.data;
+        switch (message.type) {
+          case "update":
+            const text4 = message.text;
+            updateContent(text4);
+            return;
+        }
+      });
     }
   });
   require_codeMirrorClient();

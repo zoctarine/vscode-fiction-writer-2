@@ -1,13 +1,8 @@
-import {EditorView, keymap,drawSelection} from "@codemirror/view";
-import {EditorState, Compartment} from "@codemirror/state";
-import {defaultKeymap} from "@codemirror/commands";
-import {markdown} from "@codemirror/lang-markdown";
-import {languages} from "@codemirror/language-data";
-
-'use strict';
-
-Object.defineProperty(exports, '__esModule', { value: true });
-
+import { EditorView, ViewUpdate, keymap, drawSelection } from "@codemirror/view";
+import { EditorState, TransactionSpec } from "@codemirror/state";
+import { defaultKeymap } from "@codemirror/commands";
+import { markdown } from "@codemirror/lang-markdown";
+import { languages } from "@codemirror/language-data";
 import * as view from '@codemirror/view';
 import * as  state from '@codemirror/state';
 import * as  language from '@codemirror/language';
@@ -16,43 +11,7 @@ import * as  search from '@codemirror/search';
 import * as  autocomplete from '@codemirror/autocomplete';
 import * as  lint from '@codemirror/lint';
 
-/**
-This is an extension value that just pulls together a number of
-extensions that you might want in a basic editor. It is meant as a
-convenient helper to quickly set up CodeMirror without installing
-and importing a lot of separate packages.
 
-Specifically, it includes...
-
- - [the default command bindings](https://codemirror.net/6/docs/ref/#commands.defaultKeymap)
- - [line numbers](https://codemirror.net/6/docs/ref/#view.lineNumbers)
- - [special character highlighting](https://codemirror.net/6/docs/ref/#view.highlightSpecialChars)
- - [the undo history](https://codemirror.net/6/docs/ref/#commands.history)
- - [a fold gutter](https://codemirror.net/6/docs/ref/#language.foldGutter)
- - [custom selection drawing](https://codemirror.net/6/docs/ref/#view.drawSelection)
- - [drop cursor](https://codemirror.net/6/docs/ref/#view.dropCursor)
- - [multiple selections](https://codemirror.net/6/docs/ref/#state.EditorState^allowMultipleSelections)
- - [reindentation on input](https://codemirror.net/6/docs/ref/#language.indentOnInput)
- - [the default highlight style](https://codemirror.net/6/docs/ref/#language.defaultHighlightStyle) (as fallback)
- - [bracket matching](https://codemirror.net/6/docs/ref/#language.bracketMatching)
- - [bracket closing](https://codemirror.net/6/docs/ref/#autocomplete.closeBrackets)
- - [autocompletion](https://codemirror.net/6/docs/ref/#autocomplete.autocompletion)
- - [rectangular selection](https://codemirror.net/6/docs/ref/#view.rectangularSelection) and [crosshair cursor](https://codemirror.net/6/docs/ref/#view.crosshairCursor)
- - [active line highlighting](https://codemirror.net/6/docs/ref/#view.highlightActiveLine)
- - [active line gutter highlighting](https://codemirror.net/6/docs/ref/#view.highlightActiveLineGutter)
- - [selection match highlighting](https://codemirror.net/6/docs/ref/#search.highlightSelectionMatches)
- - [search](https://codemirror.net/6/docs/ref/#search.searchKeymap)
- - [linting](https://codemirror.net/6/docs/ref/#lint.lintKeymap)
-
-(You'll probably want to add some language package to your setup
-too.)
-
-This package does not allow customization. The idea is that, once
-you decide you want to configure your editor more precisely, you
-take this package's source (which is just a bunch of imports and
-an array literal), copy it into your own code, and adjust it as
-desired.
-*/
 const basicSetup = [
     //view.lineNumbers(),
     //view.highlightActiveLineGutter(),
@@ -93,20 +52,56 @@ Object.defineProperty(exports, 'EditorState', {
 
 
 const vscode = (globalThis as any).acquireVsCodeApi();
-const previousState = vscode.getState()?.text || "";
+const doc = vscode.getState()?.text || "";
+let typing = window.performance.now();
+
+const extensions = [
+    basicSetup,
+    markdown({ codeLanguages: languages }),
+    EditorView.lineWrapping,
+    drawSelection({ cursorBlinkRate: 0 }),
+    EditorView.updateListener.of((v: ViewUpdate) => {
+        if (v.docChanged) {
+            typing = window.performance.now();
+
+            let changes = v.transactions
+                .map(t => t.changes.toJSON());
+
+            vscode.setState({ text: v.state.doc.toString() });
+            vscode.postMessage({
+                command: 'update',
+                text: changes
+            });
+        }
+    })
+];
 
 let myView = new EditorView({
-    doc: "# Hello\n\nThis is a simple example of a CodeMirror editor in a webview.",
-    
-    extensions: [
-        basicSetup,
-        markdown({codeLanguages: languages}),
-        EditorView.lineWrapping,
-        drawSelection({cursorBlinkRate: 0})
-    ],
+    doc: doc,
+    extensions: extensions,
     parent: document.querySelector("#editor")!
-  });
-  
-  Array.prototype.forEach.call(document.querySelectorAll(".CodeMirror"),
-  e => e.CodeMirror.setOption("cursorBlinkRate", 0))
+});
+
+
+function updateContent(text: string) {
+    myView.setState(EditorState.create({
+        doc: text,
+        extensions: extensions
+    }));
+    vscode.setState({ text });
+  }
+
+window.addEventListener('message', event => {
+  const message = event.data; // The json data that the extension sent
+  switch (message.type) {
+    case 'update':
+      const text = message.text;
+      // Update our webview's content
+      updateContent(text);
+
+      return;
+  }
+});
+
+
 
