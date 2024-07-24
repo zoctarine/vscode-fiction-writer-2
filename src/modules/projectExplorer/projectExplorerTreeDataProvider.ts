@@ -44,6 +44,8 @@ export class ProjectExplorerTreeDataProvider implements vscode.TreeDataProvider<
                 files.forEach((f, idx) => {
                     const basename = path.posix.basename(f.path);
                     const ext = path.posix.extname(f.path);
+
+                    // Generate dummy test data
                     for (let i = 1; i < 10; i++) {
                         this.root.set(f.path + i, {
                             id: f.path + i,
@@ -57,7 +59,7 @@ export class ProjectExplorerTreeDataProvider implements vscode.TreeDataProvider<
 
                 this._onDidChangeTreeData.fire();
 
-            })
+            });
     }
 
     // Tree data provider
@@ -114,6 +116,9 @@ export class ProjectExplorerTreeDataProvider implements vscode.TreeDataProvider<
             );
             orderHandler.move(source.id, dest?.id ?? "");
 
+            // TODO: check if the order magnitude fits in the padding
+            //       if not, check if we can redistribute with a safe gap (fixed for now), and rename all files to equidistant space
+            //       if the minimum safe gap cannot be kept, then increase the magnitude of the padding by 1
             orderHandler.get().forEach(e => {
                 const item = this.root.get(e.id);
                 if (item) {

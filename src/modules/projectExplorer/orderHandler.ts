@@ -2,57 +2,99 @@ interface Entry {
     id: string;
     order: number;
 }
+
 export class OrderHandler {
     // Helper function to convert a decimal number to a base36 string
-    public  static toBase36(number:number) {
+    public static toBase36(number: number) {
         return number.toString(36).toUpperCase();
     }
-    public static toBase10(base36Str:string) {
+
+    public static toBase10(base36Str: string) {
         return parseInt(base36Str, 36);
     }
 
-    private fileNumbers:Entry[] = [];
+    private fileNumbers: Entry[] = [];
     public static gap = 100000;
 
-    constructor(fileNumbers:Entry[]) {
+    constructor(fileNumbers: Entry[]) {
         this.fileNumbers = fileNumbers;
     }
 
-    public insertAfter(afterId:string, currentId:string) {
+    public insertAfter(afterId: string, currentId: string) {
         const index = this.fileNumbers.findIndex(a => a.id === afterId);
+
 
         if (this.to(index + 1) - this.from(index) <= 1) {
             this.redistribute(index + 1);
         }
 
-        let nextOrder =  Math.floor(
+        let nextOrder = Math.floor(
             (this.from(index) + this.to(index + 1)) / 2);
 
-        if (index>=this.fileNumbers.length-1){
-            nextOrder = Math.max(nextOrder, (this.fileNumbers.length +1) * OrderHandler.gap);
+        if (index > this.fileNumbers.length - 1) {
+            nextOrder = this.computeNextLastGap();
         }
-       this.fileNumbers.splice(index + 1, 0, {
+        this.fileNumbers.splice(index + 1, 0, {
             order: nextOrder,
             id: currentId
         });
 
     }
-    public from(index:number) {
+
+    public insertBefore(beforeId: string, currentId: string) {
+        const index = this.fileNumbers.findIndex(a => a.id === beforeId) - 1;
+        if (index < -1) {
+            this.fileNumbers.splice(index + 1, 0, {
+                order: this.computeNextLastGap(),
+                id: currentId
+            });
+            return;
+        }
+
+        if (this.to(index + 1) - this.from(index) <= 1) {
+            this.redistribute(index + 1);
+        }
+
+        let nextOrder = Math.floor(
+            (this.from(index) + this.to(index + 1)) / 2);
+
+        if (index > this.fileNumbers.length - 1) {
+            nextOrder = this.computeNextLastGap();
+        }
+        this.fileNumbers.splice(index + 1, 0, {
+            order: nextOrder,
+            id: currentId
+        });
+    }
+
+
+    public from(index: number) {
         return index < 0
             ? 0
             : this.fileNumbers[index].order;
     }
 
-    public to(index:number) {
+
+    public computeNextLastGap() {
+        const count = this.fileNumbers.length;
+        if (count === 0) {
+            return OrderHandler.gap;
+        }
+        return Math.max(this.fileNumbers[count - 1].order + OrderHandler.gap / 2, (count) * OrderHandler.gap);
+    }
+
+    public to(index: number) {
         if (index < 0 || index >= this.fileNumbers.length) {
-            return this.from(index-1) + OrderHandler.gap;
+            return this.from(index - 1) + OrderHandler.gap;
         }
 
         return this.fileNumbers[index].order;
     }
 
-    public redistribute(index:number) {
-        if (index >= this.fileNumbers.length) { return; }
+    public redistribute(index: number) {
+        if (index >= this.fileNumbers.length) {
+            return;
+        }
 
         if (this.to(index + 1) - this.from(index) <= 1) {
             this.redistribute(index + 1);
@@ -62,14 +104,22 @@ export class OrderHandler {
             (this.from(index) + this.to(index + 1)) / 2);
     }
 
-    public move(currentId:string, afterId:string) {
+    public move(currentId: string, targetId: string) {
         const current = this.fileNumbers.findIndex(a => a.id === currentId);
-        const after = this.fileNumbers.findIndex(a => a.id === afterId);
+        const target = this.fileNumbers.findIndex(a => a.id === targetId);
         this.fileNumbers.splice(current, 1);
-        this.insertAfter(afterId, currentId);
+
+        // to give the impression we are replacing the item we dropped the item on,
+        // we insert the item before the target, if the current item comes from below the target
+        // and after the target if the current item comes from above the target
+        if (current > target || target === 0) {
+            this.insertBefore(targetId, currentId);
+        } else {
+            this.insertAfter(targetId, currentId);
+        }
     }
 
-    public get():Entry[]{
+    public get(): Entry[] {
         return this.fileNumbers;
     }
 }
