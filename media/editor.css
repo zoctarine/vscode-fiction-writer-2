@@ -1,3 +1,10 @@
+html {
+  overflow-y:scroll;
+  overflow: -moz-scrollbars-vertical; 
+  scroll-behavior: smooth;
+  scrollbar-gutter: stable;
+}
+
 
 #editor, .editor {
   background-clip: padding-box;
@@ -10,6 +17,18 @@
   max-width: 40em;
   background-image: linear-gradient(rgb(0 0 0/10%) 0 0);
 
+}
+
+#toolbar {
+  display: inline-block;
+  justify-content: center;
+  margin-bottom: 10px;
+  height: 1em;
+  width: 100%;
+  background-color:transparent;
+  position:fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 9;
 }
 
 
@@ -185,18 +204,21 @@
     border-top-right-radius: inherit;
     position: relative;
     min-height: 1em;
-    color: #666;
+    color: var(--vscode-foreground);
     padding: 1px 6px;
     top: 0; left: 0; right: 0;
-    border-bottom: 1px solid silver;
-    background: white;
+    border-bottom: 1px solid var(--vscode-shadow);
+    background: var(--vscode-background);
     z-index: 10;
     -moz-box-sizing: border-box;
     box-sizing: border-box;
     overflow: visible;
-    display: none;
+    visibility: hidden;
+    opacity: 0;
   }
-  
+ 
+ 
+ 
   .ProseMirror-icon {
     display: inline-block;
     line-height: .8;
