@@ -8,6 +8,8 @@
             "dependsOn": [
                 "npm: watch:tsc",
                 "npm: watch:esbuild",
+                "npm: watch:proseview",
+                "npm: watch:codeview",
             ],
             "presentation": {
                 "reveal": "never"
@@ -24,6 +26,30 @@
             "problemMatcher": "$esbuild-watch",
             "isBackground": true,
             "label": "npm: watch:esbuild",
+            "presentation": {
+                "group": "watch",
+                "reveal": "never"
+            }
+        },
+        {
+            "type": "npm",
+            "script": "watch:codeview",
+            "group": "build",
+            "problemMatcher": "$esbuild-watch",
+            "isBackground": true,
+            "label": "npm: watch:codeview",
+            "presentation": {
+                "group": "watch",
+                "reveal": "never"
+            }
+        },
+        {
+            "type": "npm",
+            "script": "watch:proseview",
+            "group": "build",
+            "problemMatcher": "$esbuild-watch",
+            "isBackground": true,
+            "label": "npm: watch:proseview",
             "presentation": {
                 "group": "watch",
                 "reveal": "never"

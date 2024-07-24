@@ -161,10 +161,10 @@ export class ProseMirrorEditorProvider implements vscode.CustomTextEditorProvide
 	private getHtmlForWebview(webview: vscode.Webview): string {
 		// Local path to script and css for the webview
 		const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(
-			this.context.extensionUri, 'media', 'view.js'));
+			this.context.extensionUri, 'media', 'proseMirrorClient.js'));
 			
 		const styleMainUri = webview.asWebviewUri(vscode.Uri.joinPath(
-			this.context.extensionUri, 'media', 'editor.css'));
+			this.context.extensionUri, 'media', 'proseMirrorEditor.css'));
 
 		// Use a nonce to whitelist which scripts can be run
 		const nonce = getNonce();

@@ -15,12 +15,12 @@
     "menus": {
       "editor/title": [
         {
-          "when": "resourceLangId == markdown && activeCustomEditorId != fictionWriter2.proseMirrorEditor",
+          "when": "resourceLangId == markdown && !activeCustomEditorId",
           "command": "fiction-writer.proseMirror.openInProseMirror",
           "group": "navigation"
         },
         {
-          "when": "resourceLangId == markdown && activeCustomEditorId != fictionWriter2.codeMirrorEditor",
+          "when": "resourceLangId == markdown && !activeCustomEditorId",
           "command": "fiction-writer.codeMirror.openInCodeMirror",
           "group": "navigation"
         }
@@ -33,15 +33,15 @@
       },
       {
         "command": "fiction-writer.proseMirror.openInProseMirror",
-        "title": "Open current document in Fiction Editor",
+        "title": "Edit with ProseMirror Editor",
         "category": "FictionWriter",
-        "icon": "$(book)"
+        "icon": "media/icons/proseMirrorEditorIcon.svg"
       },
       {
         "command": "fiction-writer.codeMirror.openInCodeMirror",
-        "title": "Open current document in CodeMirror Editor",
+        "title": "Edit with CodeMirror Editor",
         "category": "FictionWriter",
-        "icon": "$(eye)"
+        "icon": "media/icons/codeMirrorEditorIcon.svg"
       }
     ],
     "customEditors": [
@@ -77,14 +77,14 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
-    "compile:editorview": "esbuild src/modules/proseMirrorEditorView/view.ts --bundle --minify --outfile=\"media/view.js\"",
+    "compile:proseview": "esbuild src/modules/proseMirrorEditorView/proseMirrorClient.ts --bundle --minify --outfile=\"media/proseMirrorClient.js\"",
     "compile:codeview": "esbuild src/modules/codeMirrorEditorView/codeMirrorClient.ts --bundle --minify --outfile=\"media/codeMirrorClient.js\"",
     "compile": "npm run check-types && npm run lint && node esbuild.js",
     "watch": "npm-run-all -p watch:*",
-    "watch:editorview": "esbuild --watch src/modules/proseMirrorEditorView/view.ts --bundle --sourcemap --outfile=\"media/view.js\"",
+    "watch:proseview": "esbuild --watch src/modules/proseMirrorEditorView/proseMirrorClient.ts --bundle --sourcemap --outfile=\"media/proseMirrorClient.js\"",
     "watch:codeview": "esbuild --watch src/modules/codeMirrorEditorView/codeMirrorClient.ts --bundle --sourcemap --outfile=\"media/codeMirrorClient.js\"",
     "watch:esbuild": "node esbuild.js --watch",
-    "watch:all": "concurrently -n esbuild,editorview,codeview   \"npm run watch:esbuild\" \"npm run watch:editorview\" \"npm run watch:codeview\"",
+    "watch:all": "concurrently -n esbuild,proseview,codeview   \"npm run watch:esbuild\" \"npm run watch:proseview\" \"npm run watch:codeview\"",
     "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
     "package": "npm run check-types && npm run lint && node esbuild.js --production",
     "compile-tests": "tsc -p . --outDir out",
