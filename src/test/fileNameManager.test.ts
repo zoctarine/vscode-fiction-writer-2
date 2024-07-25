@@ -1,0 +1,66 @@
+import * as assert from 'assert';
+import {FwFileInfo, FileNameManager} from "../common/fileNameManager";
+
+// You can import and use all API from the 'vscode' module
+// as well as import your extension to test it
+// import * as myExtension from '../../extension';
+
+suite('FileNameManager', () => {
+    suite('parse', () => {
+        suite('filename matches convention', () => {
+            [
+                {path: "1__fileManager1.fw.md", expected: {order: 1, name: "fileManager1"}},
+                {path: "123__fileManager1.fw.md", expected: {order: 123, name: "fileManager1"}},
+                {path: "001000__file.Manager2.fw.md", expected: {order: 1000, name: "file.Manager2"}},
+                {path: "004__ also works with spaces .fw.md", expected: {order: 4, name: " also works with spaces "}},
+            ].forEach(({path, expected}) => {
+                test(`extracts order and name from ${path}`, function () {
+                    const file = FwFileInfo.parse(path);
+
+                    assert.deepEqual(file, {
+                        id: path,
+                        location: "",
+                        ext: ".fw.md",
+                        name: expected.name,
+                        order: expected.order
+                    });
+                });
+            });
+        });
+
+        suite("filename does not match convention", () => {
+            [
+                {path: "__file.Manager2.fw.md", expected: {order: 0, name: "__file.Manager2"}},
+                {path: "justFilename.fw.md", expected: {order: 0, name: "justFilename"}},
+                {path: "2_with spaces.fw.md", expected: {order: 0, name: "2_with spaces"}},
+            ].forEach(({path, expected}) => {
+                test(`extracts full name when correct fileType from ${path}`, function () {
+                    const file = FwFileInfo.parse(path);
+
+                    assert.deepEqual(file, {
+                        id: path,
+                        location: "",
+                        name: expected.name,
+                        ext: ".fw.md",
+                        order: expected.order
+                    });
+                });
+            });
+        });
+
+        [
+            {path: "012__but_no_extension"},
+            {path: ".fw.md"},
+            {path: "012__but_wrong_extension.fw.wow"},
+            {path: "0123__but_not_fw_file.md"},
+            {path: "0123__but_not_md.fw_file.txt"},
+            {path: "some.other"},
+        ].forEach(({path}) => {
+            test(`throws exception for ${path}`, function () {
+
+                assert.throws(() => FwFileInfo.parse(path));
+            });
+        });
+    });
+
+});

@@ -1,65 +1,87 @@
 import * as vscode from 'vscode';
 import {OrderHandler} from "./orderHandler";
-import {fileManager} from "./fileManager";
+import {fileManager, findCommonWorkspaceFoldersPath} from "./fileManager";
 import * as path from 'path';
+import {FwFile, FwFileInfo} from "../../common/fileNameManager";
+import {CancellationTokenSource, ThemeIcon} from "vscode";
 
-fileManager.initialize()
+fileManager.initialize();
 
 interface Node {
+    parent?: Node;
     id: string;
     name: string;
     order: number;
     prevOrder: number;
+    isFile: boolean;
     children?: Map<string, Node>;
 }
 
 export class ProjectExplorerTreeDataProvider implements vscode.TreeDataProvider<Node>, vscode.TreeDragAndDropController<Node> {
     dropMimeTypes = ['application/vnd.code.tree.projectExplorerView'];
-    dragMimeTypes = ['text/uri-list'];
+    dragMimeTypes = ['application/vnd.code.tree.projectExplorerView'];
     private _onDidChangeTreeData: vscode.EventEmitter<Node | undefined | null | void> = new vscode.EventEmitter<Node | undefined | null | void>();
     // We want to use an array as the event type, but the API for this is currently being finalized. Until it's finalized, use any.
     public onDidChangeTreeData: vscode.Event<any> = this._onDidChangeTreeData.event;
-    public root = new Map<string, Node>([
-        ["1", {id: "1", name: "Chapter 1", order: OrderHandler.gap * 1, prevOrder: OrderHandler.gap * 1}],
-        ["2", {id: "2", name: "Chapter 2", order: OrderHandler.gap * 2, prevOrder: OrderHandler.gap * 2}],
-        ["3", {id: "3", name: "Chapter 2.1", order: OrderHandler.gap * 3, prevOrder: OrderHandler.gap * 3}],
-        ["4", {id: "4", name: "Chapter 3", order: OrderHandler.gap * 4, prevOrder: OrderHandler.gap * 4}],
-        ["5", {id: "5", name: "The End", order: OrderHandler.gap * 5, prevOrder: OrderHandler.gap * 5}],
-        ["6", {id: "6", name: "Annex", order: OrderHandler.gap * 6, prevOrder: OrderHandler.gap * 6}],
-        ["7", {id: "7", name: "Notes", order: OrderHandler.gap * 7, prevOrder: OrderHandler.gap * 7}],
-    ]);
+    public root: Node = {
+        parent: undefined,
+        name: 'root',
+        children: new Map<string, Node>(),
+        isFile: false,
+        id: "root",
+        order: 0,
+        prevOrder: 0
+    };
+
+    private _view: vscode.TreeView<Node> | undefined;
 
     constructor(context: vscode.ExtensionContext) {
-        const view = vscode.window.createTreeView('projectExplorerView', {
+        this._view = vscode.window.createTreeView('projectExplorerView', {
             treeDataProvider: this,
             showCollapseAll: true,
             canSelectMany: false,
             dragAndDropController: this
         });
-        context.subscriptions.push(view);
-        fileManager.loadFiles()
+
+        context.subscriptions.push(this._view);
+        fileManager
+            .loadFiles()
             .then(files => {
-                this.root = new Map<string, Node>();
-                let order = 0;
-                files.forEach((f, idx) => {
-                    const basename = path.posix.basename(f.path);
-                    const ext = path.posix.extname(f.path);
 
-                    // Generate dummy test data
-                    for (let i = 1; i < 10; i++) {
-                        this.root.set(f.path + i, {
-                            id: f.path + i,
-                            name: basename.replace(/\.(_fw\.md)+$/, "") + order,
-                            order: OrderHandler.gap * (order + 1),
-                            prevOrder: OrderHandler.gap * (order + 1),
-                        });
-                        order++;
-                    }
-                });
-
+                this.root = this.buildHierarchy(files);
+                this._sortChildren(this.root);
                 this._onDidChangeTreeData.fire();
 
             });
+    }
+
+    private buildHierarchy(paths: FwFileInfo[]): Node {
+
+        const commonPath = findCommonWorkspaceFoldersPath() ?? "";
+
+        paths.forEach((p) => {
+            const relativePath = path.posix.relative(commonPath, p.id);
+            const segments = relativePath.split(path.posix.sep).filter(Boolean); // Split path into segments and remove any empty segments
+            let current = this.root;
+
+            segments.forEach((segment, index) => {
+                const tmpId = path.posix.join(current.id, segment);
+                const isFile = index === segments.length - 1; // Mark as file if it's the last segment
+                if (!current.children?.has(tmpId)) {
+                    current.children?.set(tmpId, {
+                        parent: current,
+                        name: isFile ? p.name : segment,
+                        id: tmpId,
+                        order: p.order,
+                        prevOrder: 0,
+                        children: new Map(),
+                        isFile: isFile
+                    });
+                }
+                current = current.children?.get(tmpId)!;
+            });
+        });
+        return this.root;
     }
 
     // Tree data provider
@@ -69,19 +91,38 @@ export class ProjectExplorerTreeDataProvider implements vscode.TreeDataProvider<
 
     public getTreeItem(element: Node): vscode.TreeItem {
         const tooltip = new vscode.MarkdownString(`$(zap) Tooltip for ${element.id}`, true);
-        //const orderNr = element?.order.toString();//OrderHandler.toBase36(element?.order ?? 0);
         const orderNr = OrderHandler.toBase36(element?.order ?? 0).padStart(6, "0");
-        const label = element?.order.toString().padStart(10, "0");
+
+        let icon = "file";
+        let label = element.name;
+        let description = element.order.toString();
+
+        if (!element.isFile) {
+            icon = "folder";
+        }
+        if (this._isWorkspaceFolder(element)) {
+            icon = "book";
+            label = `[${label}]`;
+            description = "workspace folder"
+        }
+        if (this._isRoot(element)){
+            icon = "root-folder";
+            label= "/";
+            description = "";
+        }
+
         return {
             label: <any>{
                 label: label,
-                highlights: element?.order !== element?.prevOrder ? [[0, 10]] : void 0
+                highlights: []//element?.order !== element?.prevOrder ? [[0, 10]] : void 0
             },
-            description:  orderNr + "__" + element?.name,
+            description: description,
             tooltip,
-
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            resourceUri: vscode.Uri.parse(`/tmp/${element.id}`),
+            iconPath: new ThemeIcon(icon),
+            collapsibleState: element?.isFile
+                ? vscode.TreeItemCollapsibleState.None
+                : vscode.TreeItemCollapsibleState.Collapsed,
+            resourceUri: vscode.Uri.parse(element.id),
         };
     }
 
@@ -90,83 +131,168 @@ export class ProjectExplorerTreeDataProvider implements vscode.TreeDataProvider<
         // nothing to dispose
     }
 
-    // Drag and drop controller
+    private _canMove(node: Node) {
+        return !this._isRoot(node) && !this._isWorkspaceFolder(node);
+    }
 
+    private _tryMoveToChildren(source: Node, dest?: Node): boolean {
+        if (!this._canMove(source)) return false; // cannot move the root
+        if (dest?.isFile) return false;     // cannot move a file to a file
+        if (!dest?.parent) return false;  // cannot move a file to
+        // root (it contains workspaceFolders)
+
+        if (source.parent !== dest) {     // move to a different parent
+            source.parent?.children?.delete(source.id);
+            source.parent = dest;
+            dest.children?.set(source.id, source);
+        }
+
+        return true;
+    }
+
+    private _isWorkspaceFolder(node: Node) {
+        return this._isRoot(node?.parent);
+    }
+
+    private _isRoot(node?: Node) {
+        return node === this.root;
+    }
+
+    // Drag and drop controller
     public async handleDrop(target: Node | undefined, sources: vscode.DataTransfer, token: vscode.CancellationToken): Promise<void> {
         const transferItem = sources.get('application/vnd.code.tree.projectExplorerView');
-        if (!transferItem) {
-            return;
+
+        if (!transferItem) return; // nothing to drop
+
+        const source = this._getNode(transferItem.value[0]?.id ?? "");
+        const dest = this._getNode(target?.id ?? "");
+
+        if (!source || !dest) return; // don't know what to move where
+
+        const sameType = (s: Node, d: Node) => s.isFile === d.isFile;
+        const sameRoot = (s: Node, d: Node) => s.parent === d.parent;
+        const folderOverFolder = (s: Node, d: Node) => !s.isFile && !d.isFile;
+        const fileOverFile = (s: Node, d: Node) => s.isFile && d.isFile;
+        const fileOverFolder = (s: Node, d: Node) => s.isFile && !d.isFile;
+        const folderOverFile = (s: Node, d: Node) => !s.isFile && d.isFile;
+
+        if (sameRoot(source, dest)) {
+            // no need to move, but exit early if items cannot be reordered
+            if (!this._canMove(source)) return;
+        } else if (folderOverFolder(source, dest) || fileOverFolder(source, dest)) {
+            if (!this._tryMoveToChildren(source, dest)) return;
+        } else if (fileOverFile(source, dest) || folderOverFile(source, dest)) {
+            if (!this._tryMoveToChildren(source, dest.parent)) return;
         }
-        const treeItems: Node[] = transferItem.value;
-        //  let roots = this._getLocalRoots(treeItems);
-        const sourceKey = treeItems[0]?.id ?? "";
-        const destKey = target?.id ?? "";
 
-        const source = this.root.get(sourceKey);
-        const dest = this.root.get(destKey);
+        // Reorder source siblings (wherever it ended up)
+        const siblings = this._getMatchingSiblings(source)
+            .map(a => ({id: a.id, order: a.order}))
+            .sort((a, b) => a.order - b.order);
 
-        console.log(`From ${source?.order}:${source} to ${dest?.order}:${dest}`);
-
-        if (source) {
-            const all = [...this.root.values()];
-            all.sort((a: Node, b: Node) => a.order - b.order);
-
-            const orderHandler = new OrderHandler(
-                all.map(a => ({id: a.id, order: a.order})),
-            );
-            orderHandler.move(source.id, dest?.id ?? "");
-
-            // TODO: check if the order magnitude fits in the padding
-            //       if not, check if we can redistribute with a safe gap (fixed for now), and rename all files to equidistant space
-            //       if the minimum safe gap cannot be kept, then increase the magnitude of the padding by 1
-            orderHandler.get().forEach(e => {
-                const item = this.root.get(e.id);
+        new OrderHandler(siblings)
+            .reorder(source.id, dest?.id ?? "")
+            .get()
+            .forEach(e => {
+                const item = this._getNode(e.id);
                 if (item) {
                     item.prevOrder = item.order;
                     item.order = e.order;
                 }
             });
-            this._onDidChangeTreeData.fire();
-        }
+
+        this._onDidChangeTreeData.fire();
     }
 
     public async handleDrag(source: Node[], treeDataTransfer: vscode.DataTransfer, token: vscode.CancellationToken): Promise<void> {
+        if (!this._canMove(source[0])) return;
+
         treeDataTransfer.set('application/vnd.code.tree.projectExplorerView', new vscode.DataTransferItem(source));
+    }
+
+    _getSiblings(node: Node): Node[] {
+        if (!node) {
+            return [];
+        }
+        if (!node.parent) {
+            return [this.root];
+        }
+        return [...node.parent.children?.values() ?? []];
+    }
+
+    _getMatchingSiblings(node: Node): Node[] {
+        return this._getSiblings(node).filter(s => s.isFile === node.isFile);
     }
 
     _getChildren(key: string | undefined): Node[] {
         let result: Node[] = [];
         if (!key) {
-            result = [...this.root.values()];
+            result = [this.root];
         } else {
-            const treeElement = this._getTreeElement(key);
-            if (treeElement && treeElement.children) {
-                result = [...treeElement.children.values()];
+            const node = this._getNode(key);
+            if (node && node.children) {
+                result = [...node.children.values()];
             }
         }
 
         result.sort((a: Node, b: Node) => a.order - b.order);
-        return result;
+
+        return [
+            ...result.filter((a: Node) => !a.isFile),
+            ...result.filter((a: Node) => a.isFile),
+        ];
     }
 
-    _getTreeElement(element: string | undefined, tree?: Map<string, Node>): Node | undefined {
+    _getNode(element: string | undefined, tree?: Map<string, Node>): Node | undefined {
         if (!element) {
-            return {id: "root", name: "test", order: 0, children: this.root, prevOrder: 0};
+            return undefined;
         }
-        console.log("The tree: ", tree);
-        const currentNode = tree ?? this.root;
-        console.log("Current node", currentNode);
-        for (const prop in currentNode.keys()) {
-            if (prop === element) {
-                return currentNode.get(prop);
-            } else {
-                const treeElement = this._getTreeElement(element, currentNode.get(prop)?.children);
-                if (treeElement) {
-                    return treeElement;
+
+        const currentNode = tree ??
+            new Map<string, Node>([[this.root.id, this.root]]);
+
+        // Check if the current node has the element
+        const node = currentNode.get(element);
+        if (node) {
+            return node;
+        }
+
+        // If not found, recursively search in the children of the current node
+        for (const childNode of currentNode.values()) {
+            if (childNode.children && childNode.children.size > 0) {
+                const found = this._getNode(element, childNode.children);
+                if (found) {
+                    return found;
                 }
             }
         }
+
+        // If the node is not found in any children, return undefined
+        return undefined;
     }
 
+    private _sortChildren(root?: Node) {
+        if (!root?.children) {
+            return;
+        }
+        const order = (a: Node) => a.order.toString().padStart(FwFile.maxPad, '0') + a.name;
+        const all = [...root.children.values()]
+            .sort((a, b) => order(a) > order(b)
+                ? 1
+                : order(a) < order(b)
+                    ? -1
+                    : 0);
+        let counter = 0;
+
+        all.forEach((c, order) => {
+            counter+=FwFile.fixedGap;
+            if (c.order !== 0) counter = Math.max(c.order, counter);
+            c.prevOrder = c.order;
+            c.order = counter;
+            this._sortChildren(c);
+        });
+
+
+    }
 }
 

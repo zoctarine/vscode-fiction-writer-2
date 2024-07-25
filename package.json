@@ -35,13 +35,13 @@
         "command": "fiction-writer.proseMirror.openInProseMirror",
         "title": "Edit with ProseMirror Editor",
         "category": "FictionWriter",
-        "icon": "media/icons/proseMirrorEditorIcon.svg"
+        "icon": "$(link-external)"
       },
       {
         "command": "fiction-writer.codeMirror.openInCodeMirror",
         "title": "Edit with CodeMirror Editor",
         "category": "FictionWriter",
-        "icon": "media/icons/codeMirrorEditorIcon.svg"
+        "icon": "$(markdown)"
       }
     ],
     "customEditors": [
@@ -66,15 +66,25 @@
         "priority": "option"
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "project-explorer",
+          "title": "Package Explorer",
+          "icon": "$(book)"        }
+      ]
+    },
     "views": {
       "explorer": [
         {
           "id": "metadataView",
           "name": "Metadata"
-        },
+        }],
+      "project-explorer": [
         {
           "id": "projectExplorerView",
-          "name": "Project View"
+          "name": "Project View",
+          "icon": "$(book)"
         }
       ]
     }
@@ -111,7 +121,9 @@
     "concurrently": "^8.2.2",
     "esbuild": "^0.21.5",
     "eslint": "^8.57.0",
+    "mocha": "^10.7.0",
     "npm-run-all": "^4.1.5",
+    "ts-node": "^10.9.2",
     "typescript": "^5.4.5"
   },
   "peerDependencies": {

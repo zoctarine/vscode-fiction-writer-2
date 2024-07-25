@@ -45,6 +45,9 @@ Fixed issue #.
 
 ### 1.1.0
 
+## Third-Party Libraries and Assets
+
+
 Added features X, Y, and Z.
 
 ---

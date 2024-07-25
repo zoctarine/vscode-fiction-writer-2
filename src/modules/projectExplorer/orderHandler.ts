@@ -2,9 +2,17 @@ interface Entry {
     id: string;
     order: number;
 }
+export class Parsing {
+    public static toBase36(number: number) {
+        return number.toString(36).toUpperCase();
+    }
+
+    public static fromBase36(base36Str: string) {
+        return parseInt(base36Str, 36);
+    }
+}
 
 export class OrderHandler {
-    // Helper function to convert a decimal number to a base36 string
     public static toBase36(number: number) {
         return number.toString(36).toUpperCase();
     }
@@ -104,7 +112,7 @@ export class OrderHandler {
             (this.from(index) + this.to(index + 1)) / 2);
     }
 
-    public move(currentId: string, targetId: string) {
+    public reorder(currentId: string, targetId: string) : OrderHandler{
         const current = this.fileNumbers.findIndex(a => a.id === currentId);
         const target = this.fileNumbers.findIndex(a => a.id === targetId);
         this.fileNumbers.splice(current, 1);
@@ -117,6 +125,8 @@ export class OrderHandler {
         } else {
             this.insertAfter(targetId, currentId);
         }
+
+        return this;
     }
 
     public get(): Entry[] {
