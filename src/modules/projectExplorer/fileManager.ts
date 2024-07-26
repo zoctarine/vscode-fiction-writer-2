@@ -31,7 +31,7 @@ interface File {
     path: string;
 }
 
-class FileManager implements Disposable {
+export class FileManager implements Disposable {
     private _disposibles: Disposable[] = [];
     public files: FwFileInfo[] = [];
 
@@ -41,7 +41,7 @@ class FileManager implements Disposable {
         });
     }
 
-    public initialize() {
+    public constructor() {
         const watcher = vscode.workspace
             .createFileSystemWatcher('**/*._fw.md');
         watcher.onDidCreate((f) => this.onFilesChanged(f), this._disposibles);
@@ -66,5 +66,3 @@ class FileManager implements Disposable {
         return [...files.map(f => ({...f}))];
     }
 }
-
-export const fileManager = new FileManager();

@@ -12,6 +12,63 @@
   "activationEvents": [],
   "main": "./dist/extension.js",
   "contributes": {
+    "configuration": [{
+      "title": "Editors",
+      "properties": {
+        "fictionWriter.editors.enableAltRichTextEditor": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enables a rich text editor for markdown files (based on ProseMirror).",
+          "order": 1
+        },
+        "fictionWriter.editors.enableAltMarkdownEditor": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enables an alternative markdown editor (based on CodeMirror).",
+          "order": 2
+        },
+        "fictionWriter.editors.autoSyncIntervalInSeconds": {
+          "type": "number",
+          "default": 10,
+          "minimum": 5,
+          "maximum": 1440,
+          "description": "External editors need to sync modified contents with VS Code. For large documents, syncing at every keystroke is not efficient..",
+          "order": 3
+        }
+      }
+    },{
+      "title": "Projects",
+      "properties": {
+        "fictionWriter.projects.enableProjects": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable Projects "
+        }
+      }
+    }],
+    "icons": {
+      "fa-pen": {
+        "description": "pen",
+        "default": {
+          "fontPath": "./media/fonts/fa-solid-900.woff2",
+          "fontCharacter": "\\f304"
+        }
+      },
+      "fa-pen-nib": {
+        "description": "pen nib",
+        "default": {
+          "fontPath": "./media/fonts/fa-solid-900.woff2",
+          "fontCharacter": "\\f5ad"
+        }
+      },
+      "fa-markdown": {
+        "description": "Markdown icon",
+        "default": {
+          "fontPath": "./media/fonts/fa-regular-400.woff2",
+          "fontCharacter": "\\f044"
+        }
+      }
+    },
     "menus": {
       "editor/title": [
         {
@@ -35,13 +92,13 @@
         "command": "fiction-writer.proseMirror.openInProseMirror",
         "title": "Edit with ProseMirror Editor",
         "category": "FictionWriter",
-        "icon": "$(link-external)"
+        "icon": "$(fa-pen-nib)"
       },
       {
         "command": "fiction-writer.codeMirror.openInCodeMirror",
         "title": "Edit with CodeMirror Editor",
         "category": "FictionWriter",
-        "icon": "$(markdown)"
+        "icon": "$(fa-pen)"
       }
     ],
     "customEditors": [
@@ -70,8 +127,9 @@
       "activitybar": [
         {
           "id": "project-explorer",
-          "title": "Package Explorer",
-          "icon": "$(book)"        }
+          "title": "Fiction Writer",
+          "icon": "$(fa-markdown)"
+        }
       ]
     },
     "views": {
@@ -84,7 +142,9 @@
         {
           "id": "projectExplorerView",
           "name": "Project View",
-          "icon": "$(book)"
+          "icon": "$(book)",
+          "when": "config.fictionWriter.projects.enableProjects == true"
+
         }
       ]
     }

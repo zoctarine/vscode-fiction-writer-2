@@ -1,11 +1,11 @@
 import * as vscode from 'vscode';
 import {OrderHandler} from "./orderHandler";
-import {fileManager, findCommonWorkspaceFoldersPath} from "./fileManager";
+import {FileManager, findCommonWorkspaceFoldersPath} from "./fileManager";
 import * as path from 'path';
 import {FwFile, FwFileInfo} from "../../common/fileNameManager";
 import {CancellationTokenSource, ThemeIcon} from "vscode";
+import {ProseMirrorEditorProvider} from "../proseMirrorEditorView";
 
-fileManager.initialize();
 
 interface Node {
     parent?: Node;
@@ -20,6 +20,7 @@ interface Node {
 export class ProjectExplorerTreeDataProvider implements vscode.TreeDataProvider<Node>, vscode.TreeDragAndDropController<Node> {
     dropMimeTypes = ['application/vnd.code.tree.projectExplorerView'];
     dragMimeTypes = ['application/vnd.code.tree.projectExplorerView'];
+    private _treeView: vscode.TreeView<Node>;
     private _onDidChangeTreeData: vscode.EventEmitter<Node | undefined | null | void> = new vscode.EventEmitter<Node | undefined | null | void>();
     // We want to use an array as the event type, but the API for this is currently being finalized. Until it's finalized, use any.
     public onDidChangeTreeData: vscode.Event<any> = this._onDidChangeTreeData.event;
@@ -33,21 +34,18 @@ export class ProjectExplorerTreeDataProvider implements vscode.TreeDataProvider<
         prevOrder: 0
     };
 
-    private _view: vscode.TreeView<Node> | undefined;
 
-    constructor(context: vscode.ExtensionContext) {
-        this._view = vscode.window.createTreeView('projectExplorerView', {
+    constructor(fileManager: FileManager) {
+        this._treeView = vscode.window.createTreeView('projectExplorerView', {
             treeDataProvider: this,
             showCollapseAll: true,
             canSelectMany: false,
             dragAndDropController: this
         });
 
-        context.subscriptions.push(this._view);
         fileManager
             .loadFiles()
             .then(files => {
-
                 this.root = this.buildHierarchy(files);
                 this._sortChildren(this.root);
                 this._onDidChangeTreeData.fire();
@@ -95,7 +93,7 @@ export class ProjectExplorerTreeDataProvider implements vscode.TreeDataProvider<
 
         let icon = "file";
         let label = element.name;
-        let description = element.order.toString();
+        let description = element.order.toString() ;
 
         if (!element.isFile) {
             icon = "folder";
@@ -128,7 +126,8 @@ export class ProjectExplorerTreeDataProvider implements vscode.TreeDataProvider<
 
 
     dispose(): void {
-        // nothing to dispose
+      this._onDidChangeTreeData.dispose();
+      this._treeView.dispose();
     }
 
     private _canMove(node: Node) {
