@@ -3,27 +3,56 @@ import * as vscode from "vscode";
 import {ProjectExplorerTreeDataProvider} from "./projectExplorerTreeDataProvider";
 import {FileManager} from "./fileManager";
 import {ProjectsOptions} from "./projectsOptions";
+import {Disposable} from "vscode";
+import {DisposeManager} from "../../core/disposable";
 
+class ProjectsModule extends DisposeManager {
+    active = false;
+    options = new ProjectsOptions();
+    fileManager: FileManager | undefined;
+    projectExplorerDataProvider: ProjectExplorerTreeDataProvider | undefined;
 
-export function activate(context: vscode.ExtensionContext) {
-    const options = new ProjectsOptions();
-    let fileManager: FileManager | undefined;
-    let projectExplorerDataProvider: ProjectExplorerTreeDataProvider | undefined;
+    constructor() {
+        super();
+    }
 
-    context.subscriptions.push(options);
+    activate(): void {
+        this.fileManager = new FileManager();
+        this.projectExplorerDataProvider = new ProjectExplorerTreeDataProvider(this.fileManager);
 
-    context.subscriptions.push(options.enabled.onChanged((enabled) => {
-        console.log("Projects: " + (enabled ? "enabled" : "disabled"));
-        if (enabled) {
-            fileManager = new FileManager();
-            projectExplorerDataProvider = new ProjectExplorerTreeDataProvider(fileManager);
-            context.subscriptions.push(fileManager);
-            context.subscriptions.push(projectExplorerDataProvider);
-        } else {
-            fileManager?.dispose();
-            projectExplorerDataProvider?.dispose();
-        }
-    }));
+        this.manageDisposable(
+            this.fileManager,
+            this.projectExplorerDataProvider);
+        this.active = true;
+    };
 
-    options.enabled.emit();
+    deactivate(): void {
+        this.disposeAndForget(this.projectExplorerDataProvider);
+        this.projectExplorerDataProvider = undefined;
+
+        this.disposeAndForget(this.fileManager);
+        this.fileManager = undefined;
+
+        this.active = false;
+    };
+
+    register(): vscode.Disposable {
+
+        this.manageDisposable(
+            this.options,
+            this.options.enabled.onChanged((enabled) => {
+                if (enabled && !this.active) {
+                    this.activate();
+                } else if (!enabled && this.active) {
+                    this.deactivate();
+                }
+            }));
+
+        // Set the initial state
+        this.options.enabled.emit();
+
+        return Disposable.from(this);
+    }
 }
+
+export const projectsModule = new ProjectsModule();

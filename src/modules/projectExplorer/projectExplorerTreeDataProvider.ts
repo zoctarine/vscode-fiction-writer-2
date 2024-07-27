@@ -2,9 +2,10 @@ import * as vscode from 'vscode';
 import {OrderHandler} from "./orderHandler";
 import {FileManager, findCommonWorkspaceFoldersPath} from "./fileManager";
 import * as path from 'path';
-import {FwFile, FwFileInfo} from "../../common/fileNameManager";
+import {FwFile, FwFileInfo} from "../../core/fileNameManager";
 import {CancellationTokenSource, ThemeIcon} from "vscode";
 import {ProseMirrorEditorProvider} from "../proseMirrorEditorView";
+import {DisposeManager} from "../../core/disposable";
 
 
 interface Node {
@@ -17,10 +18,11 @@ interface Node {
     children?: Map<string, Node>;
 }
 
-export class ProjectExplorerTreeDataProvider implements vscode.TreeDataProvider<Node>, vscode.TreeDragAndDropController<Node> {
+export class ProjectExplorerTreeDataProvider extends DisposeManager implements vscode.TreeDataProvider<Node>, vscode.TreeDragAndDropController<Node> {
     dropMimeTypes = ['application/vnd.code.tree.projectExplorerView'];
     dragMimeTypes = ['application/vnd.code.tree.projectExplorerView'];
     private _treeView: vscode.TreeView<Node>;
+    private fileManager: FileManager;
     private _onDidChangeTreeData: vscode.EventEmitter<Node | undefined | null | void> = new vscode.EventEmitter<Node | undefined | null | void>();
     // We want to use an array as the event type, but the API for this is currently being finalized. Until it's finalized, use any.
     public onDidChangeTreeData: vscode.Event<any> = this._onDidChangeTreeData.event;
@@ -36,6 +38,8 @@ export class ProjectExplorerTreeDataProvider implements vscode.TreeDataProvider<
 
 
     constructor(fileManager: FileManager) {
+        super();
+        this.fileManager = fileManager;
         this._treeView = vscode.window.createTreeView('projectExplorerView', {
             treeDataProvider: this,
             showCollapseAll: true,
@@ -51,6 +55,8 @@ export class ProjectExplorerTreeDataProvider implements vscode.TreeDataProvider<
                 this._onDidChangeTreeData.fire();
 
             });
+
+        this.manageDisposable(this._treeView, this._onDidChangeTreeData );
     }
 
     private buildHierarchy(paths: FwFileInfo[]): Node {
@@ -93,7 +99,7 @@ export class ProjectExplorerTreeDataProvider implements vscode.TreeDataProvider<
 
         let icon = "file";
         let label = element.name;
-        let description = element.order.toString() ;
+        let description = element.order.toString();
 
         if (!element.isFile) {
             icon = "folder";
@@ -103,9 +109,9 @@ export class ProjectExplorerTreeDataProvider implements vscode.TreeDataProvider<
             label = `[${label}]`;
             description = "workspace folder"
         }
-        if (this._isRoot(element)){
+        if (this._isRoot(element)) {
             icon = "root-folder";
-            label= "/";
+            label = "/";
             description = "";
         }
 
@@ -122,12 +128,6 @@ export class ProjectExplorerTreeDataProvider implements vscode.TreeDataProvider<
                 : vscode.TreeItemCollapsibleState.Collapsed,
             resourceUri: vscode.Uri.parse(element.id),
         };
-    }
-
-
-    dispose(): void {
-      this._onDidChangeTreeData.dispose();
-      this._treeView.dispose();
     }
 
     private _canMove(node: Node) {
@@ -284,7 +284,7 @@ export class ProjectExplorerTreeDataProvider implements vscode.TreeDataProvider<
         let counter = 0;
 
         all.forEach((c, order) => {
-            counter+=FwFile.fixedGap;
+            counter += FwFile.fixedGap;
             if (c.order !== 0) counter = Math.max(c.order, counter);
             c.prevOrder = c.order;
             c.order = counter;

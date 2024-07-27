@@ -1,9 +1,8 @@
 import * as vscode from 'vscode';
-import { getNonce } from '../../common/nonce';
+import { getNonce } from '../../core/nonce';
 
 import { ChangeSet, EditorState } from '@codemirror/state';
-
-
+ 
 export class CodeMirrorEditorProvider implements vscode.CustomTextEditorProvider {
 	private static readonly viewType = 'fictionWriter2.codeMirrorEditor';
 
@@ -43,7 +42,7 @@ export class CodeMirrorEditorProvider implements vscode.CustomTextEditorProvider
 
 			webviewPanel.onDidChangeViewState((e) => {
 				// When user switches out of the editor, we sync the unsaved changes
-				// to the document, so they can be persisted on the next save. 
+				// to the document, so they can be persisted on the next save.
 				if (!e.webviewPanel.active) {
 					this.updateTextDocument(document, editorView);
 				}
@@ -86,7 +85,7 @@ export class CodeMirrorEditorProvider implements vscode.CustomTextEditorProvider
 				if (e.document.uri.toString() !== document.uri.toString()) { return; }
 				console.log('onDidChangeTextDocument');
 
-				// Only update the webview if the document is view is not active. 
+				// Only update the webview if the document is view is not active.
 				// The change might come from the active editor, so we don't want to enter
 				// an infinite loop of updating the webview and applying the change.
 				//
@@ -115,10 +114,10 @@ export class CodeMirrorEditorProvider implements vscode.CustomTextEditorProvider
 							};
 
 							editorView = editorView.update({ changes }).state;
-						
+
 							// This is a time consumig operation, so we can't run it on each
-							// small change. We only update the document once, if it's not dirty, 
-							// to make sure sure that the default vscode save prompt is triggered on close. 
+							// small change. We only update the document once, if it's not dirty,
+							// to make sure sure that the default vscode save prompt is triggered on close.
 							// TODO: find a differet way to mark document as dirty?
 							//
 							// The actual document sync happends on willSaveTextDocument.
@@ -142,17 +141,17 @@ export class CodeMirrorEditorProvider implements vscode.CustomTextEditorProvider
 
 		}
 	}
-
+	
 	/**
 	 * Get the static html used for the editor webviews.
 	 */
 	private getHtmlForWebview(webview: vscode.Webview): string {
 		// Local path to script and css for the webview
 		const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(
-			this.context.extensionUri, 'media', 'codeMirrorClient.js'));
+			this.context.extensionUri, 'dist', 'browser', 'codeMirrorClient.js'));
 
 		const styleMainUri = webview.asWebviewUri(vscode.Uri.joinPath(
-			this.context.extensionUri, 'media', 'codeMirrorEditor.css'));
+			this.context.extensionUri, 'dist', 'browser', 'codeMirrorClient.css'));
 
 		// Use a nonce to whitelist which scripts can be run
 		const nonce = getNonce();

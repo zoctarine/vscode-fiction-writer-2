@@ -8,7 +8,7 @@ import { schema,
 	from "./utils/fileExtensions";
 import { exampleSetup } from "prosemirror-example-setup";
 import {processInputFile} from "../../processors";
-import { getNonce } from '../../common/nonce';
+import { getNonce } from '../../core/nonce';
 
 
 /**
@@ -161,10 +161,10 @@ export class ProseMirrorEditorProvider implements vscode.CustomTextEditorProvide
 	private getHtmlForWebview(webview: vscode.Webview): string {
 		// Local path to script and css for the webview
 		const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(
-			this.context.extensionUri, 'media', 'proseMirrorClient.js'));
+			this.context.extensionUri, 'dist', 'browser', 'proseMirrorClient.js'));
 			
 		const styleMainUri = webview.asWebviewUri(vscode.Uri.joinPath(
-			this.context.extensionUri, 'media', 'proseMirrorEditor.css'));
+			this.context.extensionUri,'dist', 'browser', 'proseMirrorClient.css'));
 
 		// Use a nonce to whitelist which scripts can be run
 		const nonce = getNonce();

@@ -1,5 +1,5 @@
 import * as assert from 'assert';
-import {FwFileInfo, FileNameManager} from "../common/fileNameManager";
+import {FwFileInfo, FileNameManager} from "../core/fileNameManager";
 
 // You can import and use all API from the 'vscode' module
 // as well as import your extension to test it

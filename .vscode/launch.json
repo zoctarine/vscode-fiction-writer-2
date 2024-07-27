@@ -15,7 +15,8 @@
 				"--disable-extensions"
 			],
 			"outFiles": [
-				"${workspaceFolder}/dist/**/*.js"
+				"${workspaceFolder}/dist/**/*.js",
+				"${workspaceFolder}/media/**/*.js",
 			],
 			 "preLaunchTask": "${defaultBuildTask}"
 		}

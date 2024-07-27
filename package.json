@@ -1,7 +1,7 @@
 {
   "name": "fiction-writer-2",
   "displayName": "Fiction Writer 2",
-  "description": "",
+  "description": "The next version of the Fiction Writer extension",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.90.0"
@@ -12,40 +12,43 @@
   "activationEvents": [],
   "main": "./dist/extension.js",
   "contributes": {
-    "configuration": [{
-      "title": "Editors",
-      "properties": {
-        "fictionWriter.editors.enableAltRichTextEditor": {
-          "type": "boolean",
-          "default": true,
-          "description": "Enables a rich text editor for markdown files (based on ProseMirror).",
-          "order": 1
-        },
-        "fictionWriter.editors.enableAltMarkdownEditor": {
-          "type": "boolean",
-          "default": true,
-          "description": "Enables an alternative markdown editor (based on CodeMirror).",
-          "order": 2
-        },
-        "fictionWriter.editors.autoSyncIntervalInSeconds": {
-          "type": "number",
-          "default": 10,
-          "minimum": 5,
-          "maximum": 1440,
-          "description": "External editors need to sync modified contents with VS Code. For large documents, syncing at every keystroke is not efficient..",
-          "order": 3
+    "configuration": [
+      {
+        "title": "Editors",
+        "properties": {
+          "fictionWriter.editors.enableAltRichTextEditor": {
+            "type": "boolean",
+            "default": true,
+            "description": "Enables a rich text editor for markdown files (based on ProseMirror).",
+            "order": 1
+          },
+          "fictionWriter.editors.enableAltMarkdownEditor": {
+            "type": "boolean",
+            "default": true,
+            "description": "Enables an alternative markdown editor (based on CodeMirror).",
+            "order": 2
+          },
+          "fictionWriter.editors.autoSyncIntervalInSeconds": {
+            "type": "number",
+            "default": 10,
+            "minimum": 5,
+            "maximum": 1440,
+            "description": "External editors need to sync modified contents with VS Code. For large documents, syncing at every keystroke is not efficient..",
+            "order": 3
+          }
+        }
+      },
+      {
+        "title": "Projects",
+        "properties": {
+          "fictionWriter.projects.enableProjects": {
+            "type": "boolean",
+            "default": true,
+            "description": "Enable Projects "
+          }
         }
       }
-    },{
-      "title": "Projects",
-      "properties": {
-        "fictionWriter.projects.enableProjects": {
-          "type": "boolean",
-          "default": true,
-          "description": "Enable Projects "
-        }
-      }
-    }],
+    ],
     "icons": {
       "fa-pen": {
         "description": "pen",
@@ -137,28 +140,23 @@
         {
           "id": "metadataView",
           "name": "Metadata"
-        }],
+        }
+      ],
       "project-explorer": [
         {
           "id": "projectExplorerView",
           "name": "Project View",
           "icon": "$(book)",
           "when": "config.fictionWriter.projects.enableProjects == true"
-
         }
       ]
     }
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
-    "compile:proseview": "esbuild src/modules/proseMirrorEditorView/proseMirrorClient.ts --bundle --minify --outfile=\"media/proseMirrorClient.js\"",
-    "compile:codeview": "esbuild src/modules/codeMirrorEditorView/codeMirrorClient.ts --bundle --minify --outfile=\"media/codeMirrorClient.js\"",
     "compile": "npm run check-types && npm run lint && node esbuild.js",
     "watch": "npm-run-all -p watch:*",
-    "watch:proseview": "esbuild --watch src/modules/proseMirrorEditorView/proseMirrorClient.ts --bundle --sourcemap --outfile=\"media/proseMirrorClient.js\"",
-    "watch:codeview": "esbuild --watch src/modules/codeMirrorEditorView/codeMirrorClient.ts --bundle --sourcemap --outfile=\"media/codeMirrorClient.js\"",
     "watch:esbuild": "node esbuild.js --watch",
-    "watch:all": "concurrently -n esbuild,proseview,codeview   \"npm run watch:esbuild\" \"npm run watch:proseview\" \"npm run watch:codeview\"",
     "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
     "package": "npm run check-types && npm run lint && node esbuild.js --production",
     "compile-tests": "tsc -p . --outDir out",
@@ -178,6 +176,7 @@
     "@typescript-eslint/parser": "^7.11.0",
     "@vscode/test-cli": "^0.0.9",
     "@vscode/test-electron": "^2.4.0",
+    "chalk": "^5.3.0",
     "concurrently": "^8.2.2",
     "esbuild": "^0.21.5",
     "eslint": "^8.57.0",

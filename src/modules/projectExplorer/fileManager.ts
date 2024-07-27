@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import {Disposable} from "vscode";
-import {FwFile, FwFileInfo} from "../../common/fileNameManager";
+import {FwFile, FwFileInfo} from "../../core/fileNameManager";
 import * as path from "path";
 
 

@@ -2,15 +2,15 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import { MetadataTreeDataProvider } from './modules/metadata/metadataTreeDataProvider';
-import * as projects from './modules/projectExplorer';
+import {projectsModule} from './modules/projectExplorer';
 import { ProseMirrorEditorProvider, commands as proseMirrorCommands} from './modules/proseMirrorEditorView';
 import { CodeMirrorEditorProvider, commands as codeMirrorCommands} from './modules/codeMirrorEditorView';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-	
-	projects.activate(context);
+
+	context.subscriptions.push(projectsModule.register());
 
 	context.subscriptions.push(ProseMirrorEditorProvider.register(context));
 	context.subscriptions.push(CodeMirrorEditorProvider.register(context));

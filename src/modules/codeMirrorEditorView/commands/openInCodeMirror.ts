@@ -1,6 +1,6 @@
 
 import * as vscode from 'vscode';
-import { addCommand } from '../../../common/commandExtensions';
+import { addCommand } from '../../../core/commandExtensions';
 
 export const openInCodeMirror = () => addCommand('codeMirror.openInCodeMirror',
     () => {
