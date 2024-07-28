@@ -4,6 +4,9 @@ This is the README for 2.0
 
 **Enjoy!**
 
+## Combile
+
+`code --extensionDevelopmentPath=$(pwd) --disable-extensions --inspect-extensions=9229`
 ## License
 
 MIT License (see LICENSE file)

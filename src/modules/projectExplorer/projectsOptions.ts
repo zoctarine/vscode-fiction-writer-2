@@ -3,7 +3,7 @@ import {Options} from "../../core/options";
 export class ProjectsOptions extends Options {
     public static readonly SectionName = 'projects';
     public enabled = this.valueOf('enabled', true, true);
-    public filter = this.valueOf('extensionFilter', 'md');
+    public fileTypes = this.valueOf('fileTypes', ['md']);
     public sorting = this.valueOf('sorting', 'order');
     // sort files and folders (mixed), set explorer:sortOrder to mixed
     // sort files or folders separately, set explorer:sortOrder to foldersNestedFiles

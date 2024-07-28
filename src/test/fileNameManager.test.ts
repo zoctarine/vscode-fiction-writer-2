@@ -1,5 +1,5 @@
 import * as assert from 'assert';
-import {FwFileInfo, FileNameManager} from "../core/fileNameManager";
+import {FwFileInfo} from "../core/fileNameManager";
 
 // You can import and use all API from the 'vscode' module
 // as well as import your extension to test it
@@ -15,7 +15,7 @@ suite('FileNameManager', () => {
                 {path: "004__ also works with spaces .fw.md", expected: {order: 4, name: " also works with spaces "}},
             ].forEach(({path, expected}) => {
                 test(`extracts order and name from ${path}`, function () {
-                    const file = FwFileInfo.parse(path);
+                    const file = FwFileInfo.parse(path, ['fw.md']);
 
                     assert.deepEqual(file, {
                         id: path,
@@ -35,7 +35,7 @@ suite('FileNameManager', () => {
                 {path: "2_with spaces.fw.md", expected: {order: 0, name: "2_with spaces"}},
             ].forEach(({path, expected}) => {
                 test(`extracts full name when correct fileType from ${path}`, function () {
-                    const file = FwFileInfo.parse(path);
+                    const file = FwFileInfo.parse(path, ['fw.md']);
 
                     assert.deepEqual(file, {
                         id: path,
@@ -58,7 +58,7 @@ suite('FileNameManager', () => {
         ].forEach(({path}) => {
             test(`throws exception for ${path}`, function () {
 
-                assert.throws(() => FwFileInfo.parse(path));
+                assert.throws(() => FwFileInfo.parse(path, ['fw.md']));
             });
         });
     });

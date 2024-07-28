@@ -45,14 +45,65 @@
         "title": "Projects",
         "properties": {
           "fictionWriter.projects.enabled": {
+            "order": 1,
             "type": "boolean",
             "default": true,
-            "description": "Enable Projects "
+            "description": "Enable Projects"
+          },
+          "fictionWriter.projects.fileTypes": {
+            "order": 20,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true,
+            "default": [
+              "md"
+            ],
+            "tags": [
+              "usesOnlineServices"
+            ],
+            "markdownDescription": "What file extensions should be considered as project files. (eg. `md` for `.md` files.)"
           }
         }
       }
     ],
     "icons": {
+      "fa-book": {
+        "description": "book",
+        "default": {
+          "fontPath": "./media/fonts/fa-solid-900.woff2",
+          "fontCharacter": "\\f02d"
+        }
+      },
+      "fa-inbox": {
+        "description": "inbox",
+        "default": {
+          "fontPath": "./media/fonts/fa-solid-900.woff2",
+          "fontCharacter": "\\f01c"
+        }
+      },
+      "fa-file-lines": {
+        "description": "file-lines",
+        "default": {
+          "fontPath": "./media/fonts/fa-regular-400.woff2",
+          "fontCharacter": "\\f15c"
+        }
+      },
+      "fa-folder": {
+        "description": "folder",
+        "default": {
+          "fontPath": "./media/fonts/fa-regular-400.woff2",
+          "fontCharacter": "\\f07b"
+        }
+      },
+      "fa-folder-closed": {
+        "description": "folder-closed",
+        "default": {
+          "fontPath": "./media/fonts/fa-regular-400.woff2",
+          "fontCharacter": "\\e185"
+        }
+      },
       "fa-pen": {
         "description": "pen",
         "default": {

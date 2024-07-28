@@ -12,7 +12,7 @@ import {HelloWorldPanel} from "./_playground/HelloWorldPanel";
 export function activate(context: vscode.ExtensionContext) {
 
 	HelloWorldPanel.render(context);
-
+	console.log('\x1b[33m Welcome to the app! \x1b[0m');
 	context.subscriptions.push(projectsModule.register());
 
 	context.subscriptions.push(ProseMirrorEditorProvider.register(context));
