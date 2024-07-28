@@ -5,7 +5,9 @@ import {FileManager} from "./fileManager";
 import {ProjectsOptions} from "./projectsOptions";
 import {Disposable} from "vscode";
 import {DisposeManager} from "../../core/disposable";
+import * as logger from "../../core/logger";
 
+const log = logger.makeLog("[ProjectsModule]", "red");
 class ProjectsModule extends DisposeManager {
     active = false;
     options = new ProjectsOptions();
@@ -17,38 +19,43 @@ class ProjectsModule extends DisposeManager {
     }
 
     activate(): void {
+        log.debug("activate");
         this.fileManager = new FileManager();
         this.projectExplorerDataProvider = new ProjectExplorerTreeDataProvider(this.fileManager);
 
         this.manageDisposable(
             this.fileManager,
             this.projectExplorerDataProvider);
-        this.active = true;
     };
 
     deactivate(): void {
+        log.debug("deactivate");
+
         this.disposeAndForget(this.projectExplorerDataProvider);
         this.projectExplorerDataProvider = undefined;
 
         this.disposeAndForget(this.fileManager);
         this.fileManager = undefined;
-
-        this.active = false;
     };
 
+    private updateState(enabled: boolean){
+        console.log("[ProjectsModule.updateState]", `options.enabled: ${enabled}`);
+        if (enabled ) {
+            this.activate();
+        } else if (!enabled ) {
+            this.deactivate();
+        }
+    }
     register(): vscode.Disposable {
 
-        this.manageDisposable(
-            this.options,
-            this.options.enabled.onChanged((enabled) => {
-                if (enabled && !this.active) {
-                    this.activate();
-                } else if (!enabled && this.active) {
-                    this.deactivate();
-                }
-            }));
+        this.options.enabled.onChanged((enabled) => {
+            console.log("[options.enabled.onChanged]",`to: ${enabled}`);
+           this.updateState(enabled);
+        });
 
-        // Set the initial state
+        this.manageDisposable(
+            this.options);
+
         this.options.enabled.emit();
 
         return Disposable.from(this);

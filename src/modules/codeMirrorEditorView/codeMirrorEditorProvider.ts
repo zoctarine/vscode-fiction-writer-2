@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
-import { getNonce } from '../../core/nonce';
+import { getNonce, getWebviewRootUri } from '../../core/nonce';
 
 import { ChangeSet, EditorState } from '@codemirror/state';
- 
+
 export class CodeMirrorEditorProvider implements vscode.CustomTextEditorProvider {
 	private static readonly viewType = 'fictionWriter2.codeMirrorEditor';
 
@@ -37,7 +37,10 @@ export class CodeMirrorEditorProvider implements vscode.CustomTextEditorProvider
 			let subscriptions: vscode.Disposable[] = [];
 			let lastVersion = document.version;
 
-			webviewPanel.webview.options = { enableScripts: true, };
+			webviewPanel.webview.options = {
+				enableScripts: true,
+				localResourceRoots: [getWebviewRootUri(this.context)]
+			};
 			webviewPanel.webview.html = this.getHtmlForWebview(webviewPanel.webview);
 
 			webviewPanel.onDidChangeViewState((e) => {
@@ -141,17 +144,14 @@ export class CodeMirrorEditorProvider implements vscode.CustomTextEditorProvider
 
 		}
 	}
-	
+
 	/**
 	 * Get the static html used for the editor webviews.
 	 */
 	private getHtmlForWebview(webview: vscode.Webview): string {
 		// Local path to script and css for the webview
-		const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(
-			this.context.extensionUri, 'dist', 'browser', 'codeMirrorClient.js'));
-
-		const styleMainUri = webview.asWebviewUri(vscode.Uri.joinPath(
-			this.context.extensionUri, 'dist', 'browser', 'codeMirrorClient.css'));
+		const scriptUri = webview.asWebviewUri(getWebviewRootUri(this.context, 'codeMirrorClient.js'));
+		const styleMainUri = webview.asWebviewUri(getWebviewRootUri(this.context, 'codeMirrorClient.css'));
 
 		// Use a nonce to whitelist which scripts can be run
 		const nonce = getNonce();
@@ -167,7 +167,7 @@ export class CodeMirrorEditorProvider implements vscode.CustomTextEditorProvider
 				-->
 				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource}; style-src 'self' 'unsafe-inline' ${webview.cspSource}; script-src 'nonce-${nonce}';">
 				<meta name="viewport" content="width=device-width, initial-scale=1.0">
-				<link href="${styleMainUri}" rel="stylesheet" />
+				<link nonce="${nonce}" href="${styleMainUri}" rel="stylesheet" />
 				<title>Fiction Writer Editor</title>
 			</head>
 			<body>

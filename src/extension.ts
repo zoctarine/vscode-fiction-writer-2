@@ -5,10 +5,13 @@ import { MetadataTreeDataProvider } from './modules/metadata/metadataTreeDataPro
 import {projectsModule} from './modules/projectExplorer';
 import { ProseMirrorEditorProvider, commands as proseMirrorCommands} from './modules/proseMirrorEditorView';
 import { CodeMirrorEditorProvider, commands as codeMirrorCommands} from './modules/codeMirrorEditorView';
+import {HelloWorldPanel} from "./_playground/HelloWorldPanel";
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
+
+	HelloWorldPanel.render(context);
 
 	context.subscriptions.push(projectsModule.register());
 
@@ -23,7 +26,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// Use the console to output diagnostic information (console.log) and errors (console.error)
 	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "fiction-writer-2" is now active!');
+	console.log('Fiction Writer 2 is now active!');
 
 	context.subscriptions.push(proseMirrorCommands.openInProseMirror())	;
 	context.subscriptions.push(codeMirrorCommands.openInCodeMirror())	;

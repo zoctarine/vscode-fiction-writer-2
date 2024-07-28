@@ -3,13 +3,16 @@
   "displayName": "Fiction Writer 2",
   "description": "The next version of the Fiction Writer extension",
   "version": "0.0.1",
+  "publisher": "vsc-zoctarine",
   "engines": {
     "vscode": "^1.90.0"
   },
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
     "configuration": [
@@ -41,7 +44,7 @@
       {
         "title": "Projects",
         "properties": {
-          "fictionWriter.projects.enableProjects": {
+          "fictionWriter.projects.enabled": {
             "type": "boolean",
             "default": true,
             "description": "Enable Projects "
@@ -147,7 +150,7 @@
           "id": "projectExplorerView",
           "name": "Project View",
           "icon": "$(book)",
-          "when": "config.fictionWriter.projects.enableProjects == true"
+          "when": "fictionWriter.projects.enabled == true"
         }
       ]
     }
@@ -193,6 +196,7 @@
     "@codemirror/basic-setup": "^0.20.0",
     "@codemirror/lang-markdown": "^6.2.5",
     "@codemirror/language-data": "^6.5.1",
+    "@vscode/webview-ui-toolkit": "^1.4.0",
     "codemirror": "^6.0.1",
     "markdown-it": "*",
     "markdown-it-attrs": "^4.1.6",

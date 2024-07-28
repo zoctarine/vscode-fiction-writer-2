@@ -61,7 +61,6 @@ export class FileManager implements Disposable {
         allFiles.forEach((file) => {
             files.push(FwFileInfo.parse(file.fsPath));
         });
-        console.log("loadFiles:", files);
         this.files = files;
         return [...files.map(f => ({...f}))];
     }

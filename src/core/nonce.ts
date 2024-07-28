@@ -1,3 +1,5 @@
+import * as vscode from 'vscode';
+
 export function getNonce() {
 	let text = '';
 	const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -6,3 +8,7 @@ export function getNonce() {
 	}
 	return text;
 };
+
+ export function getWebviewRootUri(context: vscode.ExtensionContext, ...fragments:string[]): vscode.Uri {
+	return vscode.Uri.joinPath(context.extensionUri, 'dist', 'browser', ...fragments);
+ };

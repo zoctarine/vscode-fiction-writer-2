@@ -3,22 +3,22 @@ import * as vscode from 'vscode';
 import { EditorState, Transaction } from "prosemirror-state";
 import { Step } from "prosemirror-transform";
 import { schema,
-	fileParser, 
-	fileSerializer} 
+	fileParser,
+	fileSerializer}
 	from "./utils/fileExtensions";
 import { exampleSetup } from "prosemirror-example-setup";
 import {processInputFile} from "../../processors";
-import { getNonce } from '../../core/nonce';
+import { getNonce, getWebviewRootUri } from '../../core/nonce';
 
 
 /**
  * Provider for cat scratch editors.
- * 
+ *
  * Cat scratch editors are used for `.cscratch` files, which are just json files.
  * To get started, run this extension and open an empty `.cscratch` file in VS Code.
- * 
+ *
  * This provider demonstrates:
- * 
+ *
  * - Setting up the initial webview for a custom editor.
  * - Loading scripts and styles in a custom editor.
  * - Synchronizing changes between a text document and a custom editor.
@@ -57,18 +57,21 @@ export class ProseMirrorEditorProvider implements vscode.CustomTextEditorProvide
 		let subscriptions: vscode.Disposable[] = [];
 		let lastVersion = document.version;
 
-		webviewPanel.webview.options = { enableScripts: true, };
+		webviewPanel.webview.options = {
+			enableScripts: true,
+			localResourceRoots: [getWebviewRootUri(this.context)]
+		};
 		webviewPanel.webview.html = this.getHtmlForWebview(webviewPanel.webview);
-		
+
 		webviewPanel.onDidChangeViewState((e) => {
 			// When user switches out of the editor, we sync the unsaved changes
-			// to the document, so they can be persisted on the next save. 
+			// to the document, so they can be persisted on the next save.
 			if (!e.webviewPanel.active){
 				this.updateTextDocument(document, editorState);
 			}
 		});
 
-		
+
 
 		function updateWebview() {
 			const text = processInputFile(document.getText());
@@ -86,7 +89,7 @@ export class ProseMirrorEditorProvider implements vscode.CustomTextEditorProvide
 		subscriptions.push(vscode.workspace.onWillSaveTextDocument(e => {
 			if (document.uri.toString() !== document.uri.toString()) { return; }
 			console.log('onWillSaveTextDocument:');
-			
+
 			if (document.version === lastVersion) {
 				this.updateTextDocument(document, editorState);
 			}
@@ -102,7 +105,7 @@ export class ProseMirrorEditorProvider implements vscode.CustomTextEditorProvide
 			if (e.document.uri.toString() !== document.uri.toString()) { return; }
 			console.log('onDidChangeTextDocument');
 
-			// Only update the webview if the document is view is not active. 
+			// Only update the webview if the document is view is not active.
 			// The change might come from the active editor, so we don't want to enter
 			// an infinite loop of updating the webview and applying the change.
 			//
@@ -124,21 +127,21 @@ export class ProseMirrorEditorProvider implements vscode.CustomTextEditorProvide
 				case 'update':
 					try {
 						console.log('Received update content');
-						
+
 						var transaction = editorState.tr;
-						for (let i = 0; i < e.text.length; i++) {						
+						for (let i = 0; i < e.text.length; i++) {
 							transaction.step(Step.fromJSON(schema, e.text[i]));
 						};
 
 						editorState = editorState.apply(transaction);
 
 						// This is a time consumig operation, so we can't run it on each
-						// small change. We only update the document once, if it's not dirty, 
-						// to make sure sure that the default vscode save prompt is triggered on close. 
+						// small change. We only update the document once, if it's not dirty,
+						// to make sure sure that the default vscode save prompt is triggered on close.
 						// TODO: find a differet way to mark document as dirty?
 						//
 						// The actual document sync happends on willSaveTextDocument.
-			
+
 						if (!document.isDirty) {
 							this.updateTextDocument(document, editorState);
 						}
@@ -160,11 +163,8 @@ export class ProseMirrorEditorProvider implements vscode.CustomTextEditorProvide
 	 */
 	private getHtmlForWebview(webview: vscode.Webview): string {
 		// Local path to script and css for the webview
-		const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(
-			this.context.extensionUri, 'dist', 'browser', 'proseMirrorClient.js'));
-			
-		const styleMainUri = webview.asWebviewUri(vscode.Uri.joinPath(
-			this.context.extensionUri,'dist', 'browser', 'proseMirrorClient.css'));
+		const scriptUri = webview.asWebviewUri(getWebviewRootUri(this.context, 'proseMirrorClient.js'));
+		const styleMainUri = webview.asWebviewUri(getWebviewRootUri(this.context, 'proseMirrorClient.css'));
 
 		// Use a nonce to whitelist which scripts can be run
 		const nonce = getNonce();
