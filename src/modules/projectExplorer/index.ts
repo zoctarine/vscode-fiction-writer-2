@@ -6,6 +6,7 @@ import {ProjectsOptions} from "./projectsOptions";
 import {Disposable} from "vscode";
 import {DisposeManager} from "../../core/disposable";
 import * as logger from "../../core/logger";
+import {addCommand} from '../../core';
 
 const log = logger.makeLog("[ProjectsModule]", "red");
 class ProjectsModule extends DisposeManager {
@@ -23,9 +24,17 @@ class ProjectsModule extends DisposeManager {
         this.fileManager = new FwFileManager(this.options);
         this.projectExplorerDataProvider = new ProjectExplorerTreeDataProvider(this.fileManager);
 
+
+
         this.manageDisposable(
             this.fileManager,
-            this.projectExplorerDataProvider);
+            this.projectExplorerDataProvider,
+            addCommand('projectExplorerView.reload', () => {
+                this.projectExplorerDataProvider?.reload();
+            }),
+            addCommand('projectExplorerView.commit', () => {
+                this.projectExplorerDataProvider?.commit();
+            }));
     };
 
     deactivate(): void {

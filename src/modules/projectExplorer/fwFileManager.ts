@@ -4,8 +4,11 @@ import {FwFile, FwFileInfo, Regex} from "../../core/fileNameManager";
 import * as path from "path";
 import {ProjectsOptions} from './projectsOptions';
 import {DisposeManager} from '../../core';
+import {glob} from 'glob';
+import fs from 'node:fs';
 
-export const asPosix = (mixedPath:string) => mixedPath.split(path.sep).join(path.posix.sep);
+
+export const asPosix = (mixedPath: string) => path.posix.normalize(mixedPath.split(path.sep).join(path.posix.sep));
 
 
 interface File {
@@ -17,7 +20,6 @@ export class FwFileManager extends DisposeManager {
     private readonly _fileRegex: RegExp;
     private readonly _fileGlobpattern: string;
     private readonly _fileExtensions: string[];
-    public files: FwFileInfo[] = [];
 
     constructor(private _options: ProjectsOptions) {
         super();
@@ -44,14 +46,27 @@ export class FwFileManager extends DisposeManager {
         }
     }
 
+
     public async loadFiles(): Promise<FwFileInfo[]> {
-        this.files = [];
-        const allFiles = await vscode.workspace.findFiles(this._fileGlobpattern);
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        if (!workspaceFolders) {
+            return [];
+        }
         const files: FwFileInfo[] = [];
-        allFiles.forEach((file) => {
-            files.push(FwFileInfo.parse(asPosix(file.fsPath), this._fileExtensions));
-        });
-        this.files = files;
+
+        for (const folder of workspaceFolders) {
+            const dirs = await glob(`**/**`, {cwd: folder.uri.fsPath, absolute: true});
+            await Promise.all(dirs.map(async (file) => {
+                try {
+                    const stat = await fs.promises.stat(file);
+                    files.push(
+                        FwFileInfo.parse(asPosix(file), this._fileExtensions, stat.isDirectory()));
+                } catch (err) {
+                    console.error(err);
+                }
+            }));
+        }
+
         return [...files.map(f => ({...f}))];
     }
 }

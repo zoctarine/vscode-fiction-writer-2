@@ -12,7 +12,7 @@ export class FwFile {
     public static fixedGap = 10000;
     public static maxPad = 20;
     public static radix = 10;
-    public static nameRegExp = /^([a-zA-Z0-9]+)(?:__)(.*)$/ig;
+    public static nameRegExp = /^([a-zA-Z0-9]+)(?:__)(.*)$/i;
 }
 
 export class FwFileInfo {
@@ -21,22 +21,27 @@ export class FwFileInfo {
     public name: string = "";
     public ext: string = "";
     public order: number = 0;
+    public isDir: boolean = false;
 
-    public static parse(fsPath: string, knownExtension:string[]): FwFileInfo {
+    public static parse(fsPath: string, knownExtension:string[], isDirectory?: boolean): FwFileInfo {
         const result = new FwFileInfo();
         const parsed = path.parse(fsPath);
         result.id = fsPath;
         result.location = parsed.dir;
+        result.isDir = isDirectory || false;
+
         const groups = FwFile.nameRegExp.exec(parsed.name);
+
         if (groups) {
             result.order = parseInt(groups[1], FwFile.radix);
             result.name = groups[2];
+
         } else {
             result.order = 0;
             result.name = parsed.name;
         }
-        result.ext = parsed.ext;
 
+        result.ext = parsed.ext;
         let fullName = result.name+result.ext;
         // sort descending by length so we can match the longest extension first
         knownExtension.sort((a,b)=>b.length-a.length);
