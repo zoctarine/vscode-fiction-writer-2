@@ -11,8 +11,12 @@ import * as path from "path";
 export class FwFile {
     public static fixedGap = 10000;
     public static maxPad = 20;
-    public static radix = 10;
+    public static pad = 5;
+    public static radix = 36;
     public static nameRegExp = /^([a-zA-Z0-9]+)(?:__)(.*)$/i;
+
+    public static  orderNameRegExp = /^((?:\[[a-zA-Z0-9]+\])+)(?: )(.*)$/i;
+    public static orderRegExp = /\[([a-zA-Z0-9]+)\]/gi;
 }
 
 export class FwFileInfo {
@@ -21,6 +25,7 @@ export class FwFileInfo {
     public name: string = "";
     public ext: string = "";
     public order: number = 0;
+    public parentOrder: number[] = [];
     public isDir: boolean = false;
 
     public static parse(fsPath: string, knownExtension:string[], isDirectory?: boolean): FwFileInfo {
@@ -30,10 +35,19 @@ export class FwFileInfo {
         result.location = parsed.dir;
         result.isDir = isDirectory || false;
 
-        const groups = FwFile.nameRegExp.exec(parsed.name);
-
+        const groups = FwFile.orderNameRegExp.exec(parsed.name);
         if (groups) {
-            result.order = parseInt(groups[1], FwFile.radix);
+            const tmpOrders = groups[1].matchAll(FwFile.orderRegExp);
+            if (tmpOrders){
+                const orders = Array.from(tmpOrders).map(a => parseInt(a[1], FwFile.radix));
+                result.order = orders[orders.length-1];
+                orders.splice(-1, 1);
+                result.parentOrder = [...orders];
+            } else {
+                result.order = 0;
+                result.parentOrder = [];
+            }
+
             result.name = groups[2];
 
         } else {

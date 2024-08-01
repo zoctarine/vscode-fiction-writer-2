@@ -1,9 +1,9 @@
 import * as vscode from "vscode";
+import {Disposable} from "vscode";
 
-import {ProjectExplorerTreeDataProvider} from "./projectExplorerTreeDataProvider";
+import {Node, NodeType, ProjectExplorerTreeDataProvider} from "./projectExplorerTreeDataProvider";
 import {FwFileManager} from "./fwFileManager";
 import {ProjectsOptions} from "./projectsOptions";
-import {Disposable} from "vscode";
 import {DisposeManager} from "../../core/disposable";
 import * as logger from "../../core/logger";
 import {addCommand} from '../../core';
@@ -29,6 +29,9 @@ class ProjectsModule extends DisposeManager {
         this.manageDisposable(
             this.fileManager,
             this.projectExplorerDataProvider,
+            addCommand('projectExplorerView.toVirtualFolder', (node: Node)=>{
+               this.projectExplorerDataProvider?.makeVirtualFolder(node);
+            }),
             addCommand('projectExplorerView.reload', () => {
                 this.projectExplorerDataProvider?.reload();
             }),

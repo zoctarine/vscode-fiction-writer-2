@@ -11,11 +11,6 @@ import fs from 'node:fs';
 export const asPosix = (mixedPath: string) => path.posix.normalize(mixedPath.split(path.sep).join(path.posix.sep));
 
 
-interface File {
-    name: string;
-    path: string;
-}
-
 export class FwFileManager extends DisposeManager {
     private readonly _fileRegex: RegExp;
     private readonly _fileGlobpattern: string;
@@ -68,5 +63,6 @@ export class FwFileManager extends DisposeManager {
         }
 
         return [...files.map(f => ({...f}))];
+
     }
 }

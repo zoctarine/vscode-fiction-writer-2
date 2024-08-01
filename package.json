@@ -83,11 +83,32 @@
           "fontCharacter": "\\f01c"
         }
       },
+      "fa-file-lines-solid": {
+        "description": "file-lines-solid",
+        "default": {
+          "fontPath": "./media/fonts/fa-solid-900.woff2",
+          "fontCharacter": "\\f15c"
+        }
+      },
+      "fa-file-excel": {
+        "description": "file-circle-question",
+        "default": {
+          "fontPath": "./media/fonts/fa-solid-900.woff2",
+          "fontCharacter": "\\f1c3"
+        }
+      },
       "fa-file-lines": {
         "description": "file-lines",
         "default": {
           "fontPath": "./media/fonts/fa-regular-400.woff2",
           "fontCharacter": "\\f15c"
+        }
+      },
+      "fa-copy": {
+        "description": "copy",
+        "default": {
+          "fontPath": "./media/fonts/fa-regular-400.woff2",
+          "fontCharacter": "\\f0c5"
         }
       },
       "fa-folder": {
@@ -150,6 +171,13 @@
           "when": "view == projectExplorerView",
           "group": "navigation"
         }
+      ],
+      "view/item/context": [
+        {
+          "command": "fiction-writer.projectExplorerView.toVirtualFolder",
+          "when": "view == projectExplorerView",
+          "group": "fictionWriter"
+        }
       ]
     },
     "commands": [
@@ -180,6 +208,12 @@
         "title": "Update file order on disk",
         "category": "FictionWriter",
         "icon": "$(save-all)"
+      },
+      {
+        "command": "fiction-writer.projectExplorerView.toVirtualFolder",
+        "title": "Make virtual folder",
+        "category": "FictionWriter",
+        "icon": "$(folder)"
       }
     ],
     "customEditors": [
