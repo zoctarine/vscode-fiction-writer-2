@@ -1,15 +1,14 @@
 import * as vscode from "vscode";
-import {Disposable} from "vscode";
-import {FwFile, FwFileInfo, Regex} from "../../core/fileNameManager";
+import {FwFile, Regex} from "./fwFile";
 import * as path from "path";
-import {ProjectsOptions} from './projectsOptions';
-import {DisposeManager} from '../../core';
+import {ProjectsOptions} from '../modules/projectExplorer/projectsOptions';
+import {DisposeManager} from './index';
 import {glob} from 'glob';
 import fs from 'node:fs';
+import {FwFileInfo} from './fwFileInfo';
 
 
 export const asPosix = (mixedPath: string) => path.posix.normalize(mixedPath.split(path.sep).join(path.posix.sep));
-
 
 export class FwFileManager extends DisposeManager {
     private readonly _fileRegex: RegExp;
@@ -37,10 +36,9 @@ export class FwFileManager extends DisposeManager {
 
     private onFilesChanged(e: vscode.Uri): void {
         if (this.isFwFile(e.fsPath)) {
-            this.loadFiles().then(f => console.log(f.map(f => f)));
+            this.loadFiles();
         }
     }
-
 
     public async loadFiles(): Promise<FwFileInfo[]> {
         const workspaceFolders = vscode.workspace.workspaceFolders;
@@ -64,5 +62,32 @@ export class FwFileManager extends DisposeManager {
 
         return [...files.map(f => ({...f}))];
 
+    }
+
+    public renameFile(oldPath: string, newPath: string): Promise<void> {
+        return new Promise((resolve, reject) => {
+            if (!fs.existsSync(oldPath) || fs.existsSync(newPath)) {
+                console.log(`Rename: File does not need moving: ${oldPath} -> ${newPath}`);
+                resolve();
+            } else {
+                console.log("Rename: ", [oldPath, newPath]);
+                vscode.workspace.fs.rename(vscode.Uri.parse(oldPath), vscode.Uri.parse(newPath),{
+                    overwrite: false,
+                }).then(resolve, reject);
+            }
+        });
+    }
+
+    public async batchRenameFiles(renameMap: { oldPath: string, newPath: string }[]) {
+        renameMap.sort((a, b) => a.oldPath > b.oldPath ? 1 : a.oldPath === b.oldPath ? 0 : -1);
+        for (const { oldPath, newPath } of renameMap) {
+            try {
+                await this.renameFile(oldPath, newPath);
+            } catch(err){
+                console.error(err);
+                vscode.window.showErrorMessage(`Error renaming file: ${oldPath} -> ${newPath}`);
+                break;
+            }
+        }
     }
 }

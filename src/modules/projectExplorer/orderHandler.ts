@@ -2,15 +2,6 @@ interface Entry {
     id: string;
     order: number;
 }
-export class Parsing {
-    public static toBase36(number: number) {
-        return number.toString(36).toUpperCase();
-    }
-
-    public static fromBase36(base36Str: string) {
-        return parseInt(base36Str, 36);
-    }
-}
 
 export class OrderHandler {
     public static toBase36(number: number) {

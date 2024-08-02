@@ -174,8 +174,13 @@
       ],
       "view/item/context": [
         {
-          "command": "fiction-writer.projectExplorerView.toVirtualFolder",
-          "when": "view == projectExplorerView",
+          "command": "fiction-writer.projectExplorerView.makeVirtualFolder",
+          "when": "view == projectExplorerView && viewItem == file",
+          "group": "fictionWriter"
+        },
+        {
+          "command": "fiction-writer.projectExplorerView.breakVirtualFolder",
+          "when": "view == projectExplorerView && viewItem == virtualFolder",
           "group": "fictionWriter"
         }
       ]
@@ -210,8 +215,14 @@
         "icon": "$(save-all)"
       },
       {
-        "command": "fiction-writer.projectExplorerView.toVirtualFolder",
+        "command": "fiction-writer.projectExplorerView.makeVirtualFolder",
         "title": "Make virtual folder",
+        "category": "FictionWriter",
+        "icon": "$(folder)"
+      },
+      {
+        "command": "fiction-writer.projectExplorerView.breakVirtualFolder",
+        "title": "Break virtual folder",
         "category": "FictionWriter",
         "icon": "$(folder)"
       }
