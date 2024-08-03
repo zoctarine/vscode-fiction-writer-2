@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import {ThemeIcon} from 'vscode';
+import {ThemeColor, ThemeIcon} from 'vscode';
 import {OrderHandler} from "./orderHandler";
 import {asPosix, FwFileManager} from "../../core/fwFileManager";
 import * as path from 'path';
@@ -90,13 +90,14 @@ export class ProjectExplorerTreeDataProvider extends DisposeManager implements v
                 fileInfo.parentOrder.forEach((order, index) => {
                     if (!cursor) return;
 
-                    const orderId = order.toString();
                     let node = [...cursor.children?.values()??[]].find(a=>a.order === order);
                     if (!node){
-                        node = new Node(orderId);
+                        const parentOrders = fileInfo.parentOrder.slice(0, index + 1).map(a => FwFile.toOrderString(a));
+                        const name = path.posix.join(fileInfo.location, parentOrders.join('') + ` new${fileInfo.ext}`);
+                        node = new Node(name);
                         node.parent = cursor;
-                        node.name =  "?";
-                        node.description = "";
+                        node.name =  " ";
+                        node.description = "[missing file]";
                         node.order = order;
                         node.fsName = "";
                         cursor?.children?.set(node.id, node);
@@ -126,23 +127,29 @@ export class ProjectExplorerTreeDataProvider extends DisposeManager implements v
         let icon: string | undefined = FaIcons.fileLines;
         let label = element.name;
         let description = element.description;
-        if (element.type === NodeType.VirtualFolder) {
-            icon = element.fsName
+        let color = 'foreground';
+        switch (element.type) {
+            case NodeType.VirtualFolder:
+                icon = element.fsName
                     ? FaIcons.fileLinesSolid
                     : FaIcons.fileExcel;
-        }
-        if (element.type === NodeType.Folder) {
-            icon = FaIcons.folder;
-        }
-        if (element.type === NodeType.WorkspaceFolder) {
-            icon = FaIcons.inbox;
-            label = `[${label}]`;
-            description = "";
-        }
-        if (element.type === NodeType.Root) {
-            icon = "root-folder";
-            label = "/";
-            description = "";
+                color = element.fsName
+                    ?'foreground'
+                    :'disabledForeground';
+                break;
+            case NodeType.Folder:
+                icon = FaIcons.folder;
+                break;
+            case NodeType.WorkspaceFolder:
+                icon = FaIcons.inbox;
+                label = `[${label}]`;
+                description = "";
+                break;
+            case NodeType.Root:
+                icon = "root-folder";
+                label = "/";
+                description = "";
+                break;
         }
 
         return {
@@ -152,7 +159,7 @@ export class ProjectExplorerTreeDataProvider extends DisposeManager implements v
             },
             description: description,
             tooltip,
-            iconPath: icon ? new ThemeIcon(icon) : "",
+            iconPath: icon ? new ThemeIcon(icon, new ThemeColor(color)) : "",
             collapsibleState: element?.type === NodeType.File
                 ? (element?.children?.size ?? 0 > 0 ?  vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.None)
                 : vscode.TreeItemCollapsibleState.Expanded,

@@ -43,7 +43,7 @@ export class Node {
     }
 
     public buildFsName(): string {
-        return `[${this.order.toString(FwFile.radix).padStart(FwFile.pad, '0')}] ${this.name}${this.ext}`;
+        return `${FwFile.toOrderString(this.order)} ${this.name}${this.ext}`;
     }
 
     public buildFsPath(): string {
@@ -52,7 +52,7 @@ export class Node {
         while (cursor && cursor?.type !== NodeType.WorkspaceFolder) {
             if (cursor.type === NodeType.VirtualFolder) {
                 const prev=segments[segments.length - 1];
-                segments[segments.length - 1] = `[${cursor.order.toString(FwFile.radix).padStart(FwFile.pad, '0')}]`+prev;
+                segments[segments.length - 1] = FwFile.toOrderString(cursor.order)+prev;
             } else {
                 if (cursor) segments.push(cursor.buildFsName());
             }

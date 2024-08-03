@@ -50,6 +50,13 @@
             "default": true,
             "description": "Enable Projects"
           },
+          "fictionWriter.projects.folderName": {
+            "order": 10,
+            "type": "string",
+            "default": "Draft",
+            "markdownDescription": "The name of the folder storing the project files. Leave empty if you want all the files in the workspace to be considered as project files."
+          },
+
           "fictionWriter.projects.fileTypes": {
             "order": 20,
             "type": "array",
@@ -64,7 +71,7 @@
               "usesOnlineServices"
             ],
             "markdownDescription": "What file extensions should be considered as project files. (eg. `md` for `.md` files.)"
-          }
+            }
         }
       }
     ],
@@ -258,6 +265,12 @@
         }
       ]
     },
+    "viewsWelcome": [
+      {
+        "view": "projectExplorerView",
+        "contents": "You have not yet opened a folder.\n[Open Folder](command:vscode.openFolder)\n\n[Learn more](https://code.visualstudio.com) about how projects are handled by Fiction Writer."
+      }
+    ],
     "views": {
       "explorer": [
         {

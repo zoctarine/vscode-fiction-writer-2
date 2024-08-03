@@ -15,5 +15,9 @@ export class FwFile {
 
     public static orderNameRegExp = /^((?:\[[a-zA-Z0-9]+\])+)(?: )(.*)$/i;
     public static orderRegExp = /\[([a-zA-Z0-9]+)\]/gi;
+
+    public static toOrderString(order: number) {
+        return `[${order.toString(FwFile.radix).toLowerCase().padStart(FwFile.pad, '0')}]`;
+    }
 }
 
