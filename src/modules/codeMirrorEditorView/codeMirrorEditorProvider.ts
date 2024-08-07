@@ -4,7 +4,7 @@ import { getNonce, getWebviewRootUri } from '../../core/nonce';
 import { ChangeSet, EditorState } from '@codemirror/state';
 
 export class CodeMirrorEditorProvider implements vscode.CustomTextEditorProvider {
-	private static readonly viewType = 'fictionWriter2.codeMirrorEditor';
+	private static readonly viewType = 'fictionWriter.editors.codeMirror';
 
 	public static register(context: vscode.ExtensionContext): vscode.Disposable {
 		const provider = new CodeMirrorEditorProvider(context);

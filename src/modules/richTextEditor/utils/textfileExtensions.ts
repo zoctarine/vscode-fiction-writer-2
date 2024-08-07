@@ -17,7 +17,7 @@ class TextFileParser {
 					nodes.push(schema.nodes.paragraph.create(null, null));
 				}
 			});
-			
+
 			return schema.nodes.doc.create({}, nodes)!;
 		} catch (ex) {
 			throw ex;
@@ -29,9 +29,9 @@ class TextFileSerializer {
 	public serialize(content: Node): string {
 		let result = "";
 		content.forEach(node => {
-			result += node.textContent + 
-			node.isBlock ? "\n" : "";
-		
+			result += node.textContent +
+			node ? "" : "";
+
 		});
 
 		return result;

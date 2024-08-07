@@ -7,4 +7,5 @@ export const FaIcons = {
     fileExcel: 'fa-file-excel',
     folder: 'fa-folder',
     inbox: 'fa-inbox',
-}
+    trashCan: 'fa-trash-can'
+};

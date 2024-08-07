@@ -6,14 +6,15 @@ export class ProjectsOptions extends Options {
     public enabled = this.valueOf('enabled', true, true);
     public fileTypes = this.valueOf('fileTypes', ['md']);
     public sorting = this.valueOf('sorting', 'order');
-    public folderName = this.valueOf('folderName', 'Draft');
+    public rootFoldersEnabled = this.valueOf('rootFoldersEnabled', true, true);
+    public rootFolderNames = {
+        draft: 'draft',
+        trash: '.trash',
+        notes: '.notes'
+    };
     // sort files and folders (mixed), set explorer:sortOrder to mixed
     // sort files or folders separately, set explorer:sortOrder to foldersNestedFiles
-    // sort only files (do not sort folders)
-    // [x] use virtual folders... add virtual path in front of document [...]
     // max depth of virtual folders
-    // max depth of folders
-    // use radix 10 (longer names), 36 (shorter names)
     constructor() {
         super(ProjectsOptions.SectionName);
 

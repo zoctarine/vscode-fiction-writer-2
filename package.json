@@ -19,10 +19,10 @@
       {
         "title": "Editors",
         "properties": {
-          "fictionWriter.editors.enableAltRichTextEditor": {
+          "fictionWriter.editors.richTextEditor.enabled": {
             "type": "boolean",
             "default": true,
-            "description": "Enables a rich text editor for markdown files (based on ProseMirror).",
+            "markdownDescription": "Enables an experimental rich text editor (based on [ProseMirror](https://prosemirror.net/)).",
             "order": 1
           },
           "fictionWriter.editors.enableAltMarkdownEditor": {
@@ -50,13 +50,6 @@
             "default": true,
             "description": "Enable Projects"
           },
-          "fictionWriter.projects.folderName": {
-            "order": 10,
-            "type": "string",
-            "default": "Draft",
-            "markdownDescription": "The name of the folder storing the project files. Leave empty if you want all the files in the workspace to be considered as project files."
-          },
-
           "fictionWriter.projects.fileTypes": {
             "order": 20,
             "type": "array",
@@ -71,11 +64,41 @@
               "usesOnlineServices"
             ],
             "markdownDescription": "What file extensions should be considered as project files. (eg. `md` for `.md` files.)"
-            }
+          },
+          "fictionWriter.projects.rootFoldersEnabled": {
+            "order": 25,
+            "type": "boolean",
+            "default": true,
+            "description": "Enable Root Folders inside Projects"
+          }
+        }
+      },
+      {
+        "title": "Text Analysis",
+        "properties": {
+          "fictionWriter.textAnalysis.enabled": {
+            "order": 1,
+            "type": "boolean",
+            "default": true,
+            "description": "Enable Text Analysis"
+          },
+          "fictionWriter.textAnalysis.autoRefreshWhenPossible": {
+            "order": 2,
+            "type": "boolean",
+            "default": true,
+            "description": "Refreshes the text analysis when active editor changes, or analysis panel visibility changes."
+          }
         }
       }
     ],
     "icons": {
+      "fa-trash-can": {
+        "description": "trash-can",
+        "default": {
+          "fontPath": "./media/fonts/fa-regular-400.woff2",
+          "fontCharacter": "\\f2ed"
+        }
+      },
       "fa-book": {
         "description": "book",
         "default": {
@@ -146,98 +169,226 @@
           "fontCharacter": "\\f5ad"
         }
       },
-      "fa-markdown": {
-        "description": "Markdown icon",
+      "fa-folder-tree": {
+        "description": "folder-tree",
         "default": {
-          "fontPath": "./media/fonts/fa-regular-400.woff2",
-          "fontCharacter": "\\f044"
+          "fontPath": "./media/fonts/fa-solid-900.woff2",
+          "fontCharacter": "\\f802"
+        }
+      },
+      "fa-chart-column": {
+        "description": "chart-column",
+        "default": {
+          "fontPath": "./media/fonts/fa-solid-900.woff2",
+          "fontCharacter": "\\e0e3"
         }
       }
     },
     "menus": {
       "editor/title": [
         {
-          "when": "resourceLangId == markdown && !activeCustomEditorId",
-          "command": "fiction-writer.proseMirror.openInProseMirror",
+          "when": "resourceLangId == markdown && !activeCustomEditorId && fictionWriter.editors.richTextEditor.enabled == true",
+          "command": "fictionWriter.editors.proseMirror.openInProseMirror",
           "group": "navigation"
         },
         {
           "when": "resourceLangId == markdown && !activeCustomEditorId",
-          "command": "fiction-writer.codeMirror.openInCodeMirror",
+          "command": "fictionWriter.editors.codeMirror.openInCodeMirror",
           "group": "navigation"
         }
       ],
       "view/title": [
         {
-          "command": "fiction-writer.projectExplorerView.reload",
-          "when": "view == projectExplorerView",
+          "command": "fictionWriter.views.projectExplorer.newFile",
+          "when": "view == fictionWriter.views.projectExplorer",
           "group": "navigation"
         },
         {
-          "command": "fiction-writer.projectExplorerView.commit",
-          "when": "view == projectExplorerView",
+          "command": "fictionWriter.views.projectExplorer.newFolder",
+          "when": "view == fictionWriter.views.projectExplorer",
+          "group": "navigation"
+        },
+        {
+          "command": "fictionWriter.views.projectExplorer.reload",
+          "when": "view == fictionWriter.views.projectExplorer",
+          "group": "navigation"
+        },
+        {
+          "command": "fictionWriter.views.projectExplorer.commit",
+          "when": "view == fictionWriter.views.projectExplorer",
+          "group": "navigation"
+        },
+        {
+          "command": "fictionWriter.views.wordFrequency.refresh",
+          "when": "view == fictionWriter.views.wordFrequency",
+          "group": "navigation"
+        },
+        {
+          "command": "fictionWriter.views.wordFrequency.clear",
+          "when": "view == fictionWriter.views.wordFrequency",
+          "group": "navigation"
+        },
+        {
+          "command": "fictionWriter.views.wordFrequency.open",
+          "when": "view == fictionWriter.views.wordFrequency",
+          "group": "navigation"
+        },
+        {
+          "command": "fictionWriter.views.statistics.refresh",
+          "when": "view == fictionWriter.views.statistics",
           "group": "navigation"
         }
       ],
       "view/item/context": [
         {
-          "command": "fiction-writer.projectExplorerView.makeVirtualFolder",
-          "when": "view == projectExplorerView && viewItem == file",
-          "group": "fictionWriter"
+          "command": "fictionWriter.views.projectExplorer.makeVirtualFolder",
+          "when": "view == fictionWriter.views.projectExplorer && viewItem == file",
+          "group": "1_fictionWriter_virtual@1"
         },
         {
-          "command": "fiction-writer.projectExplorerView.breakVirtualFolder",
-          "when": "view == projectExplorerView && viewItem == virtualFolder",
-          "group": "fictionWriter"
+          "command": "fictionWriter.views.projectExplorer.breakVirtualFolder",
+          "when": "view == fictionWriter.views.projectExplorer && viewItem == virtualFolder",
+          "group": "1_fictionWriter@2"
+        },
+        {
+          "command": "fictionWriter.views.projectExplorer.newFile",
+          "when": "view == fictionWriter.views.projectExplorer",
+          "group": "2_fictionWriter@3"
+        },
+        {
+          "command": "fictionWriter.views.projectExplorer.newFolder",
+          "when": "view == fictionWriter.views.projectExplorer",
+          "group": "2_fictionWriter@4"
+        },
+        {
+          "command": "fictionWriter.views.projectExplorer.rename",
+          "when": "view == fictionWriter.views.projectExplorer",
+          "group": "3_fictionWriter@4"
+        },
+        {
+          "command": "fictionWriter.views.projectExplorer.trash",
+          "when": "view == projectExplorerView",
+          "group": "3_fictionWriter@5"
+        },
+        {
+          "command": "fictionWriter.views.wordFrequency.next.down",
+          "when": "view == fictionWriter.views.wordFrequency && viewItem == wordStat",
+          "group": "inline"
+        },
+        {
+          "command": "fictionWriter.views.wordFrequency.next.up",
+          "when": "view == fictionWriter.views.wordFrequency && viewItem == wordStat",
+          "group": "inline"
         }
       ]
     },
     "commands": [
       {
-        "command": "fiction-writer-2.helloWorld",
-        "title": "Hello World"
-      },
-      {
-        "command": "fiction-writer.proseMirror.openInProseMirror",
+        "command": "fictionWriter.editors.proseMirror.openInProseMirror",
         "title": "Edit with ProseMirror Editor",
         "category": "FictionWriter",
         "icon": "$(fa-pen-nib)"
       },
       {
-        "command": "fiction-writer.codeMirror.openInCodeMirror",
+        "command": "fictionWriter.editors.codeMirror.openInCodeMirror",
         "title": "Edit with CodeMirror Editor",
         "category": "FictionWriter",
         "icon": "$(fa-pen)"
       },
       {
-        "command": "fiction-writer.projectExplorerView.reload",
+        "command": "fictionWriter.views.projectExplorer.newFile",
+        "title": "New File...",
+        "category": "FictionWriter",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "fictionWriter.views.projectExplorer.newFolder",
+        "title": "New Folder...",
+        "category": "FictionWriter",
+        "icon": "$(new-folder)"
+      },
+      {
+        "command": "fictionWriter.views.projectExplorer.rename",
+        "title": "Rename...",
+        "category": "FictionWriter",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "fictionWriter.views.projectExplorer.trash",
+        "title": "Move to Trash...",
+        "category": "FictionWriter",
+        "icon": "$(delete)"
+      },
+      {
+        "command": "fictionWriter.views.projectExplorer.reload",
         "title": "Refresh Project View",
         "category": "FictionWriter",
         "icon": "$(refresh)"
       },
       {
-        "command": "fiction-writer.projectExplorerView.commit",
+        "command": "fictionWriter.views.projectExplorer.commit",
         "title": "Update file order on disk",
         "category": "FictionWriter",
         "icon": "$(save-all)"
       },
       {
-        "command": "fiction-writer.projectExplorerView.makeVirtualFolder",
+        "command": "fictionWriter.views.projectExplorer.makeVirtualFolder",
         "title": "Make virtual folder",
         "category": "FictionWriter",
         "icon": "$(folder)"
       },
       {
-        "command": "fiction-writer.projectExplorerView.breakVirtualFolder",
+        "command": "fictionWriter.views.projectExplorer.breakVirtualFolder",
         "title": "Break virtual folder",
         "category": "FictionWriter",
         "icon": "$(folder)"
+      },
+      {
+        "command": "fictionWriter.views.wordFrequency.refresh",
+        "title": "Refresh Word Frequencies",
+        "icon": "$(refresh)",
+        "category": "Markdown Fiction Writer",
+        "when": "false"
+      },
+      {
+        "command": "fictionWriter.views.wordFrequency.open",
+        "category": "Markdown Fiction Writer",
+        "title": "Open Computed Document",
+        "icon": "$(go-to-file)"
+      },
+      {
+        "command": "fictionWriter.views.statistics.refresh",
+        "title": "Refresh Document Statistics",
+        "icon": "$(refresh)",
+        "category": "Markdown Fiction Writer",
+        "when": "false"
+      },
+      {
+        "command": "fictionWriter.views.wordFrequency.clear",
+        "title": "Clear",
+        "icon": "$(clear-all)",
+        "category": "Markdown Fiction Writer",
+        "when": "false"
+      },
+      {
+        "command": "fictionWriter.views.wordFrequency.next.up",
+        "title": "Select Previous",
+        "icon": "$(find-previous-match)",
+        "category": "Markdown Fiction Writer",
+        "when": "false"
+      },
+      {
+        "command": "fictionWriter.views.wordFrequency.next.down",
+        "title": "Select Next",
+        "icon": "$(find-next-match)",
+        "category": "Markdown Fiction Writer",
+        "when": "false"
       }
     ],
     "customEditors": [
       {
-        "viewType": "fictionWriter2.proseMirrorEditor",
-        "displayName": "ProseMirror Editor",
+        "viewType": "fictionWriter.editors.proseMirror",
+        "displayName": "Fiction Writer Editor",
         "selector": [
           {
             "filenamePattern": "*.md"
@@ -246,7 +397,7 @@
         "priority": "option"
       },
       {
-        "viewType": "fictionWriter2.codeMirrorEditor",
+        "viewType": "fictionWriter.editors.codeMirror",
         "displayName": "CodeMirror Editor",
         "selector": [
           {
@@ -259,31 +410,48 @@
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "project-explorer",
-          "title": "Fiction Writer",
-          "icon": "$(fa-markdown)"
+          "id": "fictionWriterProjectExplorer",
+          "title": "Project",
+          "icon": "$(fa-folder-tree)"
+        },
+        {
+          "id": "fictionWriterDocumentAnalysis",
+          "title": "Text Analysis",
+          "icon": "$(fa-chart-column)"
         }
       ]
     },
     "viewsWelcome": [
       {
-        "view": "projectExplorerView",
+        "view": "fictionWriter.views.projectExplorer",
         "contents": "You have not yet opened a folder.\n[Open Folder](command:vscode.openFolder)\n\n[Learn more](https://code.visualstudio.com) about how projects are handled by Fiction Writer."
       }
     ],
     "views": {
-      "explorer": [
+      "fictionWriterProjectExplorer": [
         {
-          "id": "metadataView",
-          "name": "Metadata"
-        }
-      ],
-      "project-explorer": [
-        {
-          "id": "projectExplorerView",
+          "id": "fictionWriter.views.projectExplorer",
           "name": "Project View",
           "icon": "$(book)",
           "when": "fictionWriter.projects.enabled == true"
+        },
+        {
+          "id": "fictionWriter.views.metadata",
+          "name": "Metadata"
+        }
+      ],
+      "fictionWriterDocumentAnalysis": [
+        {
+          "id": "fictionWriter.views.statistics",
+          "name": "Document Statistics",
+          "icon": "$(target)",
+          "when": "fictionWriter.textAnalysis.enabled == true"
+        },
+        {
+          "id": "fictionWriter.views.wordFrequency",
+          "name": "Word Frequencies",
+          "icon": "$(target)",
+          "when": "fictionWriter.textAnalysis.enabled == true"
         }
       ]
     }
@@ -305,6 +473,7 @@
   "devDependencies": {
     "@types/codemirror": "^5.60.15",
     "@types/glob": "^8.1.0",
+    "@types/js-yaml": "^4.0.9",
     "@types/markdown-it": "^14.1.1",
     "@types/mocha": "^10.0.7",
     "@types/node": "20.x",
@@ -333,6 +502,7 @@
     "@vscode/webview-ui-toolkit": "^1.4.0",
     "codemirror": "^6.0.1",
     "glob": "^11.0.0",
+    "js-yaml": "^4.1.0",
     "markdown-it": "*",
     "markdown-it-attrs": "^4.1.6",
     "prosemirror-example-setup": "^1.2.2",

@@ -1,4 +1,4 @@
-import {Node} from './node';
+import {Node, RootNode} from './node';
 import {NodeType} from './nodeType';
 import {FwFile} from '../../core';
 
@@ -6,7 +6,7 @@ export class NodeTree {
     public root: Node;
 
     constructor() {
-        this.root = new Node('root');
+        this.root = new RootNode()
     }
 
     public getSiblings(node: Node): Node[] {

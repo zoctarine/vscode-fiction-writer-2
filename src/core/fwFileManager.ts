@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import {FwFile, Regex} from "./fwFile";
+import {FwFile, RegEx} from "./fwFile";
 import * as path from "path";
 import {ProjectsOptions} from '../modules/projectExplorer/projectsOptions';
 import {DisposeManager} from './index';
@@ -14,19 +14,21 @@ export class FwFileManager extends DisposeManager {
     private readonly _fileRegex: RegExp;
     private readonly _fileGlobpattern: string;
     private readonly _fileExtensions: string[];
+    private readonly _onFilesChanged = new vscode.EventEmitter<FwFileInfo[]>();
+    private _silentUpdates = false;
 
     constructor(private _options: ProjectsOptions) {
         super();
         this._fileExtensions = this._options.fileTypes.value;
 
-        this._fileRegex = new RegExp(`\.(${this._fileExtensions.map(Regex.escape).join('|')})$`, 'gi');
+        this._fileRegex = new RegExp(`\.(${this._fileExtensions.map(RegEx.escape).join('|')})$`, 'i');
         this._fileGlobpattern = `**/*.{${this._fileExtensions.join(',')}}`;
 
         // We listen to all file changes, and filter on the handler. Might change later
         const watcher = vscode.workspace.createFileSystemWatcher('**/*.*');
         this.manageDisposable(
-            watcher.onDidCreate((f) => this.onFilesChanged(f)),
-            watcher.onDidDelete((f) => this.onFilesChanged(f)),
+            watcher.onDidCreate((f) => this._fileChangeHandler(f)),
+            watcher.onDidDelete((f) => this._fileChangeHandler(f)),
             watcher);
     }
 
@@ -34,10 +36,17 @@ export class FwFileManager extends DisposeManager {
         return this._fileRegex.test(fsPath);
     }
 
-    private onFilesChanged(e: vscode.Uri): void {
+    private _fileChangeHandler(e: vscode.Uri): void {
+        if (this._silentUpdates) return;
         if (this.isFwFile(e.fsPath)) {
-            this.loadFiles();
+
+            this.loadFiles()
+                .then((fi) => this._onFilesChanged.fire(fi));
         }
+    }
+
+    public get onFilesChanged() {
+        return this._onFilesChanged.event;
     }
 
     public async loadFiles(): Promise<FwFileInfo[]> {
@@ -48,12 +57,14 @@ export class FwFileManager extends DisposeManager {
         const files: FwFileInfo[] = [];
 
         for (const folder of workspaceFolders) {
-            const dirs = await glob(`**/**`, {cwd: folder.uri.fsPath, absolute: true});
+            const dirs = await glob(`**/**`, {cwd: folder.uri.fsPath, absolute: true, dot: false, ignore: ['**/.vscode/**']});
             await Promise.all(dirs.map(async (file) => {
                 try {
                     const stat = await fs.promises.stat(file);
-                    files.push(
-                        FwFileInfo.parse(asPosix(file), this._fileExtensions, stat.isDirectory()));
+                    const item = FwFileInfo.parse(asPosix(file), this._fileExtensions, stat.isDirectory());
+                    this._options.rootFolderNames
+
+                    files.push(item);
                 } catch (err) {
                     console.error(err);
                 }
@@ -67,11 +78,11 @@ export class FwFileManager extends DisposeManager {
     public renameFile(oldPath: string, newPath: string): Promise<void> {
         return new Promise((resolve, reject) => {
             if (!fs.existsSync(oldPath) || fs.existsSync(newPath)) {
-                console.log(`Rename: File does not need moving: ${oldPath} -> ${newPath}`);
+                // console.log(`Rename: File does not need moving: ${oldPath} -> ${newPath}`);
                 resolve();
             } else {
-                console.log("Rename: ", [oldPath, newPath]);
-                vscode.workspace.fs.rename(vscode.Uri.parse(oldPath), vscode.Uri.parse(newPath),{
+                // console.log("Rename: ", [oldPath, newPath]);
+                vscode.workspace.fs.rename(vscode.Uri.parse(oldPath), vscode.Uri.parse(newPath), {
                     overwrite: false,
                 }).then(resolve, reject);
             }
@@ -79,15 +90,39 @@ export class FwFileManager extends DisposeManager {
     }
 
     public async batchRenameFiles(renameMap: { oldPath: string, newPath: string }[]) {
+        this._silentUpdates = true;
         renameMap.sort((a, b) => a.oldPath > b.oldPath ? 1 : a.oldPath === b.oldPath ? 0 : -1);
-        for (const { oldPath, newPath } of renameMap) {
+        for (const {oldPath, newPath} of renameMap) {
             try {
                 await this.renameFile(oldPath, newPath);
-            } catch(err){
+            } catch (err) {
                 console.error(err);
                 vscode.window.showErrorMessage(`Error renaming file: ${oldPath} -> ${newPath}`);
                 break;
             }
         }
+        this._silentUpdates = false;
+        this.onFilesChanged.bind(await this.loadFiles());
+    }
+
+    public deleteFile(fsPath: string): Thenable<void> {
+        const uri = vscode.Uri.parse(fsPath);
+        if (this._options.rootFoldersEnabled.value === true) {
+            const trashFolder = this._options.rootFolderNames.trash;
+            const workspace = vscode.workspace.getWorkspaceFolder(uri);
+            if (workspace){
+                const trashPath = path.posix.join(workspace.uri.fsPath, trashFolder);
+                if (!fs.existsSync(trashPath)) {
+                    fs.mkdirSync(trashPath);
+                }
+                const file = path.posix.basename(fsPath);
+                const trashUri = vscode.Uri.parse(path.posix.join(trashPath, file));
+                return vscode.workspace.fs.rename(uri, trashUri, {overwrite: true}).then(() => {
+                    return;
+                });
+            }
+        }
+
+        return Promise.resolve();
     }
 }

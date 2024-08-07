@@ -1,6 +1,8 @@
 import path from 'path';
 import {FwFile} from './fwFile';
 
+
+
 export class FwFileInfo {
     public id: string = "";
     public location: string = "";
@@ -16,7 +18,10 @@ export class FwFileInfo {
         result.id = fsPath;
         result.location = parsed.dir;
         result.isDir = isDirectory || false;
-
+        // we do not support extensions on folders/directories
+        if (result.isDir) {
+            parsed.name = parsed.name + parsed.ext; parsed.ext = '';
+        }
         const groups = FwFile.orderNameRegExp.exec(parsed.name);
         if (groups) {
             const tmpOrders = groups[1].matchAll(FwFile.orderRegExp);

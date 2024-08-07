@@ -65,7 +65,7 @@ async function main() {
 
     const pmCtx = esbuild.context({
         ...buildOptions,
-        entryPoints: ['src/modules/proseMirrorEditorView/browser/proseMirrorClient.ts'],
+        entryPoints: ['src/modules/richTextEditor/browser/proseMirrorClient.ts'],
         outfile: 'dist/browser/proseMirrorClient.js',
     });
 

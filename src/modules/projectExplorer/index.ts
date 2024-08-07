@@ -9,12 +9,15 @@ import * as logger from "../../core/logger";
 import {addCommand} from '../../core';
 import {NodeType} from './nodeType';
 import {Node} from './node';
+import {StateManager} from '../../core/stateManager';
 
 const log = logger.makeLog("[ProjectsModule]", "red");
+
 class ProjectsModule extends DisposeManager {
     active = false;
     options = new ProjectsOptions();
     fileManager: FwFileManager | undefined;
+    stateManger!: StateManager;
     projectExplorerDataProvider: ProjectExplorerTreeDataProvider | undefined;
 
     constructor() {
@@ -24,58 +27,60 @@ class ProjectsModule extends DisposeManager {
     activate(): void {
         log.debug("activate");
         this.fileManager = new FwFileManager(this.options);
-        this.projectExplorerDataProvider = new ProjectExplorerTreeDataProvider(this.fileManager);
-
-
+        this.projectExplorerDataProvider = new ProjectExplorerTreeDataProvider(this.fileManager, this.stateManger);
 
         this.manageDisposable(
             this.fileManager,
             this.projectExplorerDataProvider,
-            addCommand('projectExplorerView.makeVirtualFolder', (node: Node)=>{
-               this.projectExplorerDataProvider?.makeVirtualFolder(node);
+            addCommand('views.projectExplorer.newFile', (node: Node) => {
+                this.projectExplorerDataProvider?.addFile(node);
             }),
-            addCommand('projectExplorerView.breakVirtualFolder', (node: Node)=>{
+            addCommand('views.projectExplorer.newFolder', (node: Node) => {
+                this.projectExplorerDataProvider?.addFolder(node);
+            }),
+            addCommand('views.projectExplorer.rename', (node: Node) => {
+                this.projectExplorerDataProvider?.rename(node);
+            }),
+            addCommand('views.projectExplorer.trash', (node: Node) => {
+                this.projectExplorerDataProvider?.delete(node);
+            }),
+            addCommand('views.projectExplorer.makeVirtualFolder', (node: Node) => {
                 this.projectExplorerDataProvider?.makeVirtualFolder(node);
             }),
-            addCommand('projectExplorerView.reload', () => {
+            addCommand('views.projectExplorer.breakVirtualFolder', (node: Node) => {
+                this.projectExplorerDataProvider?.makeVirtualFolder(node);
+            }),
+            addCommand('views.projectExplorer.reload', () => {
                 this.projectExplorerDataProvider?.reload();
             }),
-            addCommand('projectExplorerView.commit', () => {
+            addCommand('views.projectExplorer.commit', () => {
                 this.projectExplorerDataProvider?.commit();
             }));
     };
 
     deactivate(): void {
-        log.debug("deactivate");
-
-        this.disposeAndForget(this.projectExplorerDataProvider);
+        this.dispose();
         this.projectExplorerDataProvider = undefined;
-
-        this.disposeAndForget(this.fileManager);
         this.fileManager = undefined;
     };
 
-    private updateState(enabled: boolean){
-        console.log("[ProjectsModule.updateState]", `options.enabled: ${enabled}`);
-        if (enabled ) {
-            this.activate();
-        } else if (!enabled ) {
-            this.deactivate();
-        }
+    private updateState(enabled: boolean) {
+        return enabled
+            ? this.activate()
+            : this.deactivate();
     }
-    register(): vscode.Disposable {
 
+    register(stateManager: StateManager): vscode.Disposable {
+
+        this.stateManger = stateManager;
         this.options.enabled.onChanged((enabled) => {
-            console.log("[options.enabled.onChanged]",`to: ${enabled}`);
-           this.updateState(enabled);
+            console.log("[options.enabled.onChanged]", `to: ${enabled}`);
+            this.updateState(enabled);
         });
-
-        this.manageDisposable(
-            this.options);
 
         this.options.enabled.emit();
 
-        return Disposable.from(this);
+        return Disposable.from(this.options, this);
     }
 }
 
