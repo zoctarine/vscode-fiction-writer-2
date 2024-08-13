@@ -69,10 +69,10 @@ async function main() {
         outfile: 'dist/browser/proseMirrorClient.js',
     });
 
-    const hwCts = esbuild.context({
+    const metaCtx = esbuild.context({
         ...buildOptions,
-        entryPoints: ['src/_playground/main.mts'],
-        outfile: 'dist/browser/main.js',
+        entryPoints: ['src/modules/metadata/browser/metadataEditorClient.mts'],
+        outfile: 'dist/browser/metadataEditorClient.js',
     });
 
     if (watch) {
@@ -80,7 +80,7 @@ async function main() {
             mainCtx.then((ctx) => ctx.watch()),
             cmCtx.then((ctx) => ctx.watch()),
             pmCtx.then((ctx) => ctx.watch()),
-            hwCts.then((ctx) => ctx.watch()),
+            metaCtx.then((ctx) => ctx.watch()),
         ]);
     } else {
         // Rebuild both bundles
@@ -88,14 +88,14 @@ async function main() {
             mainCtx.then((ctx) => ctx.rebuild()),
             cmCtx.then((ctx) => ctx.rebuild()),
             pmCtx.then((ctx) => ctx.rebuild()),
-            hwCts.then((ctx) => ctx.rebuild()),
+            metaCtx.then((ctx) => ctx.rebuild()),
         ]);
 
         await Promise.all([
             mainCtx.then((ctx) => ctx.dispose()),
             cmCtx.then((ctx) => ctx.dispose()),
             pmCtx.then((ctx) => ctx.dispose()),
-            hwCts.then((ctx) => ctx.dispose()),
+            metaCtx.then((ctx) => ctx.dispose()),
         ]);
     }
 }

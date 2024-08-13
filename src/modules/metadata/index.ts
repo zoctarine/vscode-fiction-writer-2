@@ -1,28 +1,43 @@
 import * as vscode from "vscode";
 import {addCommand, DisposeManager, FileManager} from '../../core';
 import {StateManager} from '../../core/stateManager';
-import {fileManager}  from '../../core';
+import {fileManager} from '../../core';
 import {MetadataTreeDataProvider} from './metadataTreeDataProvider';
+import {MetadataOptions} from './metadataOptions';
+import {ExtensionContext} from 'vscode';
+import {MetadataTreeDecorationProvider} from './metadataDecoration';
+import {ProjectCache} from './cache';
+import {FwFileManager} from '../../core/fwFileManager';
+
+export * from './cache';
 
 class MetadataModule extends DisposeManager {
     active = false;
     stateManager: StateManager | undefined;
-    private fileManager: FileManager | undefined;
+    private fileManager: FwFileManager | undefined;
+    private context: ExtensionContext | undefined;
+    private options = new MetadataOptions();
+    private metadataTreeDataProvider: MetadataTreeDataProvider | undefined;
+    private metadataDecorationProvider: MetadataTreeDecorationProvider | undefined;
 
     constructor() {
         super();
     }
 
     activate(): void {
+        this.metadataTreeDataProvider = new MetadataTreeDataProvider(this.options);
+        this.metadataDecorationProvider = new MetadataTreeDecorationProvider();
         this.manageDisposable(
-            vscode.window.createTreeView('fictionWriter.views.metadata', {
-                treeDataProvider: new MetadataTreeDataProvider(this.fileManager)
+            this.metadataTreeDataProvider,
+            this.metadataTreeDataProvider.onDidChangeTreeData(() => {
+                this.metadataDecorationProvider?.file();
             })
         );
     };
 
     deactivate(): void {
         this.dispose();
+        this.metadataTreeDataProvider = undefined;
     };
 
     private updateState(enabled: boolean) {
@@ -31,12 +46,18 @@ class MetadataModule extends DisposeManager {
             : this.deactivate();
     }
 
-    register(stateManager: StateManager, fileManager: FileManager): vscode.Disposable {
+    register(context: ExtensionContext, stateManager: StateManager, fileManager: FwFileManager | undefined): vscode.Disposable {
         this.fileManager = fileManager;
         this.stateManager = stateManager;
-        this.updateState(true);
+        this.context = context;
 
-        return vscode.Disposable.from(this);
+        this.options.enabled.onChanged((enabled) => {
+            this.updateState(enabled);
+        });
+
+        this.options.enabled.emit();
+
+        return vscode.Disposable.from(this.options, this);
     }
 }
 

@@ -2,24 +2,29 @@ import path from 'path';
 import {FwFile} from './fwFile';
 
 
+export enum FwType {
+    Unknown,
+    File,
+    Folder,
+}
 
 export class FwFileInfo {
-    public id: string = "";
+    public fsPath: string = "";
     public location: string = "";
     public name: string = "";
     public ext: string = "";
     public order: number = 0;
     public parentOrder: number[] = [];
-    public isDir: boolean = false;
+    public type: FwType = FwType.Unknown;
 
     public static parse(fsPath: string, knownExtension: string[], isDirectory?: boolean): FwFileInfo {
         const result = new FwFileInfo();
         const parsed = path.parse(fsPath);
-        result.id = fsPath;
+        result.fsPath = fsPath;
         result.location = parsed.dir;
-        result.isDir = isDirectory || false;
+        result.type = isDirectory ? FwType.Folder : FwType.File;
         // we do not support extensions on folders/directories
-        if (result.isDir) {
+        if (result.type === FwType.Folder) {
             parsed.name = parsed.name + parsed.ext; parsed.ext = '';
         }
         const groups = FwFile.orderNameRegExp.exec(parsed.name);

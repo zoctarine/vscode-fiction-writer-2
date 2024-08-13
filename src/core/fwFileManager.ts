@@ -27,6 +27,7 @@ export class FwFileManager extends DisposeManager {
         // We listen to all file changes, and filter on the handler. Might change later
         const watcher = vscode.workspace.createFileSystemWatcher('**/*.*');
         this.manageDisposable(
+            watcher.onDidChange((f) => this._fileChangeHandler(f)),
             watcher.onDidCreate((f) => this._fileChangeHandler(f)),
             watcher.onDidDelete((f) => this._fileChangeHandler(f)),
             watcher);
@@ -40,6 +41,7 @@ export class FwFileManager extends DisposeManager {
         if (this._silentUpdates) return;
         if (this.isFwFile(e.fsPath)) {
 
+            // TODO: only load the changed file
             this.loadFiles()
                 .then((fi) => this._onFilesChanged.fire(fi));
         }
@@ -62,8 +64,6 @@ export class FwFileManager extends DisposeManager {
                 try {
                     const stat = await fs.promises.stat(file);
                     const item = FwFileInfo.parse(asPosix(file), this._fileExtensions, stat.isDirectory());
-                    this._options.rootFolderNames
-
                     files.push(item);
                 } catch (err) {
                     console.error(err);
@@ -72,7 +72,6 @@ export class FwFileManager extends DisposeManager {
         }
 
         return [...files.map(f => ({...f}))];
-
     }
 
     public renameFile(oldPath: string, newPath: string): Promise<void> {

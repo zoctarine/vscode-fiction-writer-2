@@ -5,6 +5,8 @@ export enum NodeType {
     Folder = "folder",
     VirtualFolder = "virtualFolder",
     WorkspaceFolder = "workspaceFolder",
+    Filter = "filter",
+    FilterRoot = "filterRoot"
 }
 
 export enum RootFolderType {

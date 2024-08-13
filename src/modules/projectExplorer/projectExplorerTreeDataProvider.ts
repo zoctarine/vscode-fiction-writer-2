@@ -6,33 +6,38 @@ import * as path from 'path';
 import {FwFile} from "../../core/fwFile";
 import {DisposeManager} from "../../core/disposable";
 import {NodeType} from './nodeType';
-import {Node, FileNode, FolderNode, VirtualFolderNode, WorkspaceFolderNode} from './node';
-import {NodeTree} from './nodeTree';
-import {FwFileInfo} from '../../core/fwFileInfo';
+import {NodeTree} from '../../core/tree/nodeTree';
+import {FwFileInfo, FwType} from '../../core/fwFileInfo';
 import {FaIcons} from '../../core';
 import {StateManager} from '../../core/stateManager';
+import {FwFilter} from '../filters/models/fwFilter';
+import {
+    FileNode,
+    FolderNode, ProjectNode,
+    RootNode,
+    WorkspaceFolderNode
+} from './projectNodes';
+import {ProjectItem} from './projectItem';
 
-export class ProjectExplorerTreeDataProvider extends DisposeManager implements vscode.TreeDataProvider<Node>, vscode.TreeDragAndDropController<Node> {
-    dropMimeTypes = ['application/vnd.code.tree.projectExplorerView'];
-    dragMimeTypes = ['application/vnd.code.tree.projectExplorerView'];
-    private _treeView: vscode.TreeView<Node>;
-    private _onDidChangeTreeData: vscode.EventEmitter<Node | undefined | null | void> = new vscode.EventEmitter<Node | undefined | null | void>();
+export class ProjectExplorerTreeDataProvider extends DisposeManager implements vscode.TreeDataProvider<ProjectNode>, vscode.TreeDragAndDropController<ProjectNode> {
+    dropMimeTypes = ['application/vnd.code.tree.projectexplorerview'];
+    dragMimeTypes = ['application/vnd.code.tree.projectexplorerview'];
+    private _treeView: vscode.TreeView<ProjectNode>;
+    private _onDidChangeTreeData: vscode.EventEmitter<ProjectNode | undefined | null | void> = new vscode.EventEmitter<ProjectNode | undefined | null | void>();
     // We want to use an array as the event type, but the API for this is currently being finalized. Until it's finalized, use any.
     public onDidChangeTreeData: vscode.Event<any> = this._onDidChangeTreeData.event;
-    public _tree: NodeTree;
+    public _tree: NodeTree<ProjectNode>;
     private _mixFoldersAndFiles = true;
-
 
     constructor(private _fileManager: FwFileManager, private _stateManager: StateManager) {
         super();
-        this._tree = new NodeTree();
+        this._tree = new NodeTree<ProjectNode>(new RootNode());
         this._treeView = vscode.window.createTreeView('fictionWriter.views.projectExplorer', {
             treeDataProvider: this,
             showCollapseAll: true,
             canSelectMany: false,
             dragAndDropController: this
         });
-
         this.reload();
 
         this.manageDisposable(
@@ -51,47 +56,66 @@ export class ProjectExplorerTreeDataProvider extends DisposeManager implements v
     }
 
 
-    private buildHierarchy(fileInfos: FwFileInfo[]): Node {
+    private buildHierarchy(fileInfos: FwFileInfo[]): ProjectNode {
         // sort results in order by id
-        fileInfos.sort((a, b) => a.id > b.id ? 1 : a.id === b.id ? 0 : -1);
+        fileInfos.sort((a, b) => a.fsPath > b.fsPath ? 1 : a.fsPath === b.fsPath ? 0 : -1);
 
         const workspaceFolders = vscode.workspace.workspaceFolders?.map(f => asPosix(f.uri.fsPath)) ?? [];
         fileInfos.forEach((fileInfo) => {
-            if (workspaceFolders.includes(fileInfo.id)) return;
+            if (workspaceFolders.includes(fileInfo.fsPath)) return;
 
-            const relativePath = vscode.workspace.asRelativePath(fileInfo.id, true);
+            const relativePath = vscode.workspace.asRelativePath(fileInfo.fsPath, true);
 
-            let basePath = fileInfo.id.replace(relativePath, "");
+            let basePath = fileInfo.fsPath.replace(relativePath, "");
 
             const segments = relativePath.split(path.posix.sep).filter(Boolean); // Split path into segments and remove any empty segments
             let current = this._tree.root;
-            current.fsName = basePath;
+            current.item.fsName = basePath;
             current.id = basePath;
 
             segments.forEach((segment, index) => {
+                let childAdded = false;
                 const tmpId = path.posix.join(current.id, segment);
 
-
                 if (!current.children?.has(tmpId)) {
-                    const isFile = index === segments.length - 1 && !fileInfo.isDir; // Mark as file if it's the last segment
-                    if (!isFile) basePath = path.posix.join(basePath, segment);
-                    let node = new FileNode(tmpId);
-                    if (!isFile && workspaceFolders.includes(basePath)) {
+                    const isLeaf = index === segments.length - 1;
+                    if (!isLeaf) basePath = path.posix.join(basePath, segment);
+                    let node:ProjectNode = new FileNode(tmpId);
+
+
+                    if (!isLeaf && workspaceFolders.includes(basePath)) {
                         node = new WorkspaceFolderNode(tmpId);
-                    } else if (!isFile) {
+                        node.item.description = '/';
+                        node.item.name = segment;
+                    } else if (!isLeaf) {
                         node = new FolderNode(tmpId);
+                        node.item.description = 'folder';
+                        node.item.name = segment;
+                    } else if (isLeaf){
+                        if (fileInfo.type === FwType.Folder) {
+                            node = new FileNode(tmpId);
+                            // Ignore filter folder names, they will be built in the Filter View
+                            if (FwFilter.isFilterFolderName(fileInfo.name)) {
+                               return;
+
+                            } else {
+                                node = new FolderNode(tmpId);
+                                node.item.name = fileInfo.name;
+                            }
+                        } else {
+                            node = new FileNode(tmpId);
+                            node.item.ext = fileInfo.ext;
+                            node.item.name = fileInfo.name;
+                        }
                     }
-
                     node.parent = current;
-                    node.name = index === segments.length - 1 ? fileInfo.name : segment;
-                    node.description = isFile ? fileInfo.ext : "folder";
-                    node.order = fileInfo.order;
-                    node.fsName = segment;
-                    node.ext = index === segments.length - 1 ? fileInfo.ext : "";
-
-                    current.children?.set(node.id, node);
+                    node.item.order = fileInfo.order;
+                    node.item.fsName = segment;
+                    if (!childAdded) {
+                        current.children?.set(node.id, node);
+                    }
                 }
-                current = current.children?.get(tmpId)!;
+                current = current.children?.get(tmpId) as ProjectNode;
             });
 
             if (fileInfo.parentOrder.length > 0 && current.type === NodeType.File) {
@@ -100,22 +124,23 @@ export class ProjectExplorerTreeDataProvider extends DisposeManager implements v
                 fileInfo.parentOrder.forEach((order, index) => {
                     if (!cursor) return;
 
-                    let node = [...cursor.children?.values() ?? []].find(a => a.order === order);
+                    let node = [...cursor.children?.values() ?? []].find(a => a.item.order === order);
                     if (!node) {
                         const parentOrders = fileInfo.parentOrder.slice(0, index + 1).map(a => FwFile.toOrderString(a));
                         const name = path.posix.join(fileInfo.location, parentOrders.join('') + ` new${fileInfo.ext}`);
                         node = new FileNode(name);
                         node.parent = cursor;
-                        node.name = " ";
-                        node.description = "[missing file]";
-                        node.order = order;
-                        node.fsName = "";
+                        node.item.name = " ";
+                        node.item.description = "[missing file]";
+                        node.item.order = order;
+                        node.item.fsName = "";
                         cursor?.children?.set(node.id, node);
                     }
 
                     cursor = node;
                     if (cursor) {
-                        cursor.convertTo(VirtualFolderNode);
+                     //   cursor.convertTo(VirtualFolderNode);
+                        cursor.type = NodeType.VirtualFolder;
                     }
                 });
 
@@ -127,25 +152,25 @@ export class ProjectExplorerTreeDataProvider extends DisposeManager implements v
         return this._tree.root;
     }
 
-    public getParent(element: Node): Node | undefined {
-        return element.parent;
+    public getParent(element: ProjectNode): ProjectNode | undefined {
+        return element.parent as ProjectNode;
     }
 
     // Tree data provider
-    public getChildren(element: Node): Node[] {
+    public getChildren(element: ProjectNode): ProjectNode[] {
         return this._tree.getChildren(element ? element.id : undefined);
     }
 
-    public getTreeItem(element: Node): vscode.TreeItem {
+    public getTreeItem(element: ProjectNode): vscode.TreeItem {
         const tooltip = new vscode.MarkdownString(`$(zap) Tooltip for ${element.id}`, true);
         const expanded = this._stateManager.get("tree_expanded_" + element.id, false);
 
         const item = {
             label: <any>{
-                label: element.name,
+                label: element.item.name,
                 highlights: []
             },
-            description: element.description,
+            description: element.item.description,
             tooltip,
             iconPath: new ThemeIcon(FaIcons.fileLines, new ThemeColor('foreground')),
             collapsibleState: element?.type === NodeType.File
@@ -163,25 +188,40 @@ export class ProjectExplorerTreeDataProvider extends DisposeManager implements v
         switch (element.type) {
             case NodeType.File:
                 item.iconPath = new ThemeIcon(FaIcons.fileLines);
-                item.description = element.description;
+                item.description = (element.item.description ?? "") + element.item.order;
                 break;
             case NodeType.VirtualFolder:
                 item.iconPath = new ThemeIcon(
-                    element.fsName
+                    element.item.fsName
                         ? FaIcons.fileLinesSolid
                         : FaIcons.fileExcel,
-                    new ThemeColor(element.fsName
+                    new ThemeColor(element.item.fsName
                         ? 'foreground'
                         : 'disabledForeground'));
+                item.description = (element.item.description ?? "") + element.item.order;
+
                 break;
             case NodeType.Folder:
-                item.iconPath = new ThemeIcon(element.name === '.trash'
+                item.iconPath = new ThemeIcon(element.item.name === '.trash'
                     ? FaIcons.trashCan : FaIcons.folder);
+                item.description = (element.item.description ?? "") + element.item.order;
+
                 break;
             case NodeType.WorkspaceFolder:
                 item.iconPath = new ThemeIcon(FaIcons.inbox);
-                item.label.label = `[${element.name}]`;
+                item.label.label = `[${element.item.name}]`;
                 item.description = "";
+
+                break;
+            case NodeType.Filter:
+                item.iconPath = new ThemeIcon(FaIcons.link);
+                item.label.label = '...';//`${element.name}`;
+                item.description = element.item.description;
+                break;
+            case NodeType.FilterRoot:
+                item.iconPath = new ThemeIcon(FaIcons.magnifyingGlass);
+                item.label.label = '...';//`${element.name}`;
+                item.description = element.item.description;
                 break;
             case NodeType.Root:
                 item.iconPath = new ThemeIcon("root-folder");
@@ -193,7 +233,7 @@ export class ProjectExplorerTreeDataProvider extends DisposeManager implements v
         return item;
     }
 
-    public makeVirtualFolder(node: Node): void {
+    public makeVirtualFolder(node: ProjectNode): void {
         if (node.type === NodeType.File) {
             node.type = NodeType.VirtualFolder;
             this._onDidChangeTreeData.fire();
@@ -209,20 +249,20 @@ export class ProjectExplorerTreeDataProvider extends DisposeManager implements v
         }
     }
 
-    public addFile(node: Node): void {
+    public addFile(node: ProjectNode): void {
         this._addNewChild(node ?? this._treeView.selection[0], NodeType.File);
     }
 
-    public addFolder(node: Node): void {
+    public addFolder(node: ProjectNode): void {
         this._addNewChild(node ?? this._treeView.selection[0], NodeType.Folder);
     }
 
-    public rename(node: Node): void {
+    public rename(node: ProjectNode): void {
         node = node ?? this._treeView.selection[0];
         if (node) {
-            vscode.window.showInputBox({prompt: 'Enter new name', value: node.name}).then((value) => {
+            vscode.window.showInputBox({prompt: 'Enter new name', value: node.item.name}).then((value) => {
                 if (value) {
-                    node.name = value;
+                    node.item.name = value;
                     this._fileManager.renameFile(node.id, node.buildFsPath()).then(() => {
                     });
                 }
@@ -230,7 +270,7 @@ export class ProjectExplorerTreeDataProvider extends DisposeManager implements v
         }
     }
 
-    public delete(node: Node): void {
+    public delete(node: ProjectNode): void {
         node = node ?? this._treeView.selection[0];
 
         if (node) {
@@ -238,16 +278,16 @@ export class ProjectExplorerTreeDataProvider extends DisposeManager implements v
         }
     }
 
-    private _addNewChild(node: Node | undefined, type: NodeType = NodeType.File): void {
+    private _addNewChild(node: ProjectNode | undefined, type: NodeType = NodeType.File): void {
         if (!node) return;
-        const newNode = new Node('new' + Math.random());
+        const newNode = new ProjectNode('new' + Math.random(), new ProjectItem());
         newNode.type = type;
-        newNode.name = "new";
-        newNode.ext = ".md";
+        newNode.item.name = "new";
+        newNode.item.ext = ".md";
 
         this._insert(newNode, node);
         newNode.id = newNode.buildFsPath();
-        newNode.fsName = newNode.buildFsName();
+        newNode.item.fsName = newNode.item.buildFsName();
         this._treeView.reveal(newNode, {select: true, focus: true, expand: true});
         if (type === NodeType.Folder) {
             vscode.workspace.fs.createDirectory(vscode.Uri.parse(newNode.id))
@@ -262,8 +302,8 @@ export class ProjectExplorerTreeDataProvider extends DisposeManager implements v
         }
     }
 
-    private _tryMoveToChildren(source: Node, dest?: Node): boolean {
-        if (!source?.isDraggable) return false; // cannot move the root)
+    private _tryMoveToChildren(source: ProjectNode, dest?: ProjectNode): boolean {
+        if (!source?.isDraggable) return false; // cannot move the root
         if (!dest?.parent) return false;  // cannot move a file to
         if (dest.id.startsWith(source.id)) return false; // cannot move into itself
 
@@ -277,8 +317,10 @@ export class ProjectExplorerTreeDataProvider extends DisposeManager implements v
     }
 
     // Drag and drop controller
-    public async handleDrop(target: Node | undefined, sources: vscode.DataTransfer, token: vscode.CancellationToken): Promise<void> {
-        const transferItem = sources.get('application/vnd.code.tree.projectExplorerView');
+    public async handleDrop(target: ProjectNode | undefined, sources: vscode.DataTransfer, token: vscode.CancellationToken): Promise<void> {
+        if (token.isCancellationRequested) return;
+
+        const transferItem = sources.get('application/vnd.code.tree.projectexplorerview');
         if (!transferItem) return; // nothing to drop
         const source = this._tree.getNode(transferItem.value[0]?.id ?? "");
         const dest = this._tree.getNode(target?.id ?? "");
@@ -286,7 +328,7 @@ export class ProjectExplorerTreeDataProvider extends DisposeManager implements v
         this.commit();
     }
 
-    private _insert(source?: Node, dest?: Node) {
+    private _insert(source?: ProjectNode, dest?: ProjectNode) {
         if (!source || !dest) return; // don't know what to move where
         if (!source.isDraggable) return; // cannot move
         if (source === dest) return; // no need to move
@@ -295,7 +337,7 @@ export class ProjectExplorerTreeDataProvider extends DisposeManager implements v
         if (dest.acceptsChild(source)) {
             if (!this._tryMoveToChildren(source, dest)) return;
         } else {
-            if (!this._tryMoveToChildren(source, dest.parent)) return;
+            if (!this._tryMoveToChildren(source, dest.parent as ProjectNode | undefined)) return;
         }
 
         // Reorder source siblings (wherever it ended up)
@@ -303,7 +345,7 @@ export class ProjectExplorerTreeDataProvider extends DisposeManager implements v
             ? this._tree.getSiblings(source)
             : this._tree.getMatchingSiblings(source);
         const siblings = items
-            .map(a => ({id: a.id, order: a.order}))
+            .map(a => ({id: a.id, order: a.item.order}))
             .sort((a, b) => a.order - b.order);
 
         new OrderHandler(siblings)
@@ -312,17 +354,46 @@ export class ProjectExplorerTreeDataProvider extends DisposeManager implements v
             .forEach(e => {
                 const item = this._tree.getNode(e.id);
                 if (item) {
-                    item.order = e.order;
+                    item.item.order = e.order;
                 }
             });
 
         this._onDidChangeTreeData.fire();
     }
 
-    public async handleDrag(source: Node[], treeDataTransfer: vscode.DataTransfer, token: vscode.CancellationToken): Promise<void> {
+    public reorderAll(){
+        this._reorderAll(this._tree.root);
+        this.commit();
+     //   this._onDidChangeTreeData.fire();
+
+    }
+
+    public _reorderAll(root: ProjectNode) {
+        const siblings = [...root.children?.values() ??[]]
+            .map(a => ({id: a.id, order: a.item.order}));
+        let list:string[] = [];
+        new OrderHandler(siblings)
+            .redistributeAll()
+            .get()
+            .forEach(e => {
+                const item = this._tree.getNode(e.id);
+               list.push(`${e.id} ${e.order}`);
+                if (item) {
+                    item.item.order = e.order;
+                } else {
+                    console.log(`Cannot find ${e.id}`);
+                }
+            });
+        console.log(list);
+        root.children?.forEach(child => {
+            this._reorderAll(child as ProjectNode);
+        });
+    }
+
+    public async handleDrag(source: ProjectNode[], treeDataTransfer: vscode.DataTransfer, token: vscode.CancellationToken): Promise<void> {
         if (!source[0]?.isDraggable) return;
 
-        treeDataTransfer.set('application/vnd.code.tree.projectExplorerView', new vscode.DataTransferItem(source));
+        treeDataTransfer.set('application/vnd.code.tree.projectexplorerview', new vscode.DataTransferItem(source));
     }
 
 
@@ -333,7 +404,6 @@ export class ProjectExplorerTreeDataProvider extends DisposeManager implements v
     public _refreshTree(files: FwFileInfo[]) {
         this._tree.clear();
         this._tree.root = this.buildHierarchy(files);
-        //this._sortChildren(this.root);
         this._onDidChangeTreeData.fire();
     }
 
@@ -344,7 +414,7 @@ export class ProjectExplorerTreeDataProvider extends DisposeManager implements v
 
             files.forEach(f => {
                 if (!f.isDraggable) return;
-                if (!f.fsName) return;
+                if (!f.item.fsName) return;
                 const oldPath = f.id;
                 const newPath = f.buildFsPath();
                 if (oldPath !== newPath) {

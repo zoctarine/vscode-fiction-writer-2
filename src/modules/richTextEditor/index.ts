@@ -42,7 +42,7 @@ class RichTextEditorModule extends DisposeManager {
             : this.deactivate();
     }
 
-    register(stateManager: StateManager, fileManager: FileManager, context: vscode.ExtensionContext): vscode.Disposable {
+    register(context: vscode.ExtensionContext, stateManager: StateManager, fileManager: FileManager): vscode.Disposable {
         this.fileManager = fileManager;
         this.stateManager = stateManager;
         this.context = context;

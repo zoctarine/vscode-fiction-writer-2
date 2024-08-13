@@ -4,13 +4,14 @@ import {Metadata} from './metadata';
 export class InputFileProcessor {
     constructor(private text: string) {
     }
+
     /**
      * Duplicates all line-breaks in the input string, so the markdown parsesr sees them as paragraphs (hard-breaks).
      * @param input A string representing a markdown content string
      * @returns
      */
     get multiplyBreaks(): InputFileProcessor {
-        this.text =  this.text.replaceAll('\n', '\n\n');
+        this.text = this.text.replaceAll('\n', '\n\n');
         return this;
     }
 
@@ -24,20 +25,23 @@ export class InputFileProcessor {
         return this.text;
     }
 
-    get metadata(): Metadata {
-        let meta = new Metadata("");
-        try {
-            const matches = this.text.match(RegEx.Pattern.METADATA);
+    get metadataString(): string {
+        const matches = this.text.match(RegEx.Pattern.METADATA);
+        return matches ? matches[1] : '';
+    }
 
-            if (matches && matches.length > 1) {
-                const rawMeta = matches[1];
-                meta = new Metadata(rawMeta);
-            }
+    get metadataBlock(): string {
+        const matches = this.text.match(RegEx.Pattern.METADATA);
+        return matches ? matches[0] : '';
+    }
+
+    get metadata(): Metadata {
+        try {
+            return new Metadata(this.metadataString);
         } catch (error) {
             console.error("Invalid metadata block", error);
+            return new Metadata('');
         }
-
-        return meta;
     }
 }
 

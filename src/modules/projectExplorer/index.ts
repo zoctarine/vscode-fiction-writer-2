@@ -8,8 +8,9 @@ import {DisposeManager} from "../../core/disposable";
 import * as logger from "../../core/logger";
 import {addCommand} from '../../core';
 import {NodeType} from './nodeType';
-import {Node} from './node';
+import {Node} from '../../core/tree/node';
 import {StateManager} from '../../core/stateManager';
+import {ProjectNode} from './projectNodes';
 
 const log = logger.makeLog("[ProjectsModule]", "red");
 
@@ -32,29 +33,29 @@ class ProjectsModule extends DisposeManager {
         this.manageDisposable(
             this.fileManager,
             this.projectExplorerDataProvider,
-            addCommand('views.projectExplorer.newFile', (node: Node) => {
+            addCommand('views.projectExplorer.newFile', (node: ProjectNode) => {
                 this.projectExplorerDataProvider?.addFile(node);
             }),
-            addCommand('views.projectExplorer.newFolder', (node: Node) => {
+            addCommand('views.projectExplorer.newFolder', (node: ProjectNode) => {
                 this.projectExplorerDataProvider?.addFolder(node);
             }),
-            addCommand('views.projectExplorer.rename', (node: Node) => {
+            addCommand('views.projectExplorer.rename', (node: ProjectNode) => {
                 this.projectExplorerDataProvider?.rename(node);
             }),
-            addCommand('views.projectExplorer.trash', (node: Node) => {
+            addCommand('views.projectExplorer.trash', (node: ProjectNode) => {
                 this.projectExplorerDataProvider?.delete(node);
             }),
-            addCommand('views.projectExplorer.makeVirtualFolder', (node: Node) => {
+            addCommand('views.projectExplorer.makeVirtualFolder', (node: ProjectNode) => {
                 this.projectExplorerDataProvider?.makeVirtualFolder(node);
             }),
-            addCommand('views.projectExplorer.breakVirtualFolder', (node: Node) => {
+            addCommand('views.projectExplorer.breakVirtualFolder', (node: ProjectNode) => {
                 this.projectExplorerDataProvider?.makeVirtualFolder(node);
             }),
             addCommand('views.projectExplorer.reload', () => {
                 this.projectExplorerDataProvider?.reload();
             }),
             addCommand('views.projectExplorer.commit', () => {
-                this.projectExplorerDataProvider?.commit();
+                this.projectExplorerDataProvider?.reorderAll();
             }));
     };
 

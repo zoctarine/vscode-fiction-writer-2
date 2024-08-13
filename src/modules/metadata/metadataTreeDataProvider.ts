@@ -1,12 +1,65 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import {ThemeColor, ThemeIcon} from 'vscode';
-import {FileManager} from '../../core';
+import {FileDecoration, ThemeColor, ThemeIcon, Uri} from 'vscode';
+import {DisposeManager, FileManager} from '../../core';
 import {InputFileProcessor} from '../../processors/inputFileProcessor';
+import {Node} from '../../core/tree/node';
+import {Metadata} from '../../processors';
+import {MetadataOptions} from './metadataOptions';
+import {MetadataTreeDecorationProvider} from './metadataDecoration';
 
-export class MetadataTreeDataProvider implements vscode.TreeDataProvider<MetadataTreeItem> {
-    constructor(private _fileManager: FileManager | undefined) {
+export class MetadataTreeDataProvider extends DisposeManager implements vscode.TreeDataProvider<MetadataTreeItem> {
+    public static readonly viewType = 'fictionWriter.views.metadata';
+    private _treeView: vscode.TreeView<MetadataTreeItem>;
+    private _document: vscode.TextDocument | undefined;
+    private _metadata: Metadata | undefined;
+    private _onDidChangeTreeData: vscode.EventEmitter<MetadataTreeItem | undefined | null | void> = new vscode.EventEmitter<MetadataTreeItem | undefined | null | void>();
+    readonly onDidChangeTreeData: vscode.Event<MetadataTreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
+
+    constructor(private _options: MetadataOptions) {
+        super();
+
+        this._loadDocument(vscode.window.activeTextEditor?.document);
+
+        this._treeView = vscode.window.createTreeView(MetadataTreeDataProvider.viewType, {
+            treeDataProvider: this,
+            showCollapseAll: true,
+            canSelectMany: false,
+            // dragAndDropController: this
+        });
+
+        const watcher = vscode.workspace.createFileSystemWatcher('**/*');
+        this.manageDisposable(
+            watcher,
+            this._treeView,
+            vscode.window.onDidChangeActiveTextEditor((e) => {
+                this._loadDocument(e?.document);
+            }),
+            watcher.onDidChange((e) => {
+                if (e.fsPath === this._document?.uri.fsPath) {
+                    this._loadDocument(this._document);
+                }
+            }),
+            this._treeView.onDidCollapseElement((e) => {
+                if (e.element.children) {
+                    e.element.description = `${e.element.children.map(c => c.title).join(', ')}`;
+                }
+                this._onDidChangeTreeData.fire(e.element);
+            }),
+            this._treeView.onDidExpandElement((e) => {
+                if (e.element.children) {
+                    e.element.description = '';
+                }
+                this._onDidChangeTreeData.fire(e.element);
+            })
+        );
+    }
+
+    private _loadDocument(document: vscode.TextDocument | undefined) {
+        this._document = document;
+        this._metadata = new InputFileProcessor(document?.getText() ?? "").metadata;
+        this._onDidChangeTreeData.fire();
     }
 
     getTreeItem(element: MetadataTreeItem): vscode.TreeItem {
@@ -14,36 +67,93 @@ export class MetadataTreeDataProvider implements vscode.TreeDataProvider<Metadat
     }
 
     getChildren(element?: MetadataTreeItem): Thenable<MetadataTreeItem[]> {
-
         if (element) {
-            return Promise.resolve(this.getChildItems());
+            return Promise.resolve(element.children);
         } else {
-            return Promise.resolve(this.getChildItems());
+            const all = this.getChildItems();
+
+            return Promise.resolve(all);
         }
     }
 
 
-    private getChildItems(): MetadataTreeItem[] {
-        const processor = new InputFileProcessor(this._fileManager?.activeTextDocument?.getText() ?? "");
-        const meta = processor.metadata.value;
-        if (typeof meta === 'object') {
-            return Object.keys(meta).map((key) => new MetadataTreeItem(key, meta[key] + "", vscode.TreeItemCollapsibleState.None));
+    private getChildItems(meta: any = this._metadata?.value, parentKey: string = ''): MetadataTreeItem[] {
+        if (!meta) {
+            return [];
+        }
+
+        if (typeof meta === 'object' && !Array.isArray(meta)) {
+            return Object.keys(meta).map((key) => {
+                const value = meta[key];
+                const newKey = parentKey ? `${parentKey}.${key}` : key;
+                if (typeof value === 'object') {
+                    const children = this.getChildItems(value, newKey);
+                    return new MetadataTreeItem(newKey, key,
+                        children.length <= 0 ? '' : children.map(c => c.title).join(', ') + '',
+                        value && Object.keys(value).length > 0 ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None,
+                        children,
+                        this._getIcon(key, Array.isArray(value) ? 'array' : 'symbol-object')
+                        // Array.isArray(value) ? 'array' : 'symbol-object'
+                    );
+                } else {
+                    return new MetadataTreeItem(newKey, key, value + '', vscode.TreeItemCollapsibleState.None, undefined, this._getIcon(key));
+                }
+            });
+        } else if (Array.isArray(meta)) {
+            return meta.map((item, index) => {
+                const newKey = `${parentKey}[${index}]`;
+                if (typeof item === 'object') {
+                    const children = this.getChildItems(item, newKey);
+
+                    return new MetadataTreeItem(newKey, newKey,
+                        children.length <= 0 ? '' : children.map(c => c.title).join(', ') + '',
+                        vscode.TreeItemCollapsibleState.Collapsed,
+                        children,
+                        this._getIcon(newKey, Array.isArray(item) ? 'array' : 'symbol-object')
+                        //    Array.isArray(item) ? 'array' : 'symbol-object'
+                    );
+                } else {
+                    return new MetadataTreeItem(newKey, item, '', vscode.TreeItemCollapsibleState.None, undefined, this._getIcon(item));
+                }
+            });
         } else {
-            return [new MetadataTreeItem(meta, "", vscode.TreeItemCollapsibleState.None)];
+            return [new MetadataTreeItem(parentKey, meta, '', vscode.TreeItemCollapsibleState.None, undefined, this._getIcon(meta))];
         }
     }
+
+    private _getIcon(icon: string, defaultIcon: string = 'debug-stackframe-dot'): string {
+        return this._options.treeIcons.get(icon.toLowerCase()) ?? defaultIcon;
+    }
+
 }
 
-class MetadataTreeItem extends vscode.TreeItem {
+
+export class MetadataTreeItem extends vscode.TreeItem {
     constructor(
+        public readonly id: string,
         public readonly title: string,
         private subtitle: string,
-        public readonly collapsibleState: vscode.TreeItemCollapsibleState
+        public readonly collapsibleState: vscode.TreeItemCollapsibleState,
+        public readonly children: MetadataTreeItem[] = [],
+        public icon: string = 'eye'
     ) {
         super(title, collapsibleState);
-        this.tooltip = `${this.title}-${this.subtitle}`;
+        this.id = id;
         this.description = this.subtitle;
-        this.iconPath = new ThemeIcon('tag', new ThemeColor('editor.selectionBackground'));
+        this.iconPath = new ThemeIcon(icon);
+        this.resourceUri = vscode.Uri.parse(`fictionWriter://${MetadataTreeDataProvider.viewType}/#${id}`);
+        this.tooltip = this.resourceUri.toString();
+    }
+
+    public static provideFileDecoration(uri: Uri): FileDecoration | undefined {
+        if (uri?.authority !== MetadataTreeDataProvider.viewType) return;
+        return {
+            badge: "",
+            color: new ThemeColor("#569cd6"),
+
+            // color: new vscode.ThemeColor("tab.activeBackground"),
+            // tooltip: ""
+        };
     }
 
 }

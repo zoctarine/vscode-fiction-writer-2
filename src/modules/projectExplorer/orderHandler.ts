@@ -13,7 +13,7 @@ export class OrderHandler {
     }
 
     private fileNumbers: Entry[] = [];
-    public static gap = 100000;
+    public static gap = 10000;
 
     constructor(fileNumbers: Entry[]) {
         this.fileNumbers = fileNumbers;
@@ -120,6 +120,12 @@ export class OrderHandler {
         return this;
     }
 
+    public redistributeAll() : OrderHandler {
+        for (let i = 0; i < this.fileNumbers.length; i++) {
+            this.fileNumbers[i].order = (i+1) * OrderHandler.gap;
+        }
+        return this;
+    }
     public get(): Entry[] {
         return this.fileNumbers;
     }

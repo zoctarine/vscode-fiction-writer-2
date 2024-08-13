@@ -10,5 +10,5 @@ export function getNonce() {
 };
 
  export function getWebviewRootUri(context: vscode.ExtensionContext, ...fragments:string[]): vscode.Uri {
-	return vscode.Uri.joinPath(context.extensionUri, 'dist', 'browser', ...fragments);
+		return vscode.Uri.joinPath(context.extensionUri, 'dist', 'browser', ...fragments);
  };

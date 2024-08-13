@@ -89,97 +89,141 @@
             "description": "Refreshes the text analysis when active editor changes, or analysis panel visibility changes."
           }
         }
+      },
+      {
+        "title": "Metadata",
+        "properties": {
+          "fictionWriter.metadata.view.enabled": {
+            "order": 5,
+            "type": "boolean",
+            "default": true,
+            "description": "Enable File Metadata View"
+          },
+          "fictionWriter.metadata.filters.enabled": {
+            "order": 10,
+            "type": "boolean",
+            "default": true,
+            "description": "Enable Global Metadata Filters"
+          },
+          "fictionWriter.metadata.filters.countBadges.enabled": {
+            "order": 15,
+            "type": "boolean",
+            "default": true,
+            "description": "Show counters in Filter View"
+          }
+        }
       }
     ],
     "icons": {
       "fa-trash-can": {
         "description": "trash-can",
         "default": {
-          "fontPath": "./media/fonts/fa-regular-400.woff2",
+          "fontPath": "./media/webfonts/fa-regular-400.woff2",
           "fontCharacter": "\\f2ed"
         }
       },
       "fa-book": {
         "description": "book",
         "default": {
-          "fontPath": "./media/fonts/fa-solid-900.woff2",
+          "fontPath": "./media/webfonts/fa-solid-900.woff2",
           "fontCharacter": "\\f02d"
         }
       },
       "fa-inbox": {
         "description": "inbox",
         "default": {
-          "fontPath": "./media/fonts/fa-solid-900.woff2",
+          "fontPath": "./media/webfonts/fa-solid-900.woff2",
           "fontCharacter": "\\f01c"
+        }
+      },
+      "fa-filter": {
+        "description": "filter",
+        "default": {
+          "fontPath": "./media/webfonts/fa-solid-900.woff2",
+          "fontCharacter": "\\f0b0"
+        }
+      },
+      "fa-link": {
+        "description": "link",
+        "default": {
+          "fontPath": "./media/webfonts/fa-solid-900.woff2",
+          "fontCharacter": "\\f08e"
+        }
+      },
+      "fa-magnifying-glass": {
+        "description": "magnifying-glass",
+        "default": {
+          "fontPath": "./media/webfonts/fa-solid-900.woff2",
+          "fontCharacter": "\\f002"
         }
       },
       "fa-file-lines-solid": {
         "description": "file-lines-solid",
         "default": {
-          "fontPath": "./media/fonts/fa-solid-900.woff2",
+          "fontPath": "./media/webfonts/fa-solid-900.woff2",
           "fontCharacter": "\\f15c"
         }
       },
       "fa-file-excel": {
         "description": "file-circle-question",
         "default": {
-          "fontPath": "./media/fonts/fa-solid-900.woff2",
+          "fontPath": "./media/webfonts/fa-solid-900.woff2",
           "fontCharacter": "\\f1c3"
         }
       },
       "fa-file-lines": {
         "description": "file-lines",
         "default": {
-          "fontPath": "./media/fonts/fa-regular-400.woff2",
+          "fontPath": "./media/webfonts/fa-regular-400.woff2",
           "fontCharacter": "\\f15c"
         }
       },
       "fa-copy": {
         "description": "copy",
         "default": {
-          "fontPath": "./media/fonts/fa-regular-400.woff2",
+          "fontPath": "./media/webfonts/fa-regular-400.woff2",
           "fontCharacter": "\\f0c5"
         }
       },
       "fa-folder": {
         "description": "folder",
         "default": {
-          "fontPath": "./media/fonts/fa-regular-400.woff2",
+          "fontPath": "./media/webfonts/fa-regular-400.woff2",
           "fontCharacter": "\\f07b"
         }
       },
       "fa-folder-closed": {
         "description": "folder-closed",
         "default": {
-          "fontPath": "./media/fonts/fa-regular-400.woff2",
+          "fontPath": "./media/webfonts/fa-regular-400.woff2",
           "fontCharacter": "\\e185"
         }
       },
       "fa-pen": {
         "description": "pen",
         "default": {
-          "fontPath": "./media/fonts/fa-solid-900.woff2",
+          "fontPath": "./media/webfonts/fa-solid-900.woff2",
           "fontCharacter": "\\f304"
         }
       },
       "fa-pen-nib": {
         "description": "pen nib",
         "default": {
-          "fontPath": "./media/fonts/fa-solid-900.woff2",
+          "fontPath": "./media/webfonts/fa-solid-900.woff2",
           "fontCharacter": "\\f5ad"
         }
       },
       "fa-folder-tree": {
         "description": "folder-tree",
         "default": {
-          "fontPath": "./media/fonts/fa-solid-900.woff2",
+          "fontPath": "./media/webfonts/fa-solid-900.woff2",
           "fontCharacter": "\\f802"
         }
       },
       "fa-chart-column": {
         "description": "chart-column",
         "default": {
-          "fontPath": "./media/fonts/fa-solid-900.woff2",
+          "fontPath": "./media/webfonts/fa-solid-900.woff2",
           "fontCharacter": "\\e0e3"
         }
       }
@@ -237,6 +281,16 @@
           "command": "fictionWriter.views.statistics.refresh",
           "when": "view == fictionWriter.views.statistics",
           "group": "navigation"
+        },
+        {
+          "command": "fictionWriter.views.metadata.filters.setFilter",
+          "when": "view == fictionWriter.views.metadata.filters && fictionWriter.views.metadata.hasFilter == false",
+          "group": "navigation"
+        },
+        {
+          "command": "fictionWriter.views.metadata.filters.removeFilter",
+          "when": "view == fictionWriter.views.metadata.filters && fictionWriter.views.metadata.hasFilter == true",
+          "group": "navigation"
         }
       ],
       "view/item/context": [
@@ -279,6 +333,16 @@
           "command": "fictionWriter.views.wordFrequency.next.up",
           "when": "view == fictionWriter.views.wordFrequency && viewItem == wordStat",
           "group": "inline"
+        },
+        {
+          "command": "fictionWriter.views.metadata.filters.showFilter",
+          "when": "view == fictionWriter.views.metadata.filters && viewItem == filterItemMetadataKeyHidden",
+          "group": "inline"
+        },
+        {
+          "command": "fictionWriter.views.metadata.filters.hideFilter",
+          "when": "view == fictionWriter.views.metadata.filters && viewItem == filterItemMetadataKey",
+          "group": "1_fictionWriter@1"
         }
       ]
     },
@@ -383,6 +447,32 @@
         "icon": "$(find-next-match)",
         "category": "Markdown Fiction Writer",
         "when": "false"
+      },
+      {
+        "command": "fictionWriter.views.metadata.filters.hideFilter",
+        "title": "Hide",
+        "icon": "$(eye-closed)",
+        "category": "Markdown Fiction Writer",
+        "when": "false"
+      },
+      {
+        "command": "fictionWriter.views.metadata.filters.showFilter",
+        "title": "Show",
+        "icon": "$(eye)",
+        "category": "Markdown Fiction Writer",
+        "when": "false"
+      },
+      {
+        "command": "fictionWriter.views.metadata.filters.setFilter",
+        "title": "Set Filter",
+        "icon": "$(filter)",
+        "category": "Markdown Fiction Writer"
+      },
+      {
+        "command": "fictionWriter.views.metadata.filters.removeFilter",
+        "title": "Remove Filter",
+        "icon": "$(filter-filled)",
+        "category": "Markdown Fiction Writer"
       }
     ],
     "customEditors": [
@@ -408,16 +498,23 @@
       }
     ],
     "viewsContainers": {
+      "panel": [
+        {
+          "id": "fictionWriterMetadataExplorer",
+          "title": "Metadata Explorer",
+          "icon": "$(tag)"
+        }
+      ],
       "activitybar": [
         {
           "id": "fictionWriterProjectExplorer",
           "title": "Project",
-          "icon": "$(fa-folder-tree)"
+          "icon": "$(book)"
         },
         {
           "id": "fictionWriterDocumentAnalysis",
           "title": "Text Analysis",
-          "icon": "$(fa-chart-column)"
+          "icon": "$(pie-chart)"
         }
       ]
     },
@@ -437,8 +534,18 @@
         },
         {
           "id": "fictionWriter.views.metadata",
-          "name": "Metadata"
+          "name": "File Metadata",
+          "icon": "$(tag)",
+          "when": "fictionWriter.metadata.view.enabled == true"
+        },
+        {
+          "id": "fictionWriter.views.metadata.filters",
+          "name": "Project Metadata",
+          "icon": "$(filter)",
+          "when": "fictionWriter.metadata.filters.enabled == true"
         }
+      ],
+      "fictionWriterMetadataExplorer": [
       ],
       "fictionWriterDocumentAnalysis": [
         {

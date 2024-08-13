@@ -4,7 +4,7 @@ import {EditorState} from "prosemirror-state";
 import {Step} from "prosemirror-transform";
 import {fileParser, fileSerializer, schema} from "./utils/fileExtensions";
 import {exampleSetup} from "prosemirror-example-setup";
-import {InputFileProcessor, Metadata, processInputFile} from "../../processors";
+import {InputFileProcessor, processInputFile} from "../../processors";
 import {getNonce, getWebviewRootUri} from '../../core/nonce';
 import {StateManager} from '../../core/stateManager';
 
@@ -43,7 +43,7 @@ export class ProseMirrorEditorProvider implements vscode.CustomTextEditorProvide
         let editorState: EditorState = new EditorState();
         let subscriptions: vscode.Disposable[] = [];
         let lastVersion = document.version;
-        let meta = new InputFileProcessor(document.getText()).metadata;
+        let metadataBlock = new InputFileProcessor(document.getText()).metadataBlock;
         webviewPanel.webview.options = {
             enableScripts: true,
             localResourceRoots: [getWebviewRootUri(this._context)]
@@ -67,7 +67,7 @@ export class ProseMirrorEditorProvider implements vscode.CustomTextEditorProvide
             // When user switches out of the editor, we sync the unsaved changes
             // to the document, so they can be persisted on the next save.
             if (!e.webviewPanel.active) {
-                this.updateTextDocument(document, meta, editorState);
+                this.updateTextDocument(document, metadataBlock, editorState);
             }
 
             if (e.webviewPanel.active) {
@@ -84,7 +84,7 @@ export class ProseMirrorEditorProvider implements vscode.CustomTextEditorProvide
             console.log('onWillSaveTextDocument:');
 
             if (document.version === lastVersion) {
-                this.updateTextDocument(document, meta, editorState);
+                this.updateTextDocument(document, metadataBlock, editorState);
             }
         }, subscriptions);
 
@@ -141,7 +141,7 @@ export class ProseMirrorEditorProvider implements vscode.CustomTextEditorProvide
                         // The actual document sync happends on willSaveTextDocument.
 
                         if (!document.isDirty) {
-                            this.updateTextDocument(document, meta, editorState);
+                            this.updateTextDocument(document, metadataBlock, editorState);
                         }
 
                         lastVersion = document.version;
@@ -190,18 +190,16 @@ export class ProseMirrorEditorProvider implements vscode.CustomTextEditorProvide
     }
 
 
-    private updateTextDocument(document: vscode.TextDocument, meta: Metadata, editorState: EditorState) {
+    private updateTextDocument(document: vscode.TextDocument, metadataBlock: string, editorState: EditorState) {
         const edit = new vscode.WorkspaceEdit();
 
         // Just replace the entire document.
         // For long documents, this might not be the most efficient, so use it only
         // when necessary.
-        console.log(meta.serialize());
-        const metaSection = meta.serialize() ? `---\n${meta.serialize()}---\n\n` : '';
         edit.replace(
             document.uri,
             new vscode.Range(0, 0, document.lineCount, 0),
-            metaSection +  fileSerializer.serialize(editorState.doc));
+            metadataBlock +  fileSerializer.serialize(editorState.doc));
 
         return vscode.workspace.applyEdit(edit);
     }
