@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import {addCommand, DisposeManager, FileManager} from '../../core';
+import {addCommand, DisposeManager, FileManager, mapExtensions} from '../../core';
 import {StateManager} from '../../core/stateManager';
 import {fileManager} from '../../core';
 import {MetadataTreeDataProvider} from './metadataTreeDataProvider';
@@ -8,8 +8,10 @@ import {ExtensionContext} from 'vscode';
 import {MetadataTreeDecorationProvider} from './metadataDecoration';
 import {ProjectCache} from './cache';
 import {FwFileManager} from '../../core/fwFileManager';
+import {ColorResolver, IconResolver} from './iconsAndColors';
 
 export * from './cache';
+export * from './iconsAndColors';
 
 class MetadataModule extends DisposeManager {
     active = false;
@@ -19,18 +21,31 @@ class MetadataModule extends DisposeManager {
     private options = new MetadataOptions();
     private metadataTreeDataProvider: MetadataTreeDataProvider | undefined;
     private metadataDecorationProvider: MetadataTreeDecorationProvider | undefined;
+    resolvers = {
+        iconResolver: new IconResolver(),
+        colorResolver: new ColorResolver(),
+    };
 
     constructor() {
         super();
     }
 
     activate(): void {
-        this.metadataTreeDataProvider = new MetadataTreeDataProvider(this.options);
-        this.metadataDecorationProvider = new MetadataTreeDecorationProvider();
+        this.metadataTreeDataProvider = new MetadataTreeDataProvider(this.options, this.resolvers);
+        this.metadataDecorationProvider = new MetadataTreeDecorationProvider(this.resolvers);
+        this.resolvers.iconResolver.setCustom(mapExtensions.objectToMap(this.options.metadataIcons.value));
+        this.resolvers.colorResolver.setCustom(mapExtensions.objectToMap(this.options.metadataColors.value));
+
         this.manageDisposable(
             this.metadataTreeDataProvider,
             this.metadataTreeDataProvider.onDidChangeTreeData(() => {
                 this.metadataDecorationProvider?.file();
+            }),
+            this.options.metadataColors.onChanged((customColors) => {
+                this.resolvers.colorResolver.setCustom(mapExtensions.objectToMap(customColors));
+            }),
+            this.options.metadataIcons.onChanged((customIcons) => {
+                this.resolvers.iconResolver.setCustom(mapExtensions.objectToMap(customIcons));
             })
         );
     };

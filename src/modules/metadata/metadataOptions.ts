@@ -1,3 +1,4 @@
+import { mapExtensions } from "../../core";
 import {Options} from "../../core/options";
 export const defaultIcons = new Map<string, string>([
     ['pov', 'eye'],
@@ -19,13 +20,54 @@ export const defaultIcons = new Map<string, string>([
     ['info', 'info'],
     ['note', 'note'],
     ['warning', 'warning'],
+    ['colors', 'symbol-color'],
+    ['color', 'symbol-color'],
+
+    ['blue', 'circle-filled'],
+    ['lightblue', 'circle-filled'],
+    ['teal', 'circle-filled'],
+    ['red', 'circle-filled'],
+    ['lightred', 'circle-filled'],
+    ['lime', 'circle-filled'],
+    ['green', 'circle-filled'],
+    ['orange', 'circle-filled'],
+    ['amber', 'circle-filled'],
+    ['lightamber', 'circle-filled'],
+    ['purple', 'circle-filled'],
+    ['bluegrey', 'circle-filled'],
+    ['grey', 'circle-filled'],
+    ['yellow', 'circle-filled'],
+    ['pink', 'circle-filled'],
+    ['white', 'circle-filled'],
+    ['black', 'circle-filled']
+]);
+
+export const defaultColors = new Map<string, string>([
+    ['blue', 'fictionWriter.blue'],
+    ['lightblue', 'fictionWriter.lightblue'],
+    ['teal', 'fictionWriter.teal'],
+    ['red', 'fictionWriter.red'],
+    ['lightred', 'fictionWriter.lightred'],
+    ['lime', 'fictionWriter.lime'],
+    ['green', 'fictionWriter.green'],
+    ['orange', 'fictionWriter.orange'],
+    ['amber', 'fictionWriter.amber'],
+    ['lightamber', 'fictionWriter.lightamber'],
+    ['purple', 'fictionWriter.purple'],
+    ['bluegrey', 'fictionWriter.bluegrey'],
+    ['grey', 'fictionWriter.grey'],
+    ['yellow', 'fictionWriter.yellow'],
+    ['pink', 'fictionWriter.pink'],
+    ['white', 'fictionWriter.white'],
+    ['black', 'fictionWriter.black']
 ]);
 
 export class MetadataOptions extends Options {
     public static readonly SectionName = 'metadata.view';
 
     public enabled = this.valueOf('enabled', true, true);
-    public treeIcons = defaultIcons;
+    public metadataIcons = this.valueOf('icons', mapExtensions.mapToObject(defaultIcons));
+    public metadataColors = this.valueOf('colors', mapExtensions.mapToObject(defaultColors));
 
     constructor() {
         super(MetadataOptions.SectionName);

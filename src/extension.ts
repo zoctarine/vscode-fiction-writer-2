@@ -26,10 +26,10 @@ export function activate(context: vscode.ExtensionContext) {
         textAnalysisModule.register(stateManager),
         metadataModule.register(context, stateManager, projectsModule.fileManager),
         richTextEditorModule.register(context, stateManager, fileManager),
-        filtersModule.register(stateManager, cache)
+        filtersModule.register(stateManager, cache, metadataModule.resolvers)
     );
 
-    context.subscriptions.push(CodeMirrorEditorProvider.register(context));
+   // context.subscriptions.push(CodeMirrorEditorProvider.register(context));
 
 
 
@@ -37,7 +37,7 @@ export function activate(context: vscode.ExtensionContext) {
     // This line of code will only be executed once when your extension is activated
     console.log('Fiction Writer 2 is now active!');
 
-    context.subscriptions.push(codeMirrorCommands.openInCodeMirror());
+  //  context.subscriptions.push(codeMirrorCommands.openInCodeMirror());
 }
 
 // This method is called when your extension is deactivated

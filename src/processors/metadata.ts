@@ -44,7 +44,6 @@ export class Metadata {
                 this._meta = meta;
             }
         } catch (error) {
-            console.error("Invalid metadata block", error);
             this._meta = {};
         }
     }

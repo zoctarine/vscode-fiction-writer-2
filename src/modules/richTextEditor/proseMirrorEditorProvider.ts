@@ -7,29 +7,38 @@ import {exampleSetup} from "prosemirror-example-setup";
 import {InputFileProcessor, processInputFile} from "../../processors";
 import {getNonce, getWebviewRootUri} from '../../core/nonce';
 import {StateManager} from '../../core/stateManager';
+import {DisposeManager} from '../../core';
+import {RtEditorOptions} from './rtEditorOptions';
 
 
-export class ProseMirrorEditorProvider implements vscode.CustomTextEditorProvider {
+export class ProseMirrorEditorProvider extends DisposeManager
+    implements vscode.CustomTextEditorProvider {
 
-    public static register(context: vscode.ExtensionContext, stateManager: StateManager): vscode.Disposable {
-        const provider = new ProseMirrorEditorProvider(context, stateManager);
+    public static register(context: vscode.ExtensionContext, stateManager: StateManager, options: RtEditorOptions): vscode.Disposable {
+        const provider = new ProseMirrorEditorProvider(context, stateManager, options);
 
-        return vscode.window.registerCustomEditorProvider(
-            ProseMirrorEditorProvider.viewType,
-            provider, {
-                webviewOptions: {
-                    retainContextWhenHidden: false,
-                    enableFindWidget: true,
-                },
-            });
+        return vscode.Disposable.from(
+            vscode.window.registerCustomEditorProvider(
+                ProseMirrorEditorProvider.viewType,
+                provider, {
+                    webviewOptions: {
+                        retainContextWhenHidden: false,
+                        enableFindWidget: true,
+                    },
+                }),
+            provider);
     }
 
     public static readonly viewType = 'fictionWriter.editors.proseMirror';
 
+    private _webviewOptions: {} = {};
+
     constructor(
         private readonly _context: vscode.ExtensionContext,
-        private readonly _stateManager: StateManager
+        private readonly _stateManager: StateManager,
+        private readonly _options: RtEditorOptions
     ) {
+        super();
     }
 
     /**
@@ -40,17 +49,22 @@ export class ProseMirrorEditorProvider implements vscode.CustomTextEditorProvide
         webviewPanel: vscode.WebviewPanel,
         _token: vscode.CancellationToken
     ): Promise<void> {
+        if (_token.isCancellationRequested) return;
+        let isDisposed = false;
         let editorState: EditorState = new EditorState();
         let subscriptions: vscode.Disposable[] = [];
         let lastVersion = document.version;
         let metadataBlock = new InputFileProcessor(document.getText()).metadataBlock;
+
         webviewPanel.webview.options = {
             enableScripts: true,
             localResourceRoots: [getWebviewRootUri(this._context)]
         };
         webviewPanel.webview.html = this.getHtmlForWebview(webviewPanel.webview);
 
-        function updateWebview() {
+        function updateWebview(options?:{}) {
+            if (!webviewPanel || !webviewPanel.active) return;
+
             const text = processInputFile(document.getText());
             editorState = EditorState.create({
                 doc: fileParser.parse(text),
@@ -59,9 +73,22 @@ export class ProseMirrorEditorProvider implements vscode.CustomTextEditorProvide
 
             webviewPanel.webview.postMessage({
                 type: 'update',
-                text: text,
+                text,
+                options
             });
         }
+
+        function updateWebviewOptions(options: {}) {
+            if (!webviewPanel || !webviewPanel.active) return;
+            webviewPanel.webview.postMessage({
+                type: 'update',
+                options
+            });
+        }
+
+        subscriptions.push(this._options.focusMode.onChanged((value) => {
+            updateWebviewOptions(this.getWebViewOptions());
+        }));
 
         webviewPanel.onDidChangeViewState((e) => {
             // When user switches out of the editor, we sync the unsaved changes
@@ -72,68 +99,67 @@ export class ProseMirrorEditorProvider implements vscode.CustomTextEditorProvide
 
             if (e.webviewPanel.active) {
                 this._stateManager.activeTextDocument = document;
+                updateWebview(this.getWebViewOptions());
             } else {
-              //  this._stateManager.activeTextDocument = undefined;
+                //  this._stateManager.activeTextDocument = undefined;
             }
         }, subscriptions);
 
+
         vscode.workspace.onWillSaveTextDocument(e => {
+            if (isDisposed) return;
+            if (!webviewPanel.visible) return;
+            if (!webviewPanel.active) return;
+
             if (document.uri.toString() !== document.uri.toString()) {
                 return;
             }
-            console.log('onWillSaveTextDocument:');
 
             if (document.version === lastVersion) {
                 this.updateTextDocument(document, metadataBlock, editorState);
             }
         }, subscriptions);
 
-        vscode.workspace.onDidSaveTextDocument(e => {
-            if (document.uri.toString() !== document.uri.toString()) {
-                return;
-            }
-            console.log('onDidSaveTextDocument');
-            updateWebview();
-        }, subscriptions);
+            vscode.workspace.onDidSaveTextDocument(e => {
+                if (isDisposed) return;
+                if (!webviewPanel.visible) return;
+                if (!webviewPanel.active) return;
+                if (document.uri.toString() !== document.uri.toString()) {
+                    return;
+                }
+                updateWebview(this.getWebViewOptions());
+
+
+            }, subscriptions);
 
         vscode.workspace.onDidChangeTextDocument(e => {
+            if (isDisposed) return;
+            if (!webviewPanel || !webviewPanel?.webview) return;
+
             if (e.document.uri.toString() !== document.uri.toString()) {
                 return;
             }
-            console.log('onDidChangeTextDocument');
-
             // Only update the webview if the document is view is not active.
             // The change might come from the active editor, so we don't want to enter
             // an infinite loop of updating the webview and applying the change.
             //
             // TODO(?): If the view is active, but the change is not from the webview,
             // 		 we should show a prompt to ask the user to reload the document.
-            if (!webviewPanel.active) {
-                updateWebview();
-            }
         }, subscriptions);
-
-        // Make sure we get rid of the listener when our editor is closed.
-        webviewPanel.onDidDispose(() => {
-            subscriptions.forEach((s) => s.dispose());
-        });
 
         // Receive message from the webview.
         webviewPanel.webview.onDidReceiveMessage(e => {
             switch (e.command) {
                 case 'update':
                     try {
-                        console.log('Received update content');
-
                         var transaction = editorState.tr;
                         for (let i = 0; i < e.text.length; i++) {
                             transaction.step(Step.fromJSON(schema, e.text[i]));
-                        }
-                        ;
+                        };
 
                         editorState = editorState.apply(transaction);
 
-                        // This is a time consumig operation, so we can't run it on each
+                        // This is a time consuming operation, so we can't run it on each
                         // small change. We only update the document once, if it's not dirty,
                         // to make sure sure that the default vscode save prompt is triggered on close.
                         // TODO: find a differet way to mark document as dirty?
@@ -153,9 +179,33 @@ export class ProseMirrorEditorProvider implements vscode.CustomTextEditorProvide
             }
         }, subscriptions);
 
-        updateWebview();
+        // Make sure we get rid of the listener when our editor is closed.
+        webviewPanel.onDidDispose(() => {
+            console.log("proseMirror.webView disposed");
+            isDisposed = true;
+            while (subscriptions.length) {
+                const disposable = subscriptions.pop();
+                if (disposable) {
+                    try {
+                        disposable.dispose();
+                    } catch (e) {
+                        console.warn(e);
+                    }
+                }
+            }
+
+        });
+
+        updateWebview(this.getWebViewOptions());
     }
 
+    private getWebViewOptions(){
+        return {
+            highlight: {
+                highlightType: this._options.focusMode.value,
+            }
+        };
+    }
     /**
      * Get the static html used for the editor webviews.
      */
@@ -176,7 +226,7 @@ export class ProseMirrorEditorProvider implements vscode.CustomTextEditorProvide
 				Use a content security policy to only allow loading images from https or from our extension directory,
 				and only allow scripts that have a specific nonce.
 				-->
-				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource}; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
+				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource}; style-src 'self' 'unsafe-inline' ${webview.cspSource}; script-src 'nonce-${nonce}';">
 				<meta name="viewport" content="width=device-width, initial-scale=1.0">
 				<link href="${styleMainUri}" rel="stylesheet" />
 				<title>Fiction Writer Editor</title>
@@ -199,7 +249,7 @@ export class ProseMirrorEditorProvider implements vscode.CustomTextEditorProvide
         edit.replace(
             document.uri,
             new vscode.Range(0, 0, document.lineCount, 0),
-            metadataBlock +  fileSerializer.serialize(editorState.doc));
+            metadataBlock + fileSerializer.serialize(editorState.doc));
 
         return vscode.workspace.applyEdit(edit);
     }

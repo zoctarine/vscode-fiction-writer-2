@@ -8,6 +8,7 @@ import {Node} from '../../core/tree/node';
 import {Metadata} from '../../processors';
 import {MetadataOptions} from './metadataOptions';
 import {MetadataTreeDecorationProvider} from './metadataDecoration';
+import {ColorResolver, IconResolver} from './iconsAndColors';
 
 export class MetadataTreeDataProvider extends DisposeManager implements vscode.TreeDataProvider<MetadataTreeItem> {
     public static readonly viewType = 'fictionWriter.views.metadata';
@@ -17,7 +18,10 @@ export class MetadataTreeDataProvider extends DisposeManager implements vscode.T
     private _onDidChangeTreeData: vscode.EventEmitter<MetadataTreeItem | undefined | null | void> = new vscode.EventEmitter<MetadataTreeItem | undefined | null | void>();
     readonly onDidChangeTreeData: vscode.Event<MetadataTreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
 
-    constructor(private _options: MetadataOptions) {
+    constructor(private _options: MetadataOptions, private _resolvers: {
+        iconResolver: IconResolver;
+        colorResolver: ColorResolver
+    }) {
         super();
 
         this._loadDocument(vscode.window.activeTextEditor?.document);
@@ -93,7 +97,6 @@ export class MetadataTreeDataProvider extends DisposeManager implements vscode.T
                         value && Object.keys(value).length > 0 ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None,
                         children,
                         this._getIcon(key, Array.isArray(value) ? 'array' : 'symbol-object')
-                        // Array.isArray(value) ? 'array' : 'symbol-object'
                     );
                 } else {
                     return new MetadataTreeItem(newKey, key, value + '', vscode.TreeItemCollapsibleState.None, undefined, this._getIcon(key));
@@ -109,9 +112,7 @@ export class MetadataTreeDataProvider extends DisposeManager implements vscode.T
                         children.length <= 0 ? '' : children.map(c => c.title).join(', ') + '',
                         vscode.TreeItemCollapsibleState.Collapsed,
                         children,
-                        this._getIcon(newKey, Array.isArray(item) ? 'array' : 'symbol-object')
-                        //    Array.isArray(item) ? 'array' : 'symbol-object'
-                    );
+                        this._getIcon(newKey, Array.isArray(item) ? 'array' : 'symbol-object'));
                 } else {
                     return new MetadataTreeItem(newKey, item, '', vscode.TreeItemCollapsibleState.None, undefined, this._getIcon(item));
                 }
@@ -121,10 +122,11 @@ export class MetadataTreeDataProvider extends DisposeManager implements vscode.T
         }
     }
 
-    private _getIcon(icon: string, defaultIcon: string = 'debug-stackframe-dot'): string {
-        return this._options.treeIcons.get(icon.toLowerCase()) ?? defaultIcon;
+    private _getIcon(value: string, defaultIcon: string = 'debug-stackframe-dot'): vscode.ThemeIcon | undefined {
+        const color = this._resolvers.colorResolver.resolve(value) ?? new ThemeColor("foreground");
+        console.log(color);
+        return this._resolvers.iconResolver.resolve(value, color) ?? new ThemeIcon(defaultIcon, color);
     }
-
 }
 
 
@@ -135,12 +137,11 @@ export class MetadataTreeItem extends vscode.TreeItem {
         private subtitle: string,
         public readonly collapsibleState: vscode.TreeItemCollapsibleState,
         public readonly children: MetadataTreeItem[] = [],
-        public icon: string = 'eye'
-    ) {
+        public icon: ThemeIcon | undefined) {
         super(title, collapsibleState);
         this.id = id;
         this.description = this.subtitle;
-        this.iconPath = new ThemeIcon(icon);
+        this.iconPath = icon;
         this.resourceUri = vscode.Uri.parse(`fictionWriter://${MetadataTreeDataProvider.viewType}/#${id}`);
         this.tooltip = this.resourceUri.toString();
     }

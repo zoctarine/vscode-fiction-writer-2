@@ -24,7 +24,7 @@ class RichTextEditorModule extends DisposeManager {
         this.doNothingEditor = undefined;
 
         this.manageDisposable(
-            ProseMirrorEditorProvider.register(this.context!, this.stateManager!),
+            ProseMirrorEditorProvider.register(this.context!, this.stateManager!, this.options),
 
             commandBuilder.openInProseMirror(),
         );

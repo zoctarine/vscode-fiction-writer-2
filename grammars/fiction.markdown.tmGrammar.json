@@ -1,0 +1,26 @@
+{
+  "scopeName": "markdown-fictionWriter.injection",
+  "injectionSelector": "L:text.html.markdown",
+  "patterns": [
+    {
+      "name": "punctuation.definition.list.begin.markdown",
+      "match": "^(-|--|–|—)\\s"
+    },
+    {
+      "name": "fictionWriter.todo",
+      "match": "(?i)^(//\\s*)(TODO[:]*)(.*)$",
+      "captures": {
+        "1": {"name": "comment"},
+        "2": {"name": "markup.heading"},
+        "3": {"name": "comment"}
+      }
+    },
+    {
+      "name": "comment",
+      "match": "^//\\s(.*)$"
+    }
+
+  ],
+  "repository": {
+  }
+}

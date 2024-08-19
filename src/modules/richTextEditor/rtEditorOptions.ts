@@ -4,6 +4,7 @@ export class RtEditorOptions extends Options {
     public static readonly SectionName = 'editors.richTextEditor';
 
     public enabled = this.valueOf('enabled', true, true);
+    public focusMode = this.valueOf('focusMode', 'paragraph');
 
     constructor() {
         super(RtEditorOptions.SectionName);

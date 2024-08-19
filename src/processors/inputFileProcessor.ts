@@ -39,7 +39,6 @@ export class InputFileProcessor {
         try {
             return new Metadata(this.metadataString);
         } catch (error) {
-            console.error("Invalid metadata block", error);
             return new Metadata('');
         }
     }

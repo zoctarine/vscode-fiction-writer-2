@@ -14,7 +14,7 @@ class TextFileParser {
 				if (line.trim() !== "") {
 					nodes.push(schema.nodes.paragraph.create(null, schema.text(line), marks));
 				} else {
-					nodes.push(schema.nodes.paragraph.create(null, null));
+					nodes.push(schema.nodes.hard_break.create(null, schema.text("\n")));
 				}
 			});
 

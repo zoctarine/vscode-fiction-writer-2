@@ -2,6 +2,7 @@ import {window, Tab, TabInputText, Uri, Disposable, Event,
     EventEmitter, FileDecoration, FileDecorationProvider, ThemeColor} from 'vscode';
 import vscode from 'vscode';
 import {MetadataTreeItem} from './metadataTreeDataProvider';
+import {ColorResolver, IconResolver} from './iconsAndColors';
 
 export class MetadataTreeDecorationProvider implements FileDecorationProvider {
 
@@ -10,7 +11,7 @@ export class MetadataTreeDecorationProvider implements FileDecorationProvider {
     private readonly _onDidChangeFileDecorations: EventEmitter<Uri | Uri[]> = new EventEmitter< Uri | Uri[]>();
     readonly onDidChangeFileDecorations: Event<Uri | Uri[]> = this._onDidChangeFileDecorations.event;
 
-    constructor() {
+    constructor(resolvers: { iconResolver: IconResolver; colorResolver: ColorResolver }) {
         this.disposables = [];
         this.disposables.push(window.registerFileDecorationProvider(this));
     }

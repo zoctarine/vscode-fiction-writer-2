@@ -6,7 +6,7 @@ import {DisposeManager} from "../../core/disposable";
 import * as logger from "../../core/logger";
 import {StateManager} from '../../core/stateManager';
 import {FilterOptions} from './filterOptions';
-import {ProjectCache} from '../metadata';
+import {ColorResolver, IconResolver, ProjectCache} from '../metadata';
 import {addCommand} from '../../core';
 
 const log = logger.makeLog("[ProjectsModule]", "red");
@@ -17,6 +17,7 @@ class FiltersModule extends DisposeManager {
     projectCache!: ProjectCache;
     stateManger!: StateManager;
     filterDataProvider: FilterTreeDataProvider | undefined;
+    resolvers: { iconResolver: IconResolver; colorResolver: ColorResolver } | undefined;
 
     constructor() {
         super();
@@ -25,7 +26,8 @@ class FiltersModule extends DisposeManager {
     activate(): void {
         log.debug("activate");
 
-        this.filterDataProvider = new FilterTreeDataProvider(this.options, this.projectCache, this.stateManger);
+        this.filterDataProvider = new FilterTreeDataProvider(
+            this.options, this.projectCache, this.stateManger, this.resolvers!);
 
         this.manageDisposable(
             this.filterDataProvider,
@@ -55,8 +57,11 @@ class FiltersModule extends DisposeManager {
             : this.deactivate();
     }
 
-    register(stateManager: StateManager, cache: ProjectCache): vscode.Disposable {
-
+    register(stateManager: StateManager, cache: ProjectCache, resolvers: {
+        iconResolver: IconResolver;
+        colorResolver: ColorResolver
+    }): vscode.Disposable {
+        this.resolvers = resolvers;
         this.stateManger = stateManager;
         this.projectCache = cache;
         this.options.enabled.onChanged((enabled) => {

@@ -15,6 +15,161 @@
   ],
   "main": "./dist/extension.js",
   "contributes": {
+    "colors": [
+      {
+        "id": "fictionWriter.blue",
+        "description": "Blue Color",
+        "defaults": {
+          "dark": "#2196F3",
+          "light": "#1565C0",
+          "highContrast": "#0000FF"
+        }
+      },
+      {
+        "id": "fictionWriter.lightblue",
+        "description": "Blue Color",
+        "defaults": {
+          "dark": "#4cc9f0",
+          "light": "#4cc9f0",
+          "highContrast": "#0000FF"
+        }
+      },
+      {
+        "id": "fictionWriter.teal",
+        "description": "Teal Color",
+        "defaults": {
+          "dark": "#2ec4b6",
+          "light": "#2ec4b6",
+          "highContrast": "#0000FF"
+        }
+      },
+      {
+        "id": "fictionWriter.red",
+        "description": "Red Color",
+        "defaults": {
+          "dark": "#ef5350",
+          "light": "#e53935",
+          "highContrast": "#FF0000"
+        }
+      },
+      {
+        "id": "fictionWriter.lightred",
+        "description": "Light Red Color",
+        "defaults": {
+          "dark": "#e06c75",
+          "light": "#e06c75",
+          "highContrast": "#FF0000"
+        }
+      },
+      {
+        "id": "fictionWriter.lime",
+        "description": "Lime Color",
+        "defaults": {
+          "dark": "#8BC34A",
+          "light": "#8BC34A",
+          "highContrast": "#00FF00"
+        }
+      },
+      {
+        "id": "fictionWriter.green",
+        "description": "Green Color",
+        "defaults": {
+          "dark": "#00E676",
+          "light": "#2E7D32",
+          "highContrast": "#00FF00"
+        }
+      },
+      {
+        "id": "fictionWriter.orange",
+        "description": "Orange Color",
+        "defaults": {
+          "dark": "#FF9800",
+          "light": "#EF6C00",
+          "highContrast": "#000000"
+        }
+      },
+      {
+        "id": "fictionWriter.amber",
+        "description": "Amber Color",
+        "defaults": {
+          "dark": "#FFC107",
+          "light": "#FFA000",
+          "highContrast": "#000000"
+        }
+      },
+      {
+        "id": "fictionWriter.lightamber",
+        "description": "Amber Color",
+        "defaults": {
+          "dark": "#F6D55C",
+          "light": "#F6D55C",
+          "highContrast": "#ffffff"
+        }
+      },
+      {
+        "id": "fictionWriter.purple",
+        "description": "Purple Color",
+        "defaults": {
+          "dark": "#9C27B0",
+          "light": "#9C27B0",
+          "highContrast": "#ddb6b6"
+        }
+      },
+      {
+        "id": "fictionWriter.bluegrey",
+        "description": "Blue Grey Color",
+        "defaults": {
+          "dark": "#607D8B",
+          "light": "#607D8B",
+          "highContrast": "#000000"
+        }
+      },
+      {
+        "id": "fictionWriter.grey",
+        "description": "Grey Color",
+        "defaults": {
+          "dark": "#7e7e7e",
+          "light": "#8e8e8e",
+          "highContrast": "#000000"
+        }
+      },
+      {
+        "id": "fictionWriter.yellow",
+        "description": "Yellow Color",
+        "defaults": {
+          "dark": "#FFEB3B",
+          "light": "#FBC02D",
+          "highContrast": "#FFFFFF"
+        }
+      },
+      {
+        "id": "fictionWriter.pink",
+        "description": "Pink Color",
+        "defaults": {
+          "dark": "#F06292",
+          "light": "#F06292",
+          "highContrast": "#FF0000"
+        }
+      },
+      {
+        "id": "fictionWriter.white",
+        "description": "White Color",
+        "defaults": {
+          "dark": "#cccccc",
+          "light": "#FFFFFF",
+          "highContrast": "#FFFFFF"
+        }
+      },
+      {
+        "id": "fictionWriter.black",
+        "description": "Black Color",
+        "defaults": {
+          "dark": "#111111",
+          "light": "#333333",
+          "highContrast": "#000000"
+        }
+      }
+    ],
     "configuration": [
       {
         "title": "Editors",
@@ -25,6 +180,18 @@
             "markdownDescription": "Enables an experimental rich text editor (based on [ProseMirror](https://prosemirror.net/)).",
             "order": 1
           },
+          "fictionWriter.editors.richTextEditor.focusMode": {
+            "type": "string",
+            "enum": [
+              "none",
+              "paragraph",
+              "sentence"
+            ],
+            "default": "none",
+            "markdownDescription": "Emphasize the active sentence or paragraph. Select `none` to disable.",
+            "order": 1
+          },
+
           "fictionWriter.editors.enableAltMarkdownEditor": {
             "type": "boolean",
             "default": true,
@@ -94,19 +261,66 @@
         "title": "Metadata",
         "properties": {
           "fictionWriter.metadata.view.enabled": {
-            "order": 5,
+            "order": 1,
             "type": "boolean",
             "default": true,
             "description": "Enable File Metadata View"
           },
+          "fictionWriter.metadata.default": {
+            "order": 2,
+            "type": "object",
+            "default": {
+              "status": "draft",
+              "tags": "[]"
+            },
+            "markdownDescription": "Default metadata keys to be added when new meta block is created",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "fictionWriter.metadata.view.icons": {
+            "order": 3,
+            "type": "object",
+            "markdownDescription": "Icons for metadata. Select any value from [Code Icons](https://code.visualstudio.com/api/references/icons-in-labels#icon-listing). The icon will be set if any partial or full match of the `Item` is found in the metadata key or value.",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "fictionWriter.metadata.view.colors": {
+            "order": 4,
+            "type": "object",
+            "markdownDescription": "The color will be set if the text from `Item` is found in the metadata key or value. You can customize these colors in [workbench customizations](https://code.visualstudio.com/api/extension-guides/color-theme#workbench-colors). Find [here](#) the full lsit of color ids.",
+            "additionalProperties": {
+              "type": "string",
+              "enum": [
+                "blue",
+                "lightblue",
+                "teal",
+                "red",
+                "lightred",
+                "lime",
+                "green",
+                "orange",
+                "amber",
+                "lightamber",
+                "purple",
+                "bluegrey",
+                "grey",
+                "yellow",
+                "pink",
+                "white",
+                "black"
+              ]
+            }
+          },
           "fictionWriter.metadata.filters.enabled": {
-            "order": 10,
+            "order": 5,
             "type": "boolean",
             "default": true,
             "description": "Enable Global Metadata Filters"
           },
           "fictionWriter.metadata.filters.countBadges.enabled": {
-            "order": 15,
+            "order": 6,
             "type": "boolean",
             "default": true,
             "description": "Show counters in Filter View"
@@ -114,6 +328,12 @@
         }
       }
     ],
+    "configurationDefaults": {
+      "[markdown]": {
+        "editor.wordWrap": "on",
+        "editor.quickSuggestions": false
+      }
+    },
     "icons": {
       "fa-trash-can": {
         "description": "trash-can",
@@ -561,7 +781,16 @@
           "when": "fictionWriter.textAnalysis.enabled == true"
         }
       ]
-    }
+    },
+    "grammars": [
+      {
+        "scopeName": "markdown-fictionWriter.injection",
+        "path": "./grammars/fiction.markdown.tmGrammar.json",
+        "injectTo": [
+          "text.html.markdown"
+        ]
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run package",

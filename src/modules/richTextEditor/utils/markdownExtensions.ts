@@ -23,8 +23,13 @@ const customMarkdownSerializer: MarkdownSerializer = new MarkdownSerializer(
         ...defaultMarkdownSerializer.nodes,
         "paragraph": (state: MarkdownSerializerState, node: Node) => {
             state.renderInline(node);
-            state.text('\n\n');
-        },
+
+            // we want to keep empty paragraphs, to match the parseMultipleEmptyLines rule
+            if (node.textContent.trim() === ''){
+                state.write("\n");
+            }
+            state.closeBlock(node);
+        }
     },
     defaultMarkdownSerializer.marks,
     defaultMarkdownSerializer.options);

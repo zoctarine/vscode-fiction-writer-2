@@ -7,3 +7,4 @@ export * from "./options";
 export * from "./faIcons";
 export {FwFileInfo} from './fwFileInfo';
 export * from "./fileManager";
+export * as mapExtensions from "./mapExtensions";

@@ -4,7 +4,7 @@ import * as path from 'path';
 import {DisposeManager} from "../../core/disposable";
 import {StateManager} from '../../core/stateManager';
 import {TreeNode, TreeStructure} from '../../core/tree/treeStructure';
-import {ProjectCache} from '../metadata';
+import {ColorResolver, IconResolver, ProjectCache} from '../metadata';
 import {defaultIcons, MetadataOptions} from '../metadata/metadataOptions';
 import * as yaml from 'js-yaml';
 import {FilterOptions} from './filterOptions';
@@ -39,7 +39,8 @@ export class FilterTreeDataProvider extends DisposeManager
 
     public _tree: TreeStructure<FilterItem>;
 
-    constructor(private _options: FilterOptions, private _cache: ProjectCache, private _stateManager: StateManager) {
+    constructor(private _options: FilterOptions, private _cache: ProjectCache, private _stateManager: StateManager,
+                private _resolvers: { iconResolver: IconResolver; colorResolver: ColorResolver } ) {
         super();
         this._tree = new TreeStructure(new TreeNode<FilterItem>('root', new FilterItem()));
         this._treeView = vscode.window.createTreeView('fictionWriter.views.metadata.filters', {
@@ -124,13 +125,13 @@ export class FilterTreeDataProvider extends DisposeManager
                 item.contextValue = element.data.visible
                     ? "filterItemMetadataKey"
                     : "filterItemMetadataKeyHidden";
-                item.iconPath = new ThemeIcon(defaultIcons.get(element.data.icon ?? '') ?? 'symbol-constant');
+                item.iconPath = this._getIcon(element.data.icon);
                 break;
             case FilterItemType.Value:
                 item.tooltip = "";
                 item.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
                 item.contextValue = "filterItemMetadataValue";
-                item.iconPath = new ThemeIcon(defaultIcons.get(element.data.icon ?? '') ?? 'symbol-constant', new ThemeColor('descriptionForeground'));
+                item.iconPath = this._getIcon(element.data.icon);
                 break;
             case FilterItemType.File:
                 item.collapsibleState = vscode.TreeItemCollapsibleState.None;
@@ -157,6 +158,10 @@ export class FilterTreeDataProvider extends DisposeManager
         return item;
     }
 
+    private _getIcon(value?: string, defaultIcon: string =  'symbol-constant'): vscode.ThemeIcon | undefined {
+        const color = this._resolvers.colorResolver.resolve(value) ?? new ThemeColor("foreground");
+        return this._resolvers.iconResolver.resolve(value, color) ?? new ThemeIcon(defaultIcon, color);
+    }
 
     public reload(): void {
         this._refreshTree();
