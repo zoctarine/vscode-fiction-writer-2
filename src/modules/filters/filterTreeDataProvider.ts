@@ -8,12 +8,18 @@ import {ColorResolver, IconResolver, ProjectCache} from '../metadata';
 import {defaultIcons, MetadataOptions} from '../metadata/metadataOptions';
 import * as yaml from 'js-yaml';
 import {FilterOptions} from './filterOptions';
+import {MetadataTreeDataProvider, MetadataTreeItem} from '../metadata/metadataTreeDataProvider';
 
 enum FilterItemType {
     Key,
     Value,
     File,
     OtherContainer
+}
+
+class MetaFilter {
+    exactMatch: boolean = false;
+    value?: string;
 }
 
 export class FilterItem {
@@ -40,7 +46,8 @@ export class FilterTreeDataProvider extends DisposeManager
     public _tree: TreeStructure<FilterItem>;
 
     constructor(private _options: FilterOptions, private _cache: ProjectCache, private _stateManager: StateManager,
-                private _resolvers: { iconResolver: IconResolver; colorResolver: ColorResolver } ) {
+                private _metadataView?: MetadataTreeDataProvider,
+                private _resolvers?: { iconResolver: IconResolver; colorResolver: ColorResolver }) {
         super();
         this._tree = new TreeStructure(new TreeNode<FilterItem>('root', new FilterItem()));
         this._treeView = vscode.window.createTreeView('fictionWriter.views.metadata.filters', {
@@ -155,12 +162,13 @@ export class FilterTreeDataProvider extends DisposeManager
                 item.iconPath = new ThemeIcon(element.data.icon ?? 'ellipsis');
                 break;
         }
+
         return item;
     }
 
-    private _getIcon(value?: string, defaultIcon: string =  'symbol-constant'): vscode.ThemeIcon | undefined {
-        const color = this._resolvers.colorResolver.resolve(value) ?? new ThemeColor("foreground");
-        return this._resolvers.iconResolver.resolve(value, color) ?? new ThemeIcon(defaultIcon, color);
+    private _getIcon(value?: string, defaultIcon: string = 'symbol-constant'): vscode.ThemeIcon | undefined {
+        const color = this._resolvers?.colorResolver.resolve(value) ?? new ThemeColor("foreground");
+        return this._resolvers?.iconResolver.resolve(value, color) ?? new ThemeIcon(defaultIcon, color);
     }
 
     public reload(): void {
@@ -221,7 +229,7 @@ export class FilterTreeDataProvider extends DisposeManager
 
             for (const valueItem of values) {
                 const valueData = new FilterItem();
-                valueData.name = valueItem.value.toString();
+                valueData.name = valueItem.value.toString().trim();
                 valueData.description = "";
                 valueData.type = FilterItemType.Value;
                 valueData.fsPath = "";
@@ -245,7 +253,7 @@ export class FilterTreeDataProvider extends DisposeManager
             this._tree.insertLast(otherNode);
         }
         this._fireEvents();
-      //  this.refreshFilter();
+        //  this.refreshFilter();
     }
 
     private _fireEvents() {
@@ -274,24 +282,35 @@ export class FilterTreeDataProvider extends DisposeManager
         this.reload();
     }
 
-    private async _filter(value: string | undefined) {
+    private async _filter(filter: MetaFilter | undefined) {
         const toBeReviled: TreeNode<FilterItem>[] = [];
-        if (!value) {
+        const filterExactMatch = (values: string[], node: TreeNode<FilterItem>) => {
+            return values.filter(v => node.data.name == v || node.data.description == v).length > 0;
+        };
+        const filterAnyMatch = (values: string[], node: TreeNode<FilterItem>) => values.filter(v => node.data.name.toLowerCase().indexOf(v) > -1).length > 0;
+        const filterFunc = filter?.exactMatch
+            ? filterExactMatch
+            : filterAnyMatch;
+
+        if (!filter?.value) {
             this._tree.toggleChildren(this._tree.root, true);
             this._treeView.description = undefined;
-        } else if(value.length > 1){
-            this._treeView.description = `Filter: ${value}`;
+        } else if (filter?.value.length > 1) {
+            this._treeView.description = `Filter: ${filter.value}`;
             this._tree.toggleChildren(this._tree.root, false);
             this._onDidChangeTreeData.fire();
-            const values = value.toLowerCase().split(/[,\s]/).map((v) => v.trim()).filter((v) => v.length > 1);
+            const values =
+                filter?.exactMatch
+                    ? [filter.value]
+                    : filter.value.toLowerCase().split(/[,\s]/).map((v) => v.trim()).filter((v) => v.length > 1);
             for (const node of this._tree.toList()) {
 
-                if (values.filter(v => node.data.name.toLowerCase().indexOf(v) > -1).length > 0) {
+                if (filterFunc(values, node)) {
                     try {
                         this._tree.toggleParent(node, true);
                         this._tree.toggleChildren(node, true);
                         toBeReviled.push(node);
-                    } catch (err){
+                    } catch (err) {
                         console.warn(err);
                     }
                 }
@@ -304,24 +323,26 @@ export class FilterTreeDataProvider extends DisposeManager
         this._onDidChangeTreeData.fire();
     }
 
-    public async addFilter(value:string){
+    public async addFilter(value?: MetaFilter, options?: FilterOptions) {
+        if (!value) return this.removeFilter();
+
         vscode.commands.executeCommand('setContext', 'fictionWriter.views.metadata.hasFilter', true);
         this._stateManager.set("fictionWriter.views.metadata.filter", value);
         this._filter(value);
     }
 
-    public async removeFilter(){
+    public async removeFilter() {
         vscode.commands.executeCommand('setContext', 'fictionWriter.views.metadata.hasFilter', false);
         this._stateManager.remove("fictionWriter.views.metadata.filter");
         await this._filter(undefined);
     }
 
-    public async refreshFilter(){
-       const value = await this._stateManager.get("fictionWriter.views.metadata.filter", undefined);
-        if (value){
-           await this.addFilter(value);
+    public async refreshFilter() {
+        const value = await this._stateManager.get("fictionWriter.views.metadata.filter", undefined);
+        if (value) {
+            await this.addFilter(value);
         } else {
-           await this.removeFilter();
+            await this.removeFilter();
         }
     }
 
@@ -330,15 +351,45 @@ export class FilterTreeDataProvider extends DisposeManager
             "title": "Search",
             "prompt": "Search for metadata",
             "validateInput": (value) => {
-                this._filter(value);
+                this._filter({value, exactMatch: false});
                 return null;
             }
         });
-        if (value){
-            this.addFilter(value);
+        if (value) {
+            this.addFilter({value, exactMatch: false});
         } else {
             this.removeFilter();
         }
+    }
+
+    public async toggleMetadataViewLink() {
+        let isLinked = this._stateManager.get("fictionWriter.views.metadata.isLinked", false);
+        isLinked = !isLinked;
+        vscode.commands.executeCommand('setContext', 'fictionWriter.views.metadata.isLinked', isLinked);
+        this._stateManager.set("fictionWriter.views.metadata.isLinked", isLinked);
+        if (!this._metadataView) return;
+
+        const applyFilter = (e: MetadataTreeItem | undefined) => {
+            // TODO: make MetadataTreeItem a TreeItem<MetadataItem> so we can trace back parent
+            let filter = e?.title;
+            if (e?.description && (!e?.children || e.children.length === 0)) {
+                filter = e.description.toString();
+            }
+            this.addFilter({value: filter, exactMatch: true});
+        };
+
+        if (!isLinked) {
+            this.removeFilter();
+        } else {
+            applyFilter(this._metadataView.getSelectedItem());
+        }
+
+
+        this.manageDisposable(this._metadataView.onDidChangeSelection((e) => {
+            if (isLinked) {
+                applyFilter(e);
+            }
+        }));
     }
 }
 

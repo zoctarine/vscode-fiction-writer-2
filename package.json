@@ -189,14 +189,19 @@
             ],
             "default": "none",
             "markdownDescription": "Emphasize the active sentence or paragraph. Select `none` to disable.",
-            "order": 1
+            "order": 2
           },
-
+          "fictionWriter.editors.richTextEditor.showMergeEditorOnClose": {
+            "type": "boolean",
+            "default": true,
+            "markdownDescription": "Show merge editor when closing the rich text editor.\n> **Note**: this is recommended, as the text editor will parse and serialze the original file markdown content.",
+            "order": 3
+          },
           "fictionWriter.editors.enableAltMarkdownEditor": {
             "type": "boolean",
             "default": true,
             "description": "Enables an alternative markdown editor (based on CodeMirror).",
-            "order": 2
+            "order": 4
           },
           "fictionWriter.editors.autoSyncIntervalInSeconds": {
             "type": "number",
@@ -204,7 +209,7 @@
             "minimum": 5,
             "maximum": 1440,
             "description": "External editors need to sync modified contents with VS Code. For large documents, syncing at every keystroke is not efficient..",
-            "order": 3
+            "order": 5
           }
         }
       },
@@ -324,6 +329,12 @@
             "type": "boolean",
             "default": true,
             "description": "Show counters in Filter View"
+          },
+          "fictionWriter.metadata.filters.linkWithFileView.enabled": {
+            "order": 7,
+            "type": "boolean",
+            "default": true,
+            "description": "Automatically sets the filter based on selected item in the File Metadata view"
           }
         }
       }
@@ -511,6 +522,16 @@
           "command": "fictionWriter.views.metadata.filters.removeFilter",
           "when": "view == fictionWriter.views.metadata.filters && fictionWriter.views.metadata.hasFilter == true",
           "group": "navigation"
+        },
+        {
+          "command": "fictionWriter.views.metadata.filters.linkWithFileView.off",
+          "when": "view == fictionWriter.views.metadata.filters && fictionWriter.views.metadata.isLinked == true",
+          "group": "navigation"
+        },
+        {
+          "command": "fictionWriter.views.metadata.filters.linkWithFileView.on",
+          "when": "view == fictionWriter.views.metadata.filters && fictionWriter.views.metadata.isLinked == false",
+          "group": "navigation"
         }
       ],
       "view/item/context": [
@@ -684,14 +705,26 @@
       },
       {
         "command": "fictionWriter.views.metadata.filters.setFilter",
-        "title": "Set Filter",
+        "title": "Filter: Set",
         "icon": "$(filter)",
         "category": "Markdown Fiction Writer"
       },
       {
         "command": "fictionWriter.views.metadata.filters.removeFilter",
-        "title": "Remove Filter",
+        "title": "Filter: Remove",
         "icon": "$(filter-filled)",
+        "category": "Markdown Fiction Writer"
+      },
+      {
+        "command": "fictionWriter.views.metadata.filters.linkWithFileView.on",
+        "title": "Sync with File Metadata: Enable",
+        "icon": "$(sync)",
+        "category": "Markdown Fiction Writer"
+      },
+      {
+        "command": "fictionWriter.views.metadata.filters.linkWithFileView.off",
+        "title": "Sync with File Metadata: Disable",
+        "icon": "$(sync-ignored)",
         "category": "Markdown Fiction Writer"
       }
     ],

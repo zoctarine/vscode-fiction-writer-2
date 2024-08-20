@@ -19,16 +19,16 @@ export function activate(context: vscode.ExtensionContext) {
     // context.subscriptions.push(stateManager);
     let projectRegistration = projectsModule.register(stateManager);
     let cache = new ProjectCache(projectsModule.fileManager!);
-
     context.subscriptions.push(
         cache,
         projectRegistration,
         textAnalysisModule.register(stateManager),
         metadataModule.register(context, stateManager, projectsModule.fileManager),
         richTextEditorModule.register(context, stateManager, fileManager),
-        filtersModule.register(stateManager, cache, metadataModule.resolvers)
+        filtersModule.register(stateManager, cache, metadataModule.metadataTreeDataProvider, metadataModule.resolvers)
     );
 
+    console.log(context.storageUri?.fsPath);
    // context.subscriptions.push(CodeMirrorEditorProvider.register(context));
 
 

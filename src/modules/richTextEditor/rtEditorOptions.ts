@@ -5,6 +5,7 @@ export class RtEditorOptions extends Options {
 
     public enabled = this.valueOf('enabled', true, true);
     public focusMode = this.valueOf('focusMode', 'paragraph');
+    public showMergeEditor = this.valueOf('showMergeEditorOnClose', true);
 
     constructor() {
         super(RtEditorOptions.SectionName);

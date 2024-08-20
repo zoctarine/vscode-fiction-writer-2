@@ -18,6 +18,10 @@ export class MetadataTreeDataProvider extends DisposeManager implements vscode.T
     private _onDidChangeTreeData: vscode.EventEmitter<MetadataTreeItem | undefined | null | void> = new vscode.EventEmitter<MetadataTreeItem | undefined | null | void>();
     readonly onDidChangeTreeData: vscode.Event<MetadataTreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
 
+    // EventEmitter and Event for selection changes
+    private _onDidChangeSelection: vscode.EventEmitter<MetadataTreeItem | undefined> = new vscode.EventEmitter<MetadataTreeItem | undefined>();
+    public readonly onDidChangeSelection: vscode.Event<MetadataTreeItem | undefined> = this._onDidChangeSelection.event;
+
     constructor(private _options: MetadataOptions, private _resolvers: {
         iconResolver: IconResolver;
         colorResolver: ColorResolver
@@ -56,7 +60,11 @@ export class MetadataTreeDataProvider extends DisposeManager implements vscode.T
                     e.element.description = '';
                 }
                 this._onDidChangeTreeData.fire(e.element);
-            })
+            }),
+            this._treeView.onDidChangeSelection((e => {
+                this._onDidChangeSelection.fire(e.selection ? e.selection[0] : undefined);
+            })),
+            this._onDidChangeSelection
         );
     }
 
@@ -80,6 +88,9 @@ export class MetadataTreeDataProvider extends DisposeManager implements vscode.T
         }
     }
 
+    getSelectedItem(): MetadataTreeItem | undefined {
+        return this._treeView.selection ? this._treeView.selection[0] : undefined;
+    }
 
     private getChildItems(meta: any = this._metadata?.value, parentKey: string = ''): MetadataTreeItem[] {
         if (!meta) {

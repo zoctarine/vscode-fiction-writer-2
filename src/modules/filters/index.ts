@@ -8,6 +8,7 @@ import {StateManager} from '../../core/stateManager';
 import {FilterOptions} from './filterOptions';
 import {ColorResolver, IconResolver, ProjectCache} from '../metadata';
 import {addCommand} from '../../core';
+import {MetadataTreeDataProvider} from '../metadata/metadataTreeDataProvider';
 
 const log = logger.makeLog("[ProjectsModule]", "red");
 
@@ -18,16 +19,15 @@ class FiltersModule extends DisposeManager {
     stateManger!: StateManager;
     filterDataProvider: FilterTreeDataProvider | undefined;
     resolvers: { iconResolver: IconResolver; colorResolver: ColorResolver } | undefined;
+    metadataView?: MetadataTreeDataProvider;
 
     constructor() {
         super();
     }
 
     activate(): void {
-        log.debug("activate");
-
         this.filterDataProvider = new FilterTreeDataProvider(
-            this.options, this.projectCache, this.stateManger, this.resolvers!);
+            this.options, this.projectCache, this.stateManger, this.metadataView, this.resolvers!);
 
         this.manageDisposable(
             this.filterDataProvider,
@@ -42,6 +42,12 @@ class FiltersModule extends DisposeManager {
             }),
             addCommand('views.metadata.filters.removeFilter', () => {
                 this.filterDataProvider?.removeFilter();
+            }),
+            addCommand('views.metadata.filters.linkWithFileView.on', () => {
+                this.filterDataProvider?.toggleMetadataViewLink();
+            }),
+            addCommand('views.metadata.filters.linkWithFileView.off', () => {
+                this.filterDataProvider?.toggleMetadataViewLink();
             })
         );
     };
@@ -57,12 +63,14 @@ class FiltersModule extends DisposeManager {
             : this.deactivate();
     }
 
-    register(stateManager: StateManager, cache: ProjectCache, resolvers: {
-        iconResolver: IconResolver;
-        colorResolver: ColorResolver
-    }): vscode.Disposable {
+    register(stateManager: StateManager, cache: ProjectCache, metadataView?: MetadataTreeDataProvider,
+             resolvers?: {
+                 iconResolver: IconResolver;
+                 colorResolver: ColorResolver,
+             }): vscode.Disposable {
         this.resolvers = resolvers;
         this.stateManger = stateManager;
+        this.metadataView = metadataView;
         this.projectCache = cache;
         this.options.enabled.onChanged((enabled) => {
             console.log("[options.enabled.onChanged]", `to: ${enabled}`);

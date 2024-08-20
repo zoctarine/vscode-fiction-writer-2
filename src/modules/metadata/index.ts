@@ -19,7 +19,7 @@ class MetadataModule extends DisposeManager {
     private fileManager: FwFileManager | undefined;
     private context: ExtensionContext | undefined;
     private options = new MetadataOptions();
-    private metadataTreeDataProvider: MetadataTreeDataProvider | undefined;
+    metadataTreeDataProvider: MetadataTreeDataProvider | undefined;
     private metadataDecorationProvider: MetadataTreeDecorationProvider | undefined;
     resolvers = {
         iconResolver: new IconResolver(),

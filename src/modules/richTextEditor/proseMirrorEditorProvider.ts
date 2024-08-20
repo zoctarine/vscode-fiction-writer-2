@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as crypto from 'crypto';
 
 import {EditorState} from "prosemirror-state";
 import {Step} from "prosemirror-transform";
@@ -9,6 +10,7 @@ import {getNonce, getWebviewRootUri} from '../../core/nonce';
 import {StateManager} from '../../core/stateManager';
 import {DisposeManager} from '../../core';
 import {RtEditorOptions} from './rtEditorOptions';
+import path from 'path';
 
 
 export class ProseMirrorEditorProvider extends DisposeManager
@@ -55,6 +57,8 @@ export class ProseMirrorEditorProvider extends DisposeManager
         let subscriptions: vscode.Disposable[] = [];
         let lastVersion = document.version;
         let metadataBlock = new InputFileProcessor(document.getText()).metadataBlock;
+        let showMergeEditor = this._options.showMergeEditor.value;
+        let tmpStorageLocation = this._context.storageUri;
 
         webviewPanel.webview.options = {
             enableScripts: true,
@@ -62,7 +66,8 @@ export class ProseMirrorEditorProvider extends DisposeManager
         };
         webviewPanel.webview.html = this.getHtmlForWebview(webviewPanel.webview);
 
-        function updateWebview(options?:{}) {
+        function updateWebview(options?: {}) {
+            if (isDisposed) return;
             if (!webviewPanel || !webviewPanel.active) return;
 
             const text = processInputFile(document.getText());
@@ -79,11 +84,25 @@ export class ProseMirrorEditorProvider extends DisposeManager
         }
 
         function updateWebviewOptions(options: {}) {
+            if (isDisposed) return;
             if (!webviewPanel || !webviewPanel.active) return;
             webviewPanel.webview.postMessage({
                 type: 'update',
                 options
             });
+        }
+
+        function getTmpFile(document: vscode.TextDocument): vscode.Uri {
+            const filename = path.posix.parse(document.fileName).name;
+
+            const hsh =  crypto.createHash('sha256').update(filename).digest('hex');
+
+            const tmpUri = tmpStorageLocation
+                ? path.posix.join(
+                    tmpStorageLocation.fsPath, filename + hsh + ".tmp")
+                : document.uri.fsPath + ".tmp";
+
+            return vscode.Uri.parse(tmpUri);
         }
 
         subscriptions.push(this._options.focusMode.onChanged((value) => {
@@ -120,17 +139,14 @@ export class ProseMirrorEditorProvider extends DisposeManager
             }
         }, subscriptions);
 
-            vscode.workspace.onDidSaveTextDocument(e => {
-                if (isDisposed) return;
-                if (!webviewPanel.visible) return;
-                if (!webviewPanel.active) return;
-                if (document.uri.toString() !== document.uri.toString()) {
-                    return;
-                }
-                updateWebview(this.getWebViewOptions());
+        vscode.workspace.onDidSaveTextDocument(e => {
+            if (!webviewPanel.visible) return;
+            if (document.uri.toString() !== document.uri.toString()) {
+                return;
+            }
+            updateWebview(this.getWebViewOptions());
 
-
-            }, subscriptions);
+        }, subscriptions);
 
         vscode.workspace.onDidChangeTextDocument(e => {
             if (isDisposed) return;
@@ -155,7 +171,8 @@ export class ProseMirrorEditorProvider extends DisposeManager
                         var transaction = editorState.tr;
                         for (let i = 0; i < e.text.length; i++) {
                             transaction.step(Step.fromJSON(schema, e.text[i]));
-                        };
+                        }
+                        ;
 
                         editorState = editorState.apply(transaction);
 
@@ -194,18 +211,44 @@ export class ProseMirrorEditorProvider extends DisposeManager
                 }
             }
 
+            if (showMergeEditor) {
+                const tmpFile = getTmpFile(document);
+                vscode.workspace.openTextDocument(tmpFile).then(prevContent => {
+                    if (prevContent.getText() !== document.getText()) {
+                        vscode.commands.executeCommand(
+                            'vscode.diff',
+                            tmpFile,
+                            document.uri,
+                            'Previous Version ↔ Modified Version',
+                            {
+                                preview: true,
+                                viewColumn: vscode.ViewColumn.Active
+                            }
+                        ).then(e => {
+                            return vscode.workspace.fs.delete(tmpFile);
+                        });
+                    } else {
+                        return vscode.workspace.fs.delete(tmpFile);
+                    }
+                });
+
+            }
         });
 
+        if (this._options.showMergeEditor) {
+            vscode.workspace.fs.copy(document.uri, getTmpFile(document), {overwrite: true});
+        }
         updateWebview(this.getWebViewOptions());
     }
 
-    private getWebViewOptions(){
+    private getWebViewOptions() {
         return {
             highlight: {
                 highlightType: this._options.focusMode.value,
             }
         };
     }
+
     /**
      * Get the static html used for the editor webviews.
      */
@@ -253,4 +296,6 @@ export class ProseMirrorEditorProvider extends DisposeManager
 
         return vscode.workspace.applyEdit(edit);
     }
+
+
 }
