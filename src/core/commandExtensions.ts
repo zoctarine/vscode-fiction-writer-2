@@ -6,6 +6,7 @@ export function addCommand(commandName: string, callback: (...args: any[]) => an
 }
 
 export function makeCommandId(name: string) {
+    if (name.startsWith("fictionWriter.")) return name;
     return `fictionWriter.${name}`;
 }
 

@@ -7,12 +7,12 @@ import {projectsModule} from '../../projectExplorer';
 
 export class ProjectCacheItem {
     public fsPath!: string;
-    public metadata?: {};
+    public metadata?:{ [key: string]: any};
     public displayName?: string;
 }
 
 export class ProjectCache extends DisposeManager{
-    private _cache: Map<string, any> = new Map<string, any>();
+    private _cache: Map<string, ProjectCacheItem> = new Map<string, ProjectCacheItem>();
     private readonly _onCacheChanged = new vscode.EventEmitter<void>();
 
     constructor(fileManager: FwFileManager) {

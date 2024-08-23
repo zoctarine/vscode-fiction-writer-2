@@ -16,7 +16,9 @@ import path from 'path';
 export class ProseMirrorEditorProvider extends DisposeManager
     implements vscode.CustomTextEditorProvider {
 
-    public static register(context: vscode.ExtensionContext, stateManager: StateManager, options: RtEditorOptions): vscode.Disposable {
+    public static register(context: vscode.ExtensionContext,
+                           stateManager: StateManager,
+                           options: RtEditorOptions): vscode.Disposable {
         const provider = new ProseMirrorEditorProvider(context, stateManager, options);
 
         return vscode.Disposable.from(
@@ -93,14 +95,15 @@ export class ProseMirrorEditorProvider extends DisposeManager
         }
 
         function getTmpFile(document: vscode.TextDocument): vscode.Uri {
-            const filename = path.posix.parse(document.fileName).name;
+            // const filename = path.posix.parse(document.fileName).name;
+            // const hsh =  crypto.createHash('sha256').update(filename).digest('hex');
 
-            const hsh =  crypto.createHash('sha256').update(filename).digest('hex');
-
-            const tmpUri = tmpStorageLocation
-                ? path.posix.join(
-                    tmpStorageLocation.fsPath, filename + hsh + ".tmp")
-                : document.uri.fsPath + ".tmp";
+            const tmpUri =
+                // tmpStorageLocation
+                // ? path.posix.join(
+                //     tmpStorageLocation.fsPath, filename + hsh + ".tmp")
+                // :
+                    document.uri.fsPath + ".tmp";
 
             return vscode.Uri.parse(tmpUri);
         }

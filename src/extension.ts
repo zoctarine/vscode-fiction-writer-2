@@ -10,6 +10,7 @@ import {textAnalysisModule} from './modules/textAnalysis';
 import {metadataModule, ProjectCache} from './modules/metadata';
 import {fileManager} from './core';
 import {filtersModule} from './modules/filters';
+import {securityModule} from './modules/security';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -18,14 +19,15 @@ export function activate(context: vscode.ExtensionContext) {
     // HelloWorldPanel.render(context);
     // context.subscriptions.push(stateManager);
     let projectRegistration = projectsModule.register(stateManager);
-    let cache = new ProjectCache(projectsModule.fileManager!);
+    let cache = projectsModule.projectCache!;
     context.subscriptions.push(
         cache,
         projectRegistration,
         textAnalysisModule.register(stateManager),
         metadataModule.register(context, stateManager, projectsModule.fileManager),
         richTextEditorModule.register(context, stateManager, fileManager),
-        filtersModule.register(stateManager, cache, metadataModule.metadataTreeDataProvider, metadataModule.resolvers)
+        filtersModule.register(stateManager, cache, metadataModule.metadataTreeDataProvider, metadataModule.resolvers),
+        securityModule.register()
     );
 
     console.log(context.storageUri?.fsPath);

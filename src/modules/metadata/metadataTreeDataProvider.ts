@@ -62,6 +62,7 @@ export class MetadataTreeDataProvider extends DisposeManager implements vscode.T
                 this._onDidChangeTreeData.fire(e.element);
             }),
             this._treeView.onDidChangeSelection((e => {
+                if (!e.selection) return;
                 this._onDidChangeSelection.fire(e.selection ? e.selection[0] : undefined);
             })),
             this._onDidChangeSelection

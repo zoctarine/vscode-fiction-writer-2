@@ -6,18 +6,18 @@ import {FwFileManager} from "../../core/fwFileManager";
 import {ProjectsOptions} from "./projectsOptions";
 import {DisposeManager} from "../../core/disposable";
 import * as logger from "../../core/logger";
-import {addCommand} from '../../core';
+import {addCommand, FictionWriter} from '../../core';
 import {NodeType} from './nodeType';
 import {Node} from '../../core/tree/node';
 import {StateManager} from '../../core/stateManager';
 import {ProjectNode} from './projectNodes';
-
-const log = logger.makeLog("[ProjectsModule]", "red");
+import {ProjectCache} from '../metadata';
 
 class ProjectsModule extends DisposeManager {
     active = false;
     options = new ProjectsOptions();
     fileManager: FwFileManager | undefined;
+    projectCache: ProjectCache |undefined;
     stateManger!: StateManager;
     projectExplorerDataProvider: ProjectExplorerTreeDataProvider | undefined;
 
@@ -26,36 +26,48 @@ class ProjectsModule extends DisposeManager {
     }
 
     activate(): void {
-        log.debug("activate");
         this.fileManager = new FwFileManager(this.options);
-        this.projectExplorerDataProvider = new ProjectExplorerTreeDataProvider(this.fileManager, this.stateManger);
+        this.projectCache = new ProjectCache(this.fileManager);
+        this.projectExplorerDataProvider = new ProjectExplorerTreeDataProvider(
+            this.options,
+            this.fileManager, this.stateManger, this.projectCache);
 
         this.manageDisposable(
             this.fileManager,
+            this.projectCache,
             this.projectExplorerDataProvider,
-            addCommand('views.projectExplorer.newFile', (node: ProjectNode) => {
+            addCommand(FictionWriter.views.projectExplorer.sync.on, () => {
+                this.projectExplorerDataProvider?.syncWithActiveEditorOn();
+            }),
+            addCommand(FictionWriter.views.projectExplorer.sync.off, () => {
+                this.projectExplorerDataProvider?.syncWithActiveEditorOff();
+            }),
+            addCommand(FictionWriter.views.projectExplorer.newFile, (node: ProjectNode) => {
                 this.projectExplorerDataProvider?.addFile(node);
             }),
-            addCommand('views.projectExplorer.newFolder', (node: ProjectNode) => {
+            addCommand(FictionWriter.views.projectExplorer.newFolder, (node: ProjectNode) => {
                 this.projectExplorerDataProvider?.addFolder(node);
             }),
-            addCommand('views.projectExplorer.rename', (node: ProjectNode) => {
+            addCommand(FictionWriter.views.projectExplorer.rename, (node: ProjectNode) => {
                 this.projectExplorerDataProvider?.rename(node);
             }),
-            addCommand('views.projectExplorer.trash', (node: ProjectNode) => {
+            addCommand(FictionWriter.views.projectExplorer.trash, (node: ProjectNode) => {
                 this.projectExplorerDataProvider?.delete(node);
             }),
-            addCommand('views.projectExplorer.makeVirtualFolder', (node: ProjectNode) => {
+            addCommand(FictionWriter.views.projectExplorer.makeVirtualFolder, (node: ProjectNode) => {
                 this.projectExplorerDataProvider?.makeVirtualFolder(node);
             }),
-            addCommand('views.projectExplorer.breakVirtualFolder', (node: ProjectNode) => {
+            addCommand(FictionWriter.views.projectExplorer.breakVirtualFolder, (node: ProjectNode) => {
                 this.projectExplorerDataProvider?.makeVirtualFolder(node);
             }),
-            addCommand('views.projectExplorer.reload', () => {
-                this.projectExplorerDataProvider?.reload();
+            addCommand(FictionWriter.views.projectExplorer.reorder, () => {
+                this.projectExplorerDataProvider?.enableOrdering();
             }),
-            addCommand('views.projectExplorer.commit', () => {
-                this.projectExplorerDataProvider?.reorderAll();
+            addCommand(FictionWriter.views.projectExplorer.discard, () => {
+                this.projectExplorerDataProvider?.disableOrdering();
+            }),
+            addCommand(FictionWriter.views.projectExplorer.commit, () => {
+               this.projectExplorerDataProvider?.commitOrdering();
             }));
     };
 
@@ -75,7 +87,6 @@ class ProjectsModule extends DisposeManager {
 
         this.stateManger = stateManager;
         this.options.enabled.onChanged((enabled) => {
-            console.log("[options.enabled.onChanged]", `to: ${enabled}`);
             this.updateState(enabled);
         });
 

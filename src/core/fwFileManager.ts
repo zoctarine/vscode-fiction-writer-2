@@ -11,22 +11,21 @@ import {FwFileInfo} from './fwFileInfo';
 export const asPosix = (mixedPath: string) => path.posix.normalize(mixedPath.split(path.sep).join(path.posix.sep));
 
 export class FwFileManager extends DisposeManager {
-    private readonly _fileRegex: RegExp;
-    private readonly _fileGlobpattern: string;
-    private readonly _fileExtensions: string[];
-    private readonly _onFilesChanged = new vscode.EventEmitter<FwFileInfo[]>();
+    private _fileRegex!: RegExp;
+    private _fileGlobpattern!: string;
+    private _fileExtensions!: string[];
+    private _onFilesChanged = new vscode.EventEmitter<FwFileInfo[]>();
     private _silentUpdates = false;
 
     constructor(private _options: ProjectsOptions) {
         super();
-        this._fileExtensions = this._options.fileTypes.value;
 
-        this._fileRegex = new RegExp(`\.(${this._fileExtensions.map(RegEx.escape).join('|')})$`, 'i');
-        this._fileGlobpattern = `**/*.{${this._fileExtensions.join(',')}}`;
-
+        this._loadOptions();
         // We listen to all file changes, and filter on the handler. Might change later
         const watcher = vscode.workspace.createFileSystemWatcher('**/*.*');
         this.manageDisposable(
+            this._options.fileTypes.onChanged(c => {this._loadOptions(); this.loadFiles().then((fi) => this._onFilesChanged.fire(fi));}),
+            this._options.trackingTag.onChanged(c => {this._loadOptions(); this.loadFiles().then((fi) => this._onFilesChanged.fire(fi));}),
             watcher.onDidChange((f) => this._fileChangeHandler(f)),
             watcher.onDidCreate((f) => this._fileChangeHandler(f)),
             watcher.onDidDelete((f) => this._fileChangeHandler(f)),
@@ -35,6 +34,20 @@ export class FwFileManager extends DisposeManager {
 
     public isFwFile(fsPath: string): boolean {
         return this._fileRegex.test(fsPath);
+    }
+
+    private _loadOptions(){
+        this._fileExtensions = this._options.fileTypes.value.map(e => e.startsWith('.') ? e.substring(1) : e);
+
+        const projectTag = this._options.trackingTag.value;
+        if (projectTag !== ''){
+            this._fileGlobpattern = `**/*.${projectTag}{.${this._fileExtensions.join(',.')},}`;
+            this._fileExtensions = this._fileExtensions.map(e => `${projectTag}.${e}`);
+            this._fileRegex = new RegExp(`\.(${this._fileExtensions.map(RegEx.escape).join('|')}|${RegEx.escape(projectTag)})$`, 'i');
+        } else {
+            this._fileGlobpattern = `**/*{.${this._fileExtensions.join(',.')},/}`;
+            this._fileRegex = new RegExp(`\.(${this._fileExtensions.map(RegEx.escape).join('|')})$`, 'i');
+        }
     }
 
     private _fileChangeHandler(e: vscode.Uri): void {
@@ -59,7 +72,7 @@ export class FwFileManager extends DisposeManager {
         const files: FwFileInfo[] = [];
 
         for (const folder of workspaceFolders) {
-            const dirs = await glob(`**/**`, {cwd: folder.uri.fsPath, absolute: true, dot: false, ignore: ['**/.vscode/**']});
+            const dirs = await glob(this._fileGlobpattern, {cwd: folder.uri.fsPath, absolute: true, dot: false, ignore: ['**/.vscode/**']});
             await Promise.all(dirs.map(async (file) => {
                 try {
                     const stat = await fs.promises.stat(file);
@@ -80,7 +93,6 @@ export class FwFileManager extends DisposeManager {
                 // console.log(`Rename: File does not need moving: ${oldPath} -> ${newPath}`);
                 resolve();
             } else {
-                // console.log("Rename: ", [oldPath, newPath]);
                 vscode.workspace.fs.rename(vscode.Uri.parse(oldPath), vscode.Uri.parse(newPath), {
                     overwrite: false,
                 }).then(resolve, reject);

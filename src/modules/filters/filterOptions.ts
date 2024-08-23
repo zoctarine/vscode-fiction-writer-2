@@ -5,7 +5,6 @@ export class FilterOptions extends Options {
 
     public enabled = this.valueOf('enabled', true, true);
     public countBadgesEnabled = this.valueOf('countBadges.enabled', true);
-    public linkWithFileViewEnabled = this.valueOf('linkWithFileView.enabled', true);
 
     constructor() {
         super(FilterOptions.SectionName);

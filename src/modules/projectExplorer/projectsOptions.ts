@@ -4,9 +4,13 @@ export class ProjectsOptions extends Options {
     public static readonly SectionName = 'projects';
 
     public enabled = this.valueOf('enabled', true, true);
+
+
     public fileTypes = this.valueOf('fileTypes', ['md']);
+    public trackingTag = this.valueOf('fileAndFolderTrackingTag', '');
     public sorting = this.valueOf('sorting', 'order');
     public rootFoldersEnabled = this.valueOf('rootFoldersEnabled', true, true);
+    public fileDescriptionMetadataKey = this.valueOf('fileDescriptionMetadataKey', 'projects');
     public rootFolderNames = {
         draft: 'draft',
         trash: '.trash',

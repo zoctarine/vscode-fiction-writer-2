@@ -24,9 +24,10 @@ export class FwFileInfo {
         result.location = parsed.dir;
         result.type = isDirectory ? FwType.Folder : FwType.File;
         // we do not support extensions on folders/directories
-        if (result.type === FwType.Folder) {
-            parsed.name = parsed.name + parsed.ext; parsed.ext = '';
-        }
+        // if (result.type === FwType.Folder) {
+        //     parsed.name = parsed.name + parsed.ext;
+        //     parsed.ext = '';
+        // }
         const groups = FwFile.orderNameRegExp.exec(parsed.name);
         if (groups) {
             const tmpOrders = groups[1].matchAll(FwFile.orderRegExp);

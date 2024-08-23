@@ -237,11 +237,23 @@
             ],
             "markdownDescription": "What file extensions should be considered as project files. (eg. `md` for `.md` files.)"
           },
+          "fictionWriter.projects.fileAndFolderTrackingTag": {
+            "order": 18,
+            "type": "string",
+            "default": "fw",
+            "markdownDescription": "Only manage files and folders ending with this tag in project view.\n\n**Example:** if project tag is `fw` you will need to name your files like `Chapter1.fw/Scene1.fw.md` to be visible in the project view."
+          },
           "fictionWriter.projects.rootFoldersEnabled": {
             "order": 25,
             "type": "boolean",
             "default": true,
             "description": "Enable Root Folders inside Projects"
+          },
+          "fictionWriter.projects.fileDescriptionMetadataKey": {
+            "type": "string",
+            "default": "title",
+            "markdownDescription": "Shows the value of this metadata key, as a description, after the fileName, in the project tree. Leave blank if you don't want to show anything.",
+            "order": 38
           }
         }
       },
@@ -329,12 +341,24 @@
             "type": "boolean",
             "default": true,
             "description": "Show counters in Filter View"
+          }
+        }
+      },
+      {
+        "title": "Security",
+        "properties": {
+          "fictionWriter.security.encrypt.globalPassword": {
+            "type": "string",
+            "default": "FiCtIoNwRiTeR#2",
+            "markdownDescription": "Set a global password for all encrypted files.\n\n**`⚠\uFE0F Warning!`** *Changing this password will make decrypting **ALL** previously encrypted files unreadable!*",
+            "scope": "application",
+            "order": 1
           },
-          "fictionWriter.metadata.filters.linkWithFileView.enabled": {
-            "order": 7,
+          "fictionWriter.security.encrypt.temporaryFies.enabled": {
             "type": "boolean",
             "default": true,
-            "description": "Automatically sets the filter based on selected item in the File Metadata view"
+            "markdownDescription": "Encrypts all temporary files created in extension storage folder with the `#fictionWriter.security.encrypt.globalPassword#`",
+            "order": 2
           }
         }
       }
@@ -474,23 +498,38 @@
       ],
       "view/title": [
         {
+          "command": "fictionWriter.views.projectExplorer.sync.on",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.sync.isOn == false",
+          "group": "navigation"
+        },
+        {
+          "command": "fictionWriter.views.projectExplorer.sync.off",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.sync.isOn == true",
+          "group": "navigation"
+        },
+        {
           "command": "fictionWriter.views.projectExplorer.newFile",
-          "when": "view == fictionWriter.views.projectExplorer",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.isOrdering == false",
           "group": "navigation"
         },
         {
           "command": "fictionWriter.views.projectExplorer.newFolder",
-          "when": "view == fictionWriter.views.projectExplorer",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.isOrdering == false",
           "group": "navigation"
         },
         {
-          "command": "fictionWriter.views.projectExplorer.reload",
-          "when": "view == fictionWriter.views.projectExplorer",
+          "command": "fictionWriter.views.projectExplorer.reorder",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.isOrdering == false",
           "group": "navigation"
         },
         {
           "command": "fictionWriter.views.projectExplorer.commit",
-          "when": "view == fictionWriter.views.projectExplorer",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.isOrdering == true",
+          "group": "navigation"
+        },
+        {
+          "command": "fictionWriter.views.projectExplorer.discard",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.isOrdering == true",
           "group": "navigation"
         },
         {
@@ -562,7 +601,7 @@
         },
         {
           "command": "fictionWriter.views.projectExplorer.trash",
-          "when": "view == projectExplorerView",
+          "when": "view == fictionWriter.views.projectExplorer",
           "group": "3_fictionWriter@5"
         },
         {
@@ -590,7 +629,7 @@
     "commands": [
       {
         "command": "fictionWriter.editors.proseMirror.openInProseMirror",
-        "title": "Edit with ProseMirror Editor",
+        "title": "Open in ProseMirror Editor",
         "category": "FictionWriter",
         "icon": "$(fa-pen-nib)"
       },
@@ -599,6 +638,18 @@
         "title": "Edit with CodeMirror Editor",
         "category": "FictionWriter",
         "icon": "$(fa-pen)"
+      },
+      {
+        "command": "fictionWriter.views.projectExplorer.sync.on",
+        "title": "Sync with active editor: Enable",
+        "icon": "$(sync)",
+        "category": "Markdown Fiction Writer"
+      },
+      {
+        "command": "fictionWriter.views.projectExplorer.sync.off",
+        "title": "Sync with active editor: Disable",
+        "icon": "$(sync-ignored)",
+        "category": "Markdown Fiction Writer"
       },
       {
         "command": "fictionWriter.views.projectExplorer.newFile",
@@ -625,16 +676,22 @@
         "icon": "$(delete)"
       },
       {
-        "command": "fictionWriter.views.projectExplorer.reload",
-        "title": "Refresh Project View",
+        "command": "fictionWriter.views.projectExplorer.reorder",
+        "title": "Reorder items",
         "category": "FictionWriter",
-        "icon": "$(refresh)"
+        "icon": "$(edit)"
       },
       {
         "command": "fictionWriter.views.projectExplorer.commit",
-        "title": "Update file order on disk",
+        "title": "Save order",
         "category": "FictionWriter",
-        "icon": "$(save-all)"
+        "icon": "$(check)"
+      },
+      {
+        "command": "fictionWriter.views.projectExplorer.discard",
+        "title": "Discard order",
+        "category": "FictionWriter",
+        "icon": "$(discard)"
       },
       {
         "command": "fictionWriter.views.projectExplorer.makeVirtualFolder",
@@ -725,6 +782,18 @@
         "command": "fictionWriter.views.metadata.filters.linkWithFileView.off",
         "title": "Sync with File Metadata: Disable",
         "icon": "$(sync-ignored)",
+        "category": "Markdown Fiction Writer"
+      },
+      {
+        "command": "fictionWriter.security.encryptCurrentFile",
+        "title": "Encrypt current file",
+        "enablement": "editorLangId == markdown",
+        "category": "Markdown Fiction Writer"
+      },
+      {
+        "command": "fictionWriter.security.decryptCurrentFile",
+        "title": "Decrypt current file",
+        "enablement": "editorLangId == markdown",
         "category": "Markdown Fiction Writer"
       }
     ],

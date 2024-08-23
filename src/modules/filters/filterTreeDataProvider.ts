@@ -18,7 +18,8 @@ enum FilterItemType {
 }
 
 class MetaFilter {
-    exactMatch: boolean = false;
+    exactMatch?: boolean = false;
+    expandFiles?: boolean = false;
     value?: string;
 }
 
@@ -44,20 +45,24 @@ export class FilterTreeDataProvider extends DisposeManager
     readonly onDidChangeFileDecorations: Event<Uri | Uri[]> = this._onDidChangeFileDecorations.event;
 
     public _tree: TreeStructure<FilterItem>;
-
+    private _activeFilter?: MetaFilter;
+    private _onChangeMetadataViewSubscription?: vscode.Disposable;
+    private readonly TreeViewId = 'fictionWriter.views.metadata.filters';
     constructor(private _options: FilterOptions, private _cache: ProjectCache, private _stateManager: StateManager,
                 private _metadataView?: MetadataTreeDataProvider,
                 private _resolvers?: { iconResolver: IconResolver; colorResolver: ColorResolver }) {
         super();
         this._tree = new TreeStructure(new TreeNode<FilterItem>('root', new FilterItem()));
-        this._treeView = vscode.window.createTreeView('fictionWriter.views.metadata.filters', {
+        this._treeView = vscode.window.createTreeView(this.TreeViewId, {
             treeDataProvider: this,
             showCollapseAll: true,
             canSelectMany: false,
             dragAndDropController: this
         });
-
         this.reload();
+
+
+        this.setMetadataViewLink(this._stateManager.get("fictionWriter.views.metadata.isLinked", false));
 
         this.manageDisposable(
             this._treeView,
@@ -118,7 +123,7 @@ export class FilterTreeDataProvider extends DisposeManager
 
     public getTreeItem(element: TreeNode<FilterItem>): vscode.TreeItem {
         const item: vscode.TreeItem = new vscode.TreeItem(element.id, vscode.TreeItemCollapsibleState.None);
-
+        const expandAll = this._activeFilter?.expandFiles;
         item.label = {
             label: element.data.name,
             highlights: []
@@ -128,7 +133,7 @@ export class FilterTreeDataProvider extends DisposeManager
         switch (element.data.type) {
             case FilterItemType.Key:
                 item.tooltip = "";
-                item.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+                item.collapsibleState = expandAll ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed;
                 item.contextValue = element.data.visible
                     ? "filterItemMetadataKey"
                     : "filterItemMetadataKeyHidden";
@@ -136,7 +141,7 @@ export class FilterTreeDataProvider extends DisposeManager
                 break;
             case FilterItemType.Value:
                 item.tooltip = "";
-                item.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+                item.collapsibleState = expandAll ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed;
                 item.contextValue = "filterItemMetadataValue";
                 item.iconPath = this._getIcon(element.data.icon);
                 break;
@@ -157,7 +162,7 @@ export class FilterTreeDataProvider extends DisposeManager
                 break;
             case FilterItemType.OtherContainer:
                 item.tooltip = "Other tags...";
-                item.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+                item.collapsibleState = expandAll ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed;
                 item.contextValue = "filterItemMetadataOthers";
                 item.iconPath = new ThemeIcon(element.data.icon ?? 'ellipsis');
                 break;
@@ -283,6 +288,7 @@ export class FilterTreeDataProvider extends DisposeManager
     }
 
     private async _filter(filter: MetaFilter | undefined) {
+        this._activeFilter = filter;
         const toBeReviled: TreeNode<FilterItem>[] = [];
         const filterExactMatch = (values: string[], node: TreeNode<FilterItem>) => {
             return values.filter(v => node.data.name == v || node.data.description == v).length > 0;
@@ -334,6 +340,7 @@ export class FilterTreeDataProvider extends DisposeManager
     public async removeFilter() {
         vscode.commands.executeCommand('setContext', 'fictionWriter.views.metadata.hasFilter', false);
         this._stateManager.remove("fictionWriter.views.metadata.filter");
+        vscode.commands.executeCommand(`workbench.actions.treeView.${this.TreeViewId}.collapseAll`);
         await this._filter(undefined);
     }
 
@@ -351,20 +358,17 @@ export class FilterTreeDataProvider extends DisposeManager
             "title": "Search",
             "prompt": "Search for metadata",
             "validateInput": (value) => {
-                this._filter({value, exactMatch: false});
+                this._filter({value});
                 return null;
             }
         });
         if (value) {
-            this.addFilter({value, exactMatch: false});
+            this.addFilter({value});
         } else {
             this.removeFilter();
         }
     }
-
-    public async toggleMetadataViewLink() {
-        let isLinked = this._stateManager.get("fictionWriter.views.metadata.isLinked", false);
-        isLinked = !isLinked;
+    public async setMetadataViewLink(isLinked: boolean) {
         vscode.commands.executeCommand('setContext', 'fictionWriter.views.metadata.isLinked', isLinked);
         this._stateManager.set("fictionWriter.views.metadata.isLinked", isLinked);
         if (!this._metadataView) return;
@@ -375,7 +379,7 @@ export class FilterTreeDataProvider extends DisposeManager
             if (e?.description && (!e?.children || e.children.length === 0)) {
                 filter = e.description.toString();
             }
-            this.addFilter({value: filter, exactMatch: true});
+            this.addFilter({value: filter, exactMatch: true, expandFiles: true});
         };
 
         if (!isLinked) {
@@ -384,12 +388,19 @@ export class FilterTreeDataProvider extends DisposeManager
             applyFilter(this._metadataView.getSelectedItem());
         }
 
-
-        this.manageDisposable(this._metadataView.onDidChangeSelection((e) => {
+        this._onChangeMetadataViewSubscription?.dispose();
+        this._onChangeMetadataViewSubscription = this._metadataView.onDidChangeSelection((e) => {
+           if (!e) return;
+           
             if (isLinked) {
                 applyFilter(e);
             }
-        }));
+        });
+    }
+
+    public async toggleMetadataViewLink() {
+        let isLinked = this._stateManager.get("fictionWriter.views.metadata.isLinked", false);
+        this.setMetadataViewLink(!isLinked);
     }
 }
 
