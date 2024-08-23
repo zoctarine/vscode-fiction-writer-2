@@ -1,5 +1,6 @@
 const ViewsProjectExplorer = 'fictionWriter.views.projectExplorer';
 const ViewsMetadata = 'fictionWriter.views.metadata';
+const Security = 'fictionWriter.security';
 
 export const FictionWriter = {
     views: {
@@ -12,9 +13,12 @@ export const FictionWriter = {
             trash: `${ViewsProjectExplorer}.trash`,
             makeVirtualFolder: `${ViewsProjectExplorer}.makeVirtualFolder`,
             breakVirtualFolder: `${ViewsProjectExplorer}.breakVirtualFolder`,
-            reorder: `${ViewsProjectExplorer}.reorder`,
-            discard: `${ViewsProjectExplorer}.discard`,
-            commit: `${ViewsProjectExplorer}.commit`,
+            reorder:{
+                start: `${ViewsProjectExplorer}.reorder.start`,
+                discard: `${ViewsProjectExplorer}.reorder.discard`,
+                commit: `${ViewsProjectExplorer}.reorder.commit`,
+                redistribute: `${ViewsProjectExplorer}.reorder.redistribute`,
+            },
             sync: {
                 on: `${ViewsProjectExplorer}.sync.on`,
                 off: `${ViewsProjectExplorer}.sync.off`,
@@ -25,6 +29,9 @@ export const FictionWriter = {
             id: `${ViewsMetadata}`,
             isLinked: `${ViewsMetadata}.isLinked`
         }
+    },
+    security:{
+        exportKeys: `${Security}.exportKeys`,
     },
 };
 

@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import {ThemeColor, ThemeIcon} from 'vscode';
+import {ThemeColor, ThemeIcon, ViewBadge} from 'vscode';
 import {OrderHandler} from "./orderHandler";
 import {asPosix, FwFileManager} from "../../core/fwFileManager";
 import * as path from 'path';
@@ -44,7 +44,6 @@ export class ProjectExplorerTreeDataProvider extends DisposeManager implements v
             canSelectMany: false,
             dragAndDropController: this
         });
-        this.reload();
 
         this.manageDisposable(
             this._treeView,
@@ -66,8 +65,9 @@ export class ProjectExplorerTreeDataProvider extends DisposeManager implements v
                 this._handleActiveTextEditorChanged(e);
             })
         );
-    }
 
+        this.reload();
+    }
 
     private buildHierarchy(fileInfos: FwFileInfo[]): ProjectNode {
         // sort results in order by id
@@ -191,7 +191,7 @@ export class ProjectExplorerTreeDataProvider extends DisposeManager implements v
                 label: element.item.name,
                 highlights: []
             },
-            description: element.item.description,
+            description: `${this._isBatchOrderingEnabled ? `(${element.item.order}) `:''}${element.item.description ?? ''}`,
             tooltip,
             iconPath: new ThemeIcon(FaIcons.fileLines, new ThemeColor('foreground')),
             collapsibleState: element?.type === NodeType.File
@@ -209,7 +209,6 @@ export class ProjectExplorerTreeDataProvider extends DisposeManager implements v
         switch (element.type) {
             case NodeType.File:
                 item.iconPath = new ThemeIcon(FaIcons.fileLines);
-                item.description = (element.item.description ?? "");
                 break;
             case NodeType.VirtualFolder:
                 item.iconPath = new ThemeIcon(
@@ -219,13 +218,11 @@ export class ProjectExplorerTreeDataProvider extends DisposeManager implements v
                     new ThemeColor(element.item.fsName
                         ? 'foreground'
                         : 'disabledForeground'));
-                item.description = (element.item.description ?? "");
 
                 break;
             case NodeType.Folder:
                 item.iconPath = new ThemeIcon(element.item.name === '.trash'
                     ? FaIcons.trashCan : FaIcons.folder);
-                item.description = (element.item.description ?? "");
 
                 break;
             case NodeType.WorkspaceFolder:
@@ -237,12 +234,10 @@ export class ProjectExplorerTreeDataProvider extends DisposeManager implements v
             case NodeType.Filter:
                 item.iconPath = new ThemeIcon(FaIcons.link);
                 item.label.label = '...';//`${element.name}`;
-                item.description = element.item.description;
                 break;
             case NodeType.FilterRoot:
                 item.iconPath = new ThemeIcon(FaIcons.magnifyingGlass);
                 item.label.label = '...';//`${element.name}`;
-                item.description = element.item.description;
                 break;
             case NodeType.Root:
                 item.iconPath = new ThemeIcon("root-folder");
@@ -349,9 +344,9 @@ export class ProjectExplorerTreeDataProvider extends DisposeManager implements v
         const source = this._tree.getNode(transferItem.value[0]?.id ?? "");
         const dest = this._tree.getNode(target?.id ?? "");
         this._insert(source, dest);
-        if (!this._isBatchOrderingEnabled) {
-            this.commit();
-        }
+        // if (!this._isBatchOrderingEnabled) {
+        //     this.commit();
+        // }
     }
 
     private _insert(source?: ProjectNode, dest?: ProjectNode) {
@@ -422,6 +417,7 @@ export class ProjectExplorerTreeDataProvider extends DisposeManager implements v
             .then(() => {
                 this._isBatchOrderingEnabled = true;
                 this._treeView.description = "Reordering";
+                return this.reload();
             });
     }
 
@@ -438,6 +434,9 @@ export class ProjectExplorerTreeDataProvider extends DisposeManager implements v
         this.commit();
     }
 
+    public async redistribute() {
+    }
+
     public syncWithActiveEditorOn() {
         vscode.commands.executeCommand('setContext', FictionWriter.views.projectExplorer.sync.isOn, true);
         this._syncWithActiveEditorEnabled = true;
@@ -451,7 +450,7 @@ export class ProjectExplorerTreeDataProvider extends DisposeManager implements v
 
     public async handleDrag(source: ProjectNode[], treeDataTransfer: vscode.DataTransfer, token: vscode.CancellationToken): Promise<void> {
         if (!source[0]?.isDraggable) return;
-
+        if (!this._isBatchOrderingEnabled) return;
         treeDataTransfer.set('application/vnd.code.tree.projectexplorerview', new vscode.DataTransferItem(source));
     }
 
@@ -488,10 +487,11 @@ export class ProjectExplorerTreeDataProvider extends DisposeManager implements v
                     await this._fileManager.batchRenameFiles(renameMap);
                 }
                 await this.reload();
-
             });
         } else if (renameMap.length === 1) {
             this._fileManager.batchRenameFiles(renameMap).then(() => this.reload());
+        } else {
+            this.reload();
         }
 
     }

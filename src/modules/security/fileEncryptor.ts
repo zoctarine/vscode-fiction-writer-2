@@ -38,6 +38,7 @@ export class FileEncryptor {
     }
 
     public encrypt(text:string){
+
         return this._encrypt(text,this.options.globalPassword.value);
     }
 
@@ -66,6 +67,7 @@ export class FileEncryptor {
         return iv.toString('hex') + ':' + encrypted;
     }
     private _decrypt(encryptedData:string, password:string) {
+
         const [ivHex, encryptedHex] = encryptedData.split(':');
         const iv = Buffer.from(ivHex, 'hex');
         // const encryptedText = Buffer.from(encryptedHex, 'hex');

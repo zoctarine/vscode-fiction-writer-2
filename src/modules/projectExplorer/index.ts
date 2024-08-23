@@ -60,15 +60,19 @@ class ProjectsModule extends DisposeManager {
             addCommand(FictionWriter.views.projectExplorer.breakVirtualFolder, (node: ProjectNode) => {
                 this.projectExplorerDataProvider?.makeVirtualFolder(node);
             }),
-            addCommand(FictionWriter.views.projectExplorer.reorder, () => {
+            addCommand(FictionWriter.views.projectExplorer.reorder.start, () => {
                 this.projectExplorerDataProvider?.enableOrdering();
             }),
-            addCommand(FictionWriter.views.projectExplorer.discard, () => {
+            addCommand(FictionWriter.views.projectExplorer.reorder.discard, () => {
                 this.projectExplorerDataProvider?.disableOrdering();
             }),
-            addCommand(FictionWriter.views.projectExplorer.commit, () => {
+            addCommand(FictionWriter.views.projectExplorer.reorder.commit, () => {
                this.projectExplorerDataProvider?.commitOrdering();
-            }));
+            }),
+            addCommand(FictionWriter.views.projectExplorer.reorder.commit, () => {
+                this.projectExplorerDataProvider?.redistribute();
+            })
+        );
     };
 
     deactivate(): void {

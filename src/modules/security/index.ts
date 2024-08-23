@@ -1,4 +1,4 @@
-import {addCommand, DisposeManager} from '../../core';
+import {addCommand, DisposeManager, FictionWriter} from '../../core';
 import {SecurityOptions} from './securityOptions';
 import vscode from 'vscode';
 import {FileEncryptor} from './fileEncryptor';
@@ -19,6 +19,12 @@ class SecurityModule extends DisposeManager {
             }),
             addCommand('security.decryptCurrentFile',() =>{
                 this.fileEncryptor.decryptDocument(vscode.window.activeTextEditor?.document?.uri);
+            }),
+            addCommand(FictionWriter.security.exportKeys,() =>{
+                vscode.window.showInformationMessage("Copy and store the encryption key(s) below so you don't loose access to your encrypted files.", {
+                    modal: true,
+                    detail: this.options.globalPassword.value
+                });
             }),
         );
     };

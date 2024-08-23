@@ -370,6 +370,27 @@
       }
     },
     "icons": {
+      "mdi-swap-vert": {
+        "description": "swap_vert",
+        "default": {
+          "fontPath": "./media/webfonts/MaterialSymbolsSharp-subset.woff2",
+          "fontCharacter": "\\e8d5"
+        }
+      },
+      "mdi-link": {
+        "description": "link",
+        "default": {
+          "fontPath": "./media/webfonts/MaterialSymbolsSharp-subset.woff2",
+          "fontCharacter": "\\e250"
+        }
+      },
+      "mdi-link-off": {
+        "description": "link_off",
+        "default": {
+          "fontPath": "./media/webfonts/MaterialSymbolsSharp-subset.woff2",
+          "fontCharacter": "\\e16f"
+        }
+      },
       "fa-trash-can": {
         "description": "trash-can",
         "default": {
@@ -489,22 +510,17 @@
           "when": "resourceLangId == markdown && !activeCustomEditorId && fictionWriter.editors.richTextEditor.enabled == true",
           "command": "fictionWriter.editors.proseMirror.openInProseMirror",
           "group": "navigation"
-        },
-        {
-          "when": "resourceLangId == markdown && !activeCustomEditorId",
-          "command": "fictionWriter.editors.codeMirror.openInCodeMirror",
-          "group": "navigation"
         }
       ],
       "view/title": [
         {
           "command": "fictionWriter.views.projectExplorer.sync.on",
-          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.sync.isOn == false",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.sync.isOn == false && fictionWriter.views.projectExplorer.isOrdering == false",
           "group": "navigation"
         },
         {
           "command": "fictionWriter.views.projectExplorer.sync.off",
-          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.sync.isOn == true",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.sync.isOn == true && fictionWriter.views.projectExplorer.isOrdering == false",
           "group": "navigation"
         },
         {
@@ -518,20 +534,21 @@
           "group": "navigation"
         },
         {
-          "command": "fictionWriter.views.projectExplorer.reorder",
+          "command": "fictionWriter.views.projectExplorer.reorder.start",
           "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.isOrdering == false",
           "group": "navigation"
         },
         {
-          "command": "fictionWriter.views.projectExplorer.commit",
+          "command": "fictionWriter.views.projectExplorer.reorder.discard",
           "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.isOrdering == true",
           "group": "navigation"
         },
         {
-          "command": "fictionWriter.views.projectExplorer.discard",
+          "command": "fictionWriter.views.projectExplorer.reorder.commit",
           "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.isOrdering == true",
           "group": "navigation"
         },
+
         {
           "command": "fictionWriter.views.wordFrequency.refresh",
           "when": "view == fictionWriter.views.wordFrequency",
@@ -576,32 +593,37 @@
       "view/item/context": [
         {
           "command": "fictionWriter.views.projectExplorer.makeVirtualFolder",
-          "when": "view == fictionWriter.views.projectExplorer && viewItem == file",
+          "when": "view == fictionWriter.views.projectExplorer && viewItem == file && fictionWriter.views.projectExplorer.isOrdering == false",
           "group": "1_fictionWriter_virtual@1"
         },
         {
           "command": "fictionWriter.views.projectExplorer.breakVirtualFolder",
-          "when": "view == fictionWriter.views.projectExplorer && viewItem == virtualFolder",
+          "when": "view == fictionWriter.views.projectExplorer && viewItem == virtualFolder && fictionWriter.views.projectExplorer.isOrdering == false",
           "group": "1_fictionWriter@2"
         },
         {
           "command": "fictionWriter.views.projectExplorer.newFile",
-          "when": "view == fictionWriter.views.projectExplorer",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.isOrdering == false",
           "group": "2_fictionWriter@3"
         },
         {
           "command": "fictionWriter.views.projectExplorer.newFolder",
-          "when": "view == fictionWriter.views.projectExplorer",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.isOrdering == false",
           "group": "2_fictionWriter@4"
         },
         {
           "command": "fictionWriter.views.projectExplorer.rename",
-          "when": "view == fictionWriter.views.projectExplorer",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.isOrdering == false",
           "group": "3_fictionWriter@4"
         },
         {
           "command": "fictionWriter.views.projectExplorer.trash",
-          "when": "view == fictionWriter.views.projectExplorer",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.isOrdering == false",
+          "group": "3_fictionWriter@5"
+        },
+        {
+          "command": "fictionWriter.views.projectExplorer.reorder.redistribute",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.isOrdering == true",
           "group": "3_fictionWriter@5"
         },
         {
@@ -676,22 +698,28 @@
         "icon": "$(delete)"
       },
       {
-        "command": "fictionWriter.views.projectExplorer.reorder",
+        "command": "fictionWriter.views.projectExplorer.reorder.start",
         "title": "Reorder items",
         "category": "FictionWriter",
-        "icon": "$(edit)"
+        "icon": "$(mdi-swap-vert)"
       },
       {
-        "command": "fictionWriter.views.projectExplorer.commit",
-        "title": "Save order",
+        "command": "fictionWriter.views.projectExplorer.reorder.commit",
+        "title": "Reorder: Save new order",
         "category": "FictionWriter",
         "icon": "$(check)"
       },
       {
-        "command": "fictionWriter.views.projectExplorer.discard",
-        "title": "Discard order",
+        "command": "fictionWriter.views.projectExplorer.reorder.discard",
+        "title": "Reorder: Discard order",
         "category": "FictionWriter",
-        "icon": "$(discard)"
+        "icon": "$(remove-close)"
+      },
+      {
+        "command": "fictionWriter.views.projectExplorer.reorder.redistribute",
+        "title": "Redistriute evenly",
+        "category": "FictionWriter",
+        "icon": "$(remove-close)"
       },
       {
         "command": "fictionWriter.views.projectExplorer.makeVirtualFolder",
@@ -775,13 +803,13 @@
       {
         "command": "fictionWriter.views.metadata.filters.linkWithFileView.on",
         "title": "Sync with File Metadata: Enable",
-        "icon": "$(sync)",
+        "icon": "$(mdi-link)",
         "category": "Markdown Fiction Writer"
       },
       {
         "command": "fictionWriter.views.metadata.filters.linkWithFileView.off",
         "title": "Sync with File Metadata: Disable",
-        "icon": "$(sync-ignored)",
+        "icon": "$(mdi-link-off)",
         "category": "Markdown Fiction Writer"
       },
       {
@@ -795,7 +823,14 @@
         "title": "Decrypt current file",
         "enablement": "editorLangId == markdown",
         "category": "Markdown Fiction Writer"
+      },
+      {
+        "command": "fictionWriter.security.exportKeys",
+        "title": "Export encryption keys",
+        "enablement": "editorLangId == markdown",
+        "category": "Markdown Fiction Writer"
       }
+
     ],
     "customEditors": [
       {

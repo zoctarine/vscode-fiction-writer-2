@@ -40,3 +40,17 @@ MIT License (see LICENSE file)
 This project uses icons from [Material Design Icons](https://github.com/google/material-design-icons), which are licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
 This project uses icons from [Font Awesome Free 6](https://use.fontawesome.com/releases/v6.6.0/fontawesome-free-6.6.0-web.zip), distributed under the [SIL OFL license](https://scripts.sil.org/OFL)
+
+
+fonttools ttLib MaterialSymbolsSharp-subset.ttf --flavor woff2 -o MaterialSymbolsSharp-subset.woff2
+
+swap_vert e8d5
+link e250
+link_off e16f
+
+
+fonttools subset material-design-icons/font/MaterialSymbolsSharp.ttf \
+--unicodes=5f-7a,30-39,e8d5,e250,e16f \
+--no-layout-closure \
+--output-file=MaterialSymbolsSharp-subset.woff2 \
+--flavor=woff2
