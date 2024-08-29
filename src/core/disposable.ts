@@ -2,7 +2,7 @@
  * A disposable-like interface, that can be used by vscode disposables to dispose of resources.
  * We don't use vscode.Disposable directly, because we try to avoid direct dependency on vscode where we can
  */
-interface IDisposable {
+export interface IDisposable {
     dispose(): void;
 }
 

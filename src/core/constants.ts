@@ -13,6 +13,12 @@ export const FictionWriter = {
             trash: `${ViewsProjectExplorer}.trash`,
             makeVirtualFolder: `${ViewsProjectExplorer}.makeVirtualFolder`,
             breakVirtualFolder: `${ViewsProjectExplorer}.breakVirtualFolder`,
+            show:{
+                toggle1: `${ViewsProjectExplorer}.show.toggle1`,
+                toggle2: `${ViewsProjectExplorer}.show.toggle2`,
+                toggle3: `${ViewsProjectExplorer}.show.toggle3`,
+                is: `${ViewsProjectExplorer}.show.is`,
+            },
             reorder:{
                 start: `${ViewsProjectExplorer}.reorder.start`,
                 discard: `${ViewsProjectExplorer}.reorder.discard`,

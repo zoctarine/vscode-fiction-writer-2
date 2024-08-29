@@ -5,20 +5,18 @@ import {ProjectExplorerTreeDataProvider} from "./projectExplorerTreeDataProvider
 import {FwFileManager} from "../../core/fwFileManager";
 import {ProjectsOptions} from "./projectsOptions";
 import {DisposeManager} from "../../core/disposable";
-import * as logger from "../../core/logger";
 import {addCommand, FictionWriter} from '../../core';
-import {NodeType} from './nodeType';
-import {Node} from '../../core/tree/node';
-import {StateManager} from '../../core/stateManager';
+import {ContextManager} from '../../core/contextManager';
 import {ProjectNode} from './projectNodes';
-import {ProjectCache} from '../metadata';
+import {ProjectExplorerDecorationProvider} from './projectExplorerDecorationProvider';
+import {StateManager} from '../../core/state';
 
 class ProjectsModule extends DisposeManager {
     active = false;
     options = new ProjectsOptions();
-    fileManager: FwFileManager | undefined;
-    projectCache: ProjectCache |undefined;
-    stateManger!: StateManager;
+    fileManager!: FwFileManager;
+    stateManager!: StateManager;
+    contextManager!: ContextManager;
     projectExplorerDataProvider: ProjectExplorerTreeDataProvider | undefined;
 
     constructor() {
@@ -26,16 +24,23 @@ class ProjectsModule extends DisposeManager {
     }
 
     activate(): void {
-        this.fileManager = new FwFileManager(this.options);
-        this.projectCache = new ProjectCache(this.fileManager);
         this.projectExplorerDataProvider = new ProjectExplorerTreeDataProvider(
             this.options,
-            this.fileManager, this.stateManger, this.projectCache);
+            this.fileManager, this.contextManager, this.stateManager);
+
 
         this.manageDisposable(
-            this.fileManager,
-            this.projectCache,
             this.projectExplorerDataProvider,
+            new ProjectExplorerDecorationProvider(this.stateManager),
+            addCommand(FictionWriter.views.projectExplorer.show.toggle1, () => {
+                this.projectExplorerDataProvider?.showNextFor('toggle1');
+            }),
+            addCommand(FictionWriter.views.projectExplorer.show.toggle2, () => {
+                this.projectExplorerDataProvider?.showNextFor('toggle2');
+            }),
+            addCommand(FictionWriter.views.projectExplorer.show.toggle3, () => {
+                this.projectExplorerDataProvider?.showNextFor('toggle3');
+            }),
             addCommand(FictionWriter.views.projectExplorer.sync.on, () => {
                 this.projectExplorerDataProvider?.syncWithActiveEditorOn();
             }),
@@ -69,7 +74,7 @@ class ProjectsModule extends DisposeManager {
             addCommand(FictionWriter.views.projectExplorer.reorder.commit, () => {
                this.projectExplorerDataProvider?.commitOrdering();
             }),
-            addCommand(FictionWriter.views.projectExplorer.reorder.commit, () => {
+            addCommand(FictionWriter.views.projectExplorer.reorder.redistribute, () => {
                 this.projectExplorerDataProvider?.redistribute();
             })
         );
@@ -78,7 +83,6 @@ class ProjectsModule extends DisposeManager {
     deactivate(): void {
         this.dispose();
         this.projectExplorerDataProvider = undefined;
-        this.fileManager = undefined;
     };
 
     private updateState(enabled: boolean) {
@@ -87,9 +91,11 @@ class ProjectsModule extends DisposeManager {
             : this.deactivate();
     }
 
-    register(stateManager: StateManager): vscode.Disposable {
+    register(fileManager: FwFileManager, contextManager: ContextManager, stateManager: StateManager): vscode.Disposable {
+        this.fileManager = fileManager;
+        this.contextManager = contextManager;
+        this.stateManager = stateManager;
 
-        this.stateManger = stateManager;
         this.options.enabled.onChanged((enabled) => {
             this.updateState(enabled);
         });

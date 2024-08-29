@@ -1,5 +1,23 @@
-import {RegEx} from '../core';
+import {RegEx} from '../core/fwFile';
 import {Metadata} from './metadata';
+import vscode from 'vscode';
+import {FwFileInfo} from '../core';
+import {ITextProcessor} from './IProcessor';
+
+;
+
+export class LoadContent implements ITextProcessor {
+    async process(content: string, data: { fileInfo?: FwFileInfo }): Promise<string> {
+        if (data.fileInfo) {
+            const doc = await vscode.workspace.openTextDocument(vscode.Uri.parse(data.fileInfo.fsPath));
+            if (doc) {
+                content = doc.getText();
+            }
+        }
+        return content;
+    }
+}
+
 
 export class InputFileProcessor {
     constructor(private text: string) {
@@ -27,7 +45,7 @@ export class InputFileProcessor {
 
     get metadataString(): string {
         const matches = this.text.match(RegEx.Pattern.METADATA);
-        return matches ? matches[1] : '';
+        return matches ? matches[2] : '';
     }
 
     get metadataBlock(): string {

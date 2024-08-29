@@ -1,8 +1,7 @@
 import * as vscode from 'vscode';
-import * as fs from 'fs';
 import * as path from 'path';
 import {FileDecoration, ThemeColor, ThemeIcon, Uri} from 'vscode';
-import {DisposeManager, FileManager} from '../../core';
+import {DisposeManager} from '../../core';
 import {InputFileProcessor} from '../../processors/inputFileProcessor';
 import {Node} from '../../core/tree/node';
 import {Metadata} from '../../processors';
@@ -104,14 +103,15 @@ export class MetadataTreeDataProvider extends DisposeManager implements vscode.T
                 const newKey = parentKey ? `${parentKey}.${key}` : key;
                 if (typeof value === 'object') {
                     const children = this.getChildItems(value, newKey);
+                    const desc = children.length <= 0 ? '' : children.map(c => c.title).join(', ') + '';
                     return new MetadataTreeItem(newKey, key,
-                        children.length <= 0 ? '' : children.map(c => c.title).join(', ') + '',
+                        desc,
                         value && Object.keys(value).length > 0 ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None,
                         children,
-                        this._getIcon(key, Array.isArray(value) ? 'array' : 'symbol-object')
+                        this._getIcon(key, desc, Array.isArray(value) ? 'array' : 'symbol-object')
                     );
                 } else {
-                    return new MetadataTreeItem(newKey, key, value + '', vscode.TreeItemCollapsibleState.None, undefined, this._getIcon(key));
+                    return new MetadataTreeItem(newKey, key, value + '', vscode.TreeItemCollapsibleState.None, undefined, this._getIcon(key, value));
                 }
             });
         } else if (Array.isArray(meta)) {
@@ -119,25 +119,29 @@ export class MetadataTreeDataProvider extends DisposeManager implements vscode.T
                 const newKey = `${parentKey}[${index}]`;
                 if (typeof item === 'object') {
                     const children = this.getChildItems(item, newKey);
-
+                    const desc = children.length <= 0 ? '' : children.map(c => c.title).join(', ') + '';
                     return new MetadataTreeItem(newKey, newKey,
-                        children.length <= 0 ? '' : children.map(c => c.title).join(', ') + '',
+                        desc,
                         vscode.TreeItemCollapsibleState.Collapsed,
                         children,
-                        this._getIcon(newKey, Array.isArray(item) ? 'array' : 'symbol-object'));
+                        this._getIcon(newKey, desc, Array.isArray(item) ? 'array' : 'symbol-object'));
                 } else {
-                    return new MetadataTreeItem(newKey, item, '', vscode.TreeItemCollapsibleState.None, undefined, this._getIcon(item));
+                    return new MetadataTreeItem(newKey, item, '', vscode.TreeItemCollapsibleState.None, undefined, this._getIcon(newKey, item));
                 }
             });
         } else {
-            return [new MetadataTreeItem(parentKey, meta, '', vscode.TreeItemCollapsibleState.None, undefined, this._getIcon(meta))];
+            return [new MetadataTreeItem(parentKey, meta, '', vscode.TreeItemCollapsibleState.None, undefined, this._getIcon(parentKey, meta))];
         }
     }
 
-    private _getIcon(value: string, defaultIcon: string = 'debug-stackframe-dot'): vscode.ThemeIcon | undefined {
-        const color = this._resolvers.colorResolver.resolve(value) ?? new ThemeColor("foreground");
-        console.log(color);
-        return this._resolvers.iconResolver.resolve(value, color) ?? new ThemeIcon(defaultIcon, color);
+    private _getIcon(key: string, value: string, defaultIcon: string = 'debug-stackframe-dot'): vscode.ThemeIcon | undefined {
+        const color = this._resolvers.colorResolver.resolve(value, key.startsWith('color'))
+            ?? this._resolvers.colorResolver.resolve(key, true)
+            ?? new ThemeColor("foreground");
+
+        return this._resolvers.iconResolver.resolve(value, color, key==='icon')
+            ?? this._resolvers.iconResolver.resolve(key, color)
+            ?? new ThemeIcon(defaultIcon, color);
     }
 }
 

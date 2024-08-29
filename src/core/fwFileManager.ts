@@ -54,9 +54,13 @@ export class FwFileManager extends DisposeManager {
         if (this._silentUpdates) return;
         if (this.isFwFile(e.fsPath)) {
 
-            // TODO: only load the changed file
-            this.loadFiles()
-                .then((fi) => this._onFilesChanged.fire(fi));
+            fs.promises.stat(e.fsPath).then((stat) => {
+                const fwInfo = FwFileInfo.parse(asPosix(e.fsPath), this._fileExtensions, stat.isDirectory());
+                this._onFilesChanged.fire([fwInfo]);
+            });
+            // // TODO: only load the changed file
+            // this.loadFiles()
+            //     .then((fi) => this._onFilesChanged.fire(fi));
         }
     }
 
@@ -118,7 +122,7 @@ export class FwFileManager extends DisposeManager {
 
     public deleteFile(fsPath: string): Thenable<void> {
         const uri = vscode.Uri.parse(fsPath);
-        if (this._options.rootFoldersEnabled.value === true) {
+        if (this._options.rootFoldersEnabled.value) {
             const trashFolder = this._options.rootFolderNames.trash;
             const workspace = vscode.workspace.getWorkspaceFolder(uri);
             if (workspace){

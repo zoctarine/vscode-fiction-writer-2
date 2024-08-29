@@ -5,7 +5,7 @@ import MarkdownIt from 'markdown-it';
 // as well as import your extension to test it
 // import * as myExtension from '../../extension';
 
-suite('Extension Test Suite', () => {
+describe('Extension Test Suite', () => {
 
 	test('Sample test', async () => {
 		const md = new MarkdownIt({

@@ -1,23 +1,15 @@
 import * as vscode from 'vscode';
 import {WordStatTreeItem} from './wordStatTreeItem';
 import {DisposeManager, RegEx} from '../../core';
-import {StateManager} from '../../core/stateManager';
+import {ContextManager} from '../../core/contextManager';
 import path from 'path';
-
-const STD_CHAR_PER_WORD = 6;
-const STD_WORD_PER_LINE = 10;
-const STD_LINES_PER_PAGE = 24;
-const STD_WORDS_PER_MINUTE = 200;
-
-const count = (text: string, pattern: RegExp) => {
-    return ((text || '').match(pattern) || []).length;
-};
+import {TextAnalyzer} from './textAnalyzer';
 
 export class DocStatisticTreeDataProvider extends DisposeManager implements vscode.TreeDataProvider<WordStatTreeItem> {
     private _document: vscode.TextDocument | undefined;
     private _treeView: vscode.TreeView<WordStatTreeItem> | undefined;
 
-    constructor(private readonly _stateManager: StateManager) {
+    constructor(private readonly _stateManager: ContextManager) {
         super();
 
         this._treeView = vscode.window.createTreeView('fictionWriter.views.statistics', {treeDataProvider: this});
@@ -44,17 +36,16 @@ export class DocStatisticTreeDataProvider extends DisposeManager implements vsco
         if (element) {
             return Promise.resolve([]);
         } else {
-            const rawText = this._document.getText();
-            const text = rawText.replace(RegEx.Pattern.METADATA_BLOCK, '');
-            const wordCount = count(text, RegEx.Pattern.WHOLE_WORD);
-            const charCount = count(text, RegEx.Pattern.ANY_CHARACTER_ESCEPT_NEWLINE);
-            const charCountNoSpaces = count(text, RegEx.Pattern.ANY_CHARACTER_EXCEPT_WHITESPACE);
-            const estWordCount = Math.ceil(charCount / STD_CHAR_PER_WORD);
-            const estLines = Math.ceil(estWordCount / STD_WORD_PER_LINE);
-            const estPages = Math.ceil(estLines / STD_LINES_PER_PAGE);
-            const estReadTime = wordCount / STD_WORDS_PER_MINUTE;
-            const estReadTimeMin = Math.floor(estReadTime);
-            const estReadTimeSec = Math.round(60 * (estReadTime - estReadTimeMin));
+            let {
+                wordCount,
+                charCount,
+                charCountNoSpaces,
+                estPages,
+                estLines,
+                estWordCount,
+                estReadTimeMin,
+                estReadTimeSec
+            } = TextAnalyzer.analyze(this._document.getText());
 
             const asString = (n: number) => `${n}`;
 

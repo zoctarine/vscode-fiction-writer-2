@@ -1,5 +1,5 @@
 import { mapExtensions } from "../../core";
-import {Options} from "../../core/options";
+import {Options} from "../../core";
 export const defaultIcons = new Map<string, string>([
     ['pov', 'eye'],
     ['povs', 'eye'],
@@ -66,8 +66,8 @@ export class MetadataOptions extends Options {
     public static readonly SectionName = 'metadata.view';
 
     public enabled = this.valueOf('enabled', true, true);
-    public metadataIcons = this.valueOf('icons', mapExtensions.mapToObject(defaultIcons));
-    public metadataColors = this.valueOf('colors', mapExtensions.mapToObject(defaultColors));
+    public metadataIcons = this.valueOf('icons',{});
+    public metadataColors = this.valueOf('colors',{});
 
     constructor() {
         super(MetadataOptions.SectionName);

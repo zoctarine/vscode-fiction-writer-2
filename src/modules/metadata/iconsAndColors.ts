@@ -1,4 +1,5 @@
 import vscode from 'vscode';
+import {isValidCodicon} from '../../core';
 
 export class IconResolver {
     public defaultIcons = new Map<string, string>([
@@ -23,24 +24,6 @@ export class IconResolver {
         ['warning', 'warning'],
         ['colors', 'symbol-color'],
         ['color', 'symbol-color'],
-
-        ['blue', 'circle-filled'],
-        ['lightblue', 'circle-filled'],
-        ['teal', 'circle-filled'],
-        ['red', 'circle-filled'],
-        ['lightred', 'circle-filled'],
-        ['lime', 'circle-filled'],
-        ['green', 'circle-filled'],
-        ['orange', 'circle-filled'],
-        ['amber', 'circle-filled'],
-        ['lightamber', 'circle-filled'],
-        ['purple', 'circle-filled'],
-        ['bluegrey', 'circle-filled'],
-        ['grey', 'circle-filled'],
-        ['yellow', 'circle-filled'],
-        ['pink', 'circle-filled'],
-        ['white', 'circle-filled'],
-        ['black', 'circle-filled']
     ]);
     public allIcons = new Map<string, string>();
 
@@ -52,15 +35,18 @@ export class IconResolver {
         makeLowercase(this.allIcons);
     }
 
-    resolve(text?: string, color?: vscode.ThemeColor | undefined): vscode.ThemeIcon | undefined {
+    resolve(text?: string, color?: vscode.ThemeColor | undefined, resolveValues=false): vscode.ThemeIcon | undefined {
         if (!text) return undefined;
-        const icon = match(text, this.allIcons);
+        text = text.trim();
+        let icon = match(text, this.allIcons);
+        if (resolveValues && !icon && isValidCodicon(text)) { icon=text;}
+
         return icon ? new vscode.ThemeIcon(icon, color) : undefined;
     }
 }
 
 export class ColorResolver {
-    public defaultColors = new Map<string, string>([
+    public knownColors = new Map<string, string>([
         ['blue', 'fictionWriter.blue'],
         ['lightblue', 'fictionWriter.lightblue'],
         ['teal', 'fictionWriter.teal'],
@@ -79,6 +65,9 @@ export class ColorResolver {
         ['white', 'fictionWriter.white'],
         ['black', 'fictionWriter.black']
     ]);
+    public defaultColors = new Map<string, string>([
+
+    ]);
     public allColors = new Map<string, string>();
 
     public setCustom(customColors: Map<string, string>, expandDefault: boolean = true) {
@@ -91,9 +80,13 @@ export class ColorResolver {
         makeLowercase(this.allColors);
     }
 
-    resolve(text?: string): vscode.ThemeColor | undefined {
+    resolve(text?: string, resolveValues=false): vscode.ThemeColor | undefined {
         if (!text) return undefined;
-        const color = match(text, this.allColors);
+        text= text.trim();
+        let color = match(text, this.allColors);
+        if (resolveValues && !color && this.knownColors.has(text)) {
+            color = this.knownColors.get(text);
+        }
         return color ? new vscode.ThemeColor(color) : undefined;
     }
 }

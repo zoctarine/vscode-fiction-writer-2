@@ -1,7 +1,6 @@
 import {SecurityOptions} from './securityOptions';
 import * as crypto from 'crypto';
 import vscode from 'vscode';
-import {fileSerializer} from '../richTextEditor/utils/fileExtensions';
 
 export class FileEncryptor {
     constructor(public options: SecurityOptions) {
@@ -45,7 +44,7 @@ export class FileEncryptor {
     public decrypt(text:string){
         return this._decrypt(text,this.options.globalPassword.value);
     }
-    public hash(text: string){
+    public static hash(text: string){
         return crypto.createHash('sha256').update(text).digest('hex');
     }
 

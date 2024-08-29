@@ -31,25 +31,33 @@ export class Metadata {
             });
         });
 
-        const SCHEMA = yaml.FAILSAFE_SCHEMA;
+        this._meta = Metadata.parse(meta);
 
-
-        try {
-            if (typeof meta === "string") {
-                this._meta = yaml.load(meta,{
-                    schema: SCHEMA,
-                    json: false,
-                });
-            } else {
-                this._meta = meta;
-            }
-        } catch (error) {
-            this._meta = {};
-        }
     }
 
     public serialize(opts?: DumpOptions): string {
         return yaml.dump(this._meta, opts);
+    }
+
+    public static parse(meta: string | object) {
+        const SCHEMA = yaml.FAILSAFE_SCHEMA;
+
+        try {
+            if (typeof meta === "string") {
+                return yaml.load(meta,{
+                    schema: SCHEMA,
+                    json: false,
+                });
+            } else {
+                return meta;
+            }
+        } catch (error) {
+            return {};
+        }
+    }
+    public static serializeObj(obj:{}, opts?: DumpOptions): string {
+
+        return yaml.dump(obj, opts);
     }
 
     public get(key: string): any {

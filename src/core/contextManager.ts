@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import {Memento, TextDocument} from 'vscode';
 
-export class StateManager {
+export class ContextManager {
     private _state: Memento;
 
     constructor(context: vscode.ExtensionContext) {

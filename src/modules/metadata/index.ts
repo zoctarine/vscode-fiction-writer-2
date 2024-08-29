@@ -1,21 +1,18 @@
 import * as vscode from "vscode";
-import {addCommand, DisposeManager, FileManager, mapExtensions} from '../../core';
-import {StateManager} from '../../core/stateManager';
-import {fileManager} from '../../core';
+import {addCommand, DisposeManager, mapExtensions} from '../../core';
+import {ContextManager} from '../../core/contextManager';
 import {MetadataTreeDataProvider} from './metadataTreeDataProvider';
 import {MetadataOptions} from './metadataOptions';
 import {ExtensionContext} from 'vscode';
 import {MetadataTreeDecorationProvider} from './metadataDecoration';
-import {ProjectCache} from './cache';
 import {FwFileManager} from '../../core/fwFileManager';
 import {ColorResolver, IconResolver} from './iconsAndColors';
 
-export * from './cache';
 export * from './iconsAndColors';
 
 class MetadataModule extends DisposeManager {
     active = false;
-    stateManager: StateManager | undefined;
+    stateManager: ContextManager | undefined;
     private fileManager: FwFileManager | undefined;
     private context: ExtensionContext | undefined;
     private options = new MetadataOptions();
@@ -31,10 +28,11 @@ class MetadataModule extends DisposeManager {
     }
 
     activate(): void {
-        this.metadataTreeDataProvider = new MetadataTreeDataProvider(this.options, this.resolvers);
-        this.metadataDecorationProvider = new MetadataTreeDecorationProvider(this.resolvers);
         this.resolvers.iconResolver.setCustom(mapExtensions.objectToMap(this.options.metadataIcons.value));
         this.resolvers.colorResolver.setCustom(mapExtensions.objectToMap(this.options.metadataColors.value));
+
+        this.metadataTreeDataProvider = new MetadataTreeDataProvider(this.options, this.resolvers);
+        this.metadataDecorationProvider = new MetadataTreeDecorationProvider(this.resolvers);
 
         this.manageDisposable(
             this.metadataTreeDataProvider,
@@ -61,7 +59,7 @@ class MetadataModule extends DisposeManager {
             : this.deactivate();
     }
 
-    register(context: ExtensionContext, stateManager: StateManager, fileManager: FwFileManager | undefined): vscode.Disposable {
+    register(context: ExtensionContext, stateManager: ContextManager, fileManager: FwFileManager | undefined): vscode.Disposable {
         this.fileManager = fileManager;
         this.stateManager = stateManager;
         this.context = context;

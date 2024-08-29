@@ -9,7 +9,7 @@ import {NodeType} from './nodeType';
 import {NodeTree} from '../../core/tree/nodeTree';
 import {FwFileInfo, FwType} from '../../core/fwFileInfo';
 import {FaIcons, FictionWriter} from '../../core';
-import {StateManager} from '../../core/stateManager';
+import {ContextManager} from '../../core/contextManager';
 import {FwFilter} from '../filters/models/fwFilter';
 import {
     FileNode,
@@ -18,10 +18,13 @@ import {
     WorkspaceFolderNode
 } from './projectNodes';
 import {ProjectItem} from './projectItem';
-import {ProjectCache} from '../metadata';
 import {ProjectsOptions} from './projectsOptions';
+import {StateManager} from '../../core/state';
 
-export class ProjectExplorerTreeDataProvider extends DisposeManager implements vscode.TreeDataProvider<ProjectNode>, vscode.TreeDragAndDropController<ProjectNode> {
+export class ProjectExplorerTreeDataProvider
+    extends DisposeManager
+    implements vscode.TreeDataProvider<ProjectNode>,
+        vscode.TreeDragAndDropController<ProjectNode> {
     dropMimeTypes = ['application/vnd.code.tree.projectexplorerview'];
     dragMimeTypes = ['application/vnd.code.tree.projectexplorerview'];
     private _treeView: vscode.TreeView<ProjectNode>;
@@ -32,10 +35,11 @@ export class ProjectExplorerTreeDataProvider extends DisposeManager implements v
     private _mixFoldersAndFiles = true;
     private _syncWithActiveEditorEnabled = false;
     private _isBatchOrderingEnabled = false;
+    private _showToggle?: string;
 
     constructor(
         private _options: ProjectsOptions,
-        private _fileManager: FwFileManager, private _stateManager: StateManager, private _projectCache: ProjectCache) {
+        private _fileManager: FwFileManager, private _contextManager: ContextManager, private _stateManager: StateManager) {
         super();
         this._tree = new NodeTree<ProjectNode>(new RootNode());
         this._treeView = vscode.window.createTreeView(FictionWriter.views.projectExplorer.id, {
@@ -49,23 +53,24 @@ export class ProjectExplorerTreeDataProvider extends DisposeManager implements v
             this._treeView,
             this._onDidChangeTreeData,
             this._options.fileDescriptionMetadataKey.onChanged(_ => this.reload()),
-            this._projectCache.onCacheChanged(() => {
+            this._stateManager.onFilesChanged(() => {
                 this.reload(); // TODO: Improve this, to not overlap with onFilesChanged
             }),
             // this._fileManager.onFilesChanged((files) => {
             //     this._refreshTree(files);
             // }),
             this._treeView.onDidCollapseElement((e) => {
-                this._stateManager.set("tree_expanded_" + e.element.id, false);
+                this._contextManager.set("tree_expanded_" + e.element.id, false);
             }),
             this._treeView.onDidExpandElement((e) => {
-                this._stateManager.set("tree_expanded_" + e.element.id, true);
+                this._contextManager.set("tree_expanded_" + e.element.id, true);
             }),
             vscode.window.onDidChangeActiveTextEditor(e => {
                 this._handleActiveTextEditorChanged(e);
             })
         );
 
+        this.showNextFor();
         this.reload();
     }
 
@@ -121,11 +126,28 @@ export class ProjectExplorerTreeDataProvider extends DisposeManager implements v
                             node.item.ext = fileInfo.ext;
                             node.item.name = fileInfo.name;
                         }
+                        const state = this._stateManager.get(fileInfo.fsPath);
+                        // TODO: refactor
+                        // if (state?.metadata) {
+                        //     if (this._options.fileDescriptionMetadataKey.value) {
+                        //         node.item.description = state.metadata[this._options.fileDescriptionMetadataKey.value]?.toString();
+                        //     }
+                        //     node.item.icon = state.metadata['icon'];
+                        //     node.item.color = state.metadata['color'];
+                        // }
 
-                        if (this._options.fileDescriptionMetadataKey.value) {
-                            const meta = this._projectCache.get(fileInfo.fsPath);
-                            if (meta?.metadata) {
-                                node.item.description = meta?.metadata[this._options.fileDescriptionMetadataKey.value]?.toString();
+                        if (state?.decoration){
+                            node.item.icon = state.decoration.icon;
+                            node.item.color = state.decoration.color;
+                            node.item.description = state.decoration.description ?? node.item.description;
+
+                            if (state.decoration.named && this._showToggle){
+                                const decoration = state.decoration.named.get(this._showToggle);
+                                if (decoration){
+                                    node.item.icon = decoration.icon;
+                                    node.item.color = decoration.color;
+                                    node.item.description = decoration.description ?? node.item.description;
+                                }
                             }
                         }
                     }
@@ -184,20 +206,22 @@ export class ProjectExplorerTreeDataProvider extends DisposeManager implements v
 
     public getTreeItem(element: ProjectNode): vscode.TreeItem {
         const tooltip = new vscode.MarkdownString(`$(zap) Tooltip for ${element.id}`, true);
-        const expanded = this._stateManager.get("tree_expanded_" + element.id, false);
+        const expanded = this._contextManager.get("tree_expanded_" + element.id, false);
 
+        const color = element.item.color ? new ThemeColor(`fictionWriter.${element.item.color}`) : new ThemeColor('foreground');
+        const icon = element.item.icon ? new ThemeIcon(element.item.icon, color) : undefined;
         const item = {
             label: <any>{
                 label: element.item.name,
                 highlights: []
             },
-            description: `${this._isBatchOrderingEnabled ? `(${element.item.order}) `:''}${element.item.description ?? ''}`,
+            description: `${this._isBatchOrderingEnabled ? `(${element.item.order}) ` : ''}${element.item.description ?? ''}`,
             tooltip,
-            iconPath: new ThemeIcon(FaIcons.fileLines, new ThemeColor('foreground')),
+            iconPath: icon,
             collapsibleState: element?.type === NodeType.File
                 ? vscode.TreeItemCollapsibleState.None
                 : expanded ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed,
-            resourceUri: vscode.Uri.parse(element.id),
+            resourceUri: vscode.Uri.parse(element.id).with({scheme:FictionWriter.views.projectExplorer.id}),
             contextValue: element.type,
             command: element.type == NodeType.File || element.type == NodeType.VirtualFolder ? {
                 title: 'Open',
@@ -208,10 +232,10 @@ export class ProjectExplorerTreeDataProvider extends DisposeManager implements v
 
         switch (element.type) {
             case NodeType.File:
-                item.iconPath = new ThemeIcon(FaIcons.fileLines);
+                item.iconPath = icon ?? new ThemeIcon(FaIcons.fileLines, color);
                 break;
             case NodeType.VirtualFolder:
-                item.iconPath = new ThemeIcon(
+                item.iconPath = icon ?? new ThemeIcon(
                     element.item.fsName
                         ? FaIcons.fileLinesSolid
                         : FaIcons.fileExcel,
@@ -245,6 +269,7 @@ export class ProjectExplorerTreeDataProvider extends DisposeManager implements v
                 item.description = "";
                 break;
         }
+
 
         return item;
     }
@@ -437,6 +462,28 @@ export class ProjectExplorerTreeDataProvider extends DisposeManager implements v
     public async redistribute() {
     }
 
+    public showNextFor(toggle?: string){
+        const toggles = ['toggle1', 'toggle2', 'toggle3'];
+        if (toggle) {
+            const crt = toggles.indexOf(toggle);
+            let next = crt;
+            if (crt >= 0) {
+                next = (crt + 1) % toggles.length;
+            }
+            vscode.commands.executeCommand('setContext', FictionWriter.views.projectExplorer.show.is, toggles[next])
+                .then(() => {
+                    this._showToggle = toggles[next];
+                    this._refreshTree();
+                });
+        } else {
+            vscode.commands.executeCommand('setContext', FictionWriter.views.projectExplorer.show.is, toggles[0])
+                .then(() => {
+                    this._showToggle = toggles[0];
+                    this._refreshTree();
+                });
+        }
+    }
+
     public syncWithActiveEditorOn() {
         vscode.commands.executeCommand('setContext', FictionWriter.views.projectExplorer.sync.isOn, true);
         this._syncWithActiveEditorEnabled = true;
@@ -460,7 +507,9 @@ export class ProjectExplorerTreeDataProvider extends DisposeManager implements v
         return this._refreshTree(f);
     }
 
-    public _refreshTree(files: FwFileInfo[]) {
+    public _refreshTree(files?: FwFileInfo[]) {
+        console.log("refrehsing tree...");
+        files ??= this._stateManager.trackedFiles.map(f => f?.fileInfo).filter(a => a !== undefined);
         this._tree.clear();
         this._tree.root = this.buildHierarchy(files);
         this._onDidChangeTreeData.fire();

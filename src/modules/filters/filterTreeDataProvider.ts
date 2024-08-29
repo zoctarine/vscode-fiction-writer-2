@@ -2,13 +2,13 @@ import * as vscode from 'vscode';
 import {Event, EventEmitter, FileDecoration, FileDecorationProvider, ThemeColor, ThemeIcon, Uri, window} from 'vscode';
 import * as path from 'path';
 import {DisposeManager} from "../../core/disposable";
-import {StateManager} from '../../core/stateManager';
+import {ContextManager} from '../../core/contextManager';
 import {TreeNode, TreeStructure} from '../../core/tree/treeStructure';
-import {ColorResolver, IconResolver, ProjectCache} from '../metadata';
-import {defaultIcons, MetadataOptions} from '../metadata/metadataOptions';
+import {ColorResolver, IconResolver} from '../metadata';
 import * as yaml from 'js-yaml';
 import {FilterOptions} from './filterOptions';
 import {MetadataTreeDataProvider, MetadataTreeItem} from '../metadata/metadataTreeDataProvider';
+import {StateManager} from '../../core/state';
 
 enum FilterItemType {
     Key,
@@ -48,7 +48,7 @@ export class FilterTreeDataProvider extends DisposeManager
     private _activeFilter?: MetaFilter;
     private _onChangeMetadataViewSubscription?: vscode.Disposable;
     private readonly TreeViewId = 'fictionWriter.views.metadata.filters';
-    constructor(private _options: FilterOptions, private _cache: ProjectCache, private _stateManager: StateManager,
+    constructor(private _options: FilterOptions, private _stateManager: StateManager, private _contextManager: ContextManager,
                 private _metadataView?: MetadataTreeDataProvider,
                 private _resolvers?: { iconResolver: IconResolver; colorResolver: ColorResolver }) {
         super();
@@ -62,20 +62,20 @@ export class FilterTreeDataProvider extends DisposeManager
         this.reload();
 
 
-        this.setMetadataViewLink(this._stateManager.get("fictionWriter.views.metadata.isLinked", false));
+        this.setMetadataViewLink(this._contextManager.get("fictionWriter.views.metadata.isLinked", false));
 
         this.manageDisposable(
             this._treeView,
             window.registerFileDecorationProvider(this),
             this._onDidChangeTreeData,
-            this._cache.onCacheChanged(() => {
+            this._stateManager.onFilesChanged(() => {
                 this._refreshTree();
             }),
             this._treeView.onDidCollapseElement((e) => {
-                this._stateManager.set("tree_expanded_" + e.element.id, false);
+                this._contextManager.set("tree_expanded_" + e.element.id, false);
             }),
             this._treeView.onDidExpandElement((e) => {
-                this._stateManager.set("tree_expanded_" + e.element.id, true);
+                this._contextManager.set("tree_expanded_" + e.element.id, true);
             }),
             this._options.onChanged(() => {
                 this._refreshTree();
@@ -183,9 +183,9 @@ export class FilterTreeDataProvider extends DisposeManager
 
     private _globalMetadata() {
         const metadata = new Map<string, { value: any, files: { fsPath: string, name?: string }[] }[]>();
-        for (const item of this._cache.entries) {
-            if (item?.metadata) {
-                for (const [key, value] of Object.entries(item.metadata)) {
+        for (const state of this._stateManager.trackedFiles) {
+            if (state?.metadata?.value) {
+                for (const [key, value] of Object.entries(state.metadata?.value)) {
                     const values = Array.isArray(value) ? value : [value];
 
                     const crtValues = metadata.get(key) ?? [];
@@ -195,10 +195,12 @@ export class FilterTreeDataProvider extends DisposeManager
                             noArrayIndent: true, indent: 0
                         }).replace(/\n/g, " ");
                         const entry = crtValues.find(val => val.value === vStr);
+                        const fileInfo = state.fileInfo;
+                        if (!fileInfo) continue;
                         if (entry) {
-                            entry.files.push({fsPath: item.fsPath, name: item.displayName});
+                            entry.files.push({fsPath: fileInfo.fsPath, name: fileInfo.name});
                         } else {
-                            crtValues.push({value: vStr, files: [{fsPath: item.fsPath, name: item.displayName}]});
+                            crtValues.push({value: vStr, files: [{fsPath: fileInfo.fsPath, name: fileInfo.name}]});
                         }
                     }
                     metadata.set(key, crtValues);
@@ -267,15 +269,15 @@ export class FilterTreeDataProvider extends DisposeManager
     }
 
     private _isVisible(key: string) {
-        return this._stateManager.get("filter_" + key, true);
+        return this._contextManager.get("filter_" + key, true);
     }
 
     private _hideFilter(key: string) {
-        return this._stateManager.set("filter_" + key, false);
+        return this._contextManager.set("filter_" + key, false);
     }
 
     private _showFilter(key: string) {
-        return this._stateManager.set("filter_" + key, true);
+        return this._contextManager.set("filter_" + key, true);
     }
 
     public toggleFilter(key: string) {
@@ -333,19 +335,19 @@ export class FilterTreeDataProvider extends DisposeManager
         if (!value) return this.removeFilter();
 
         vscode.commands.executeCommand('setContext', 'fictionWriter.views.metadata.hasFilter', true);
-        this._stateManager.set("fictionWriter.views.metadata.filter", value);
+        this._contextManager.set("fictionWriter.views.metadata.filter", value);
         this._filter(value);
     }
 
     public async removeFilter() {
         vscode.commands.executeCommand('setContext', 'fictionWriter.views.metadata.hasFilter', false);
-        this._stateManager.remove("fictionWriter.views.metadata.filter");
+        this._contextManager.remove("fictionWriter.views.metadata.filter");
         vscode.commands.executeCommand(`workbench.actions.treeView.${this.TreeViewId}.collapseAll`);
         await this._filter(undefined);
     }
 
     public async refreshFilter() {
-        const value = await this._stateManager.get("fictionWriter.views.metadata.filter", undefined);
+        const value = await this._contextManager.get("fictionWriter.views.metadata.filter", undefined);
         if (value) {
             await this.addFilter(value);
         } else {
@@ -370,7 +372,7 @@ export class FilterTreeDataProvider extends DisposeManager
     }
     public async setMetadataViewLink(isLinked: boolean) {
         vscode.commands.executeCommand('setContext', 'fictionWriter.views.metadata.isLinked', isLinked);
-        this._stateManager.set("fictionWriter.views.metadata.isLinked", isLinked);
+        this._contextManager.set("fictionWriter.views.metadata.isLinked", isLinked);
         if (!this._metadataView) return;
 
         const applyFilter = (e: MetadataTreeItem | undefined) => {
@@ -391,7 +393,7 @@ export class FilterTreeDataProvider extends DisposeManager
         this._onChangeMetadataViewSubscription?.dispose();
         this._onChangeMetadataViewSubscription = this._metadataView.onDidChangeSelection((e) => {
            if (!e) return;
-           
+
             if (isLinked) {
                 applyFilter(e);
             }
@@ -399,7 +401,7 @@ export class FilterTreeDataProvider extends DisposeManager
     }
 
     public async toggleMetadataViewLink() {
-        let isLinked = this._stateManager.get("fictionWriter.views.metadata.isLinked", false);
+        let isLinked = this._contextManager.get("fictionWriter.views.metadata.isLinked", false);
         this.setMetadataViewLink(!isLinked);
     }
 }

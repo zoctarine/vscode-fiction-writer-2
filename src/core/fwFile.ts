@@ -44,7 +44,7 @@ export class RegEx {
 
         ENDING_NUMBER: /\d+$/gi,
 
-        METADATA: /^---((.*[\n\r])*)(---|\.\.\.)[\r\n]*/im
+        METADATA: /^(---[\r\n]+)([\s\S]*)(---|\.\.\.[\r\n]+)/im
     };
 }
 

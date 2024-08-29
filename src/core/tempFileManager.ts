@@ -17,7 +17,7 @@ export class TempFileManager {
     public getUriFor(uri: vscode.Uri): vscode.Uri {
         const filename = path.posix.parse(uri.fsPath).name;
 
-        const hsh = this._fileEncryptor.hash(filename);
+        const hsh = FileEncryptor.hash(filename);
 
         const tmpUri = this._tmpStorageLocation
             ? path.posix.join(

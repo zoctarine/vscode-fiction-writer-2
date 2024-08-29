@@ -350,7 +350,7 @@
           "fictionWriter.security.encrypt.globalPassword": {
             "type": "string",
             "default": "FiCtIoNwRiTeR#2",
-            "markdownDescription": "Set a global password for all encrypted files.\n\n**`⚠\uFE0F Warning!`** *Changing this password will make decrypting **ALL** previously encrypted files unreadable!*",
+            "markdownDescription": "Set a global password for all encrypted files.\n\n**`⚠️ Warning!`** *Changing this password will make decrypting **ALL** previously encrypted files unreadable!*",
             "scope": "application",
             "order": 1
           },
@@ -389,6 +389,69 @@
         "default": {
           "fontPath": "./media/webfonts/MaterialSymbolsSharp-subset.woff2",
           "fontCharacter": "\\e16f"
+        }
+      },
+      "mdi-clock-loader-10": {
+        "description": "clock_loader_10",
+        "default": {
+          "fontPath": "./media/webfonts/MaterialSymbolsSharp-subset.woff2",
+          "fontCharacter": "\\f726"
+        }
+      },
+      "mdi-clock-loader-20": {
+        "description": "clock_loader_20",
+        "default": {
+          "fontPath": "./media/webfonts/MaterialSymbolsSharp-subset.woff2",
+          "fontCharacter": "\\f725"
+        }
+      },
+      "mdi-clock-loader-40": {
+        "description": "clock_loader_40",
+        "default": {
+          "fontPath": "./media/webfonts/MaterialSymbolsSharp-subset.woff2",
+          "fontCharacter": "\\f724"
+        }
+      },
+      "mdi-clock-loader-60": {
+        "description": "clock_loader_60",
+        "default": {
+          "fontPath": "./media/webfonts/MaterialSymbolsSharp-subset.woff2",
+          "fontCharacter": "\\f723"
+        }
+      },
+      "mdi-clock-loader-80": {
+        "description": "clock_loader_80",
+        "default": {
+          "fontPath": "./media/webfonts/MaterialSymbolsSharp-subset.woff2",
+          "fontCharacter": "\\f722"
+        }
+      },
+      "mdi-clock-loader-90": {
+        "description": "clock_loader_90",
+        "default": {
+          "fontPath": "./media/webfonts/MaterialSymbolsSharp-subset.woff2",
+          "fontCharacter": "\\f721"
+        }
+      },
+      "mdi-task-alt": {
+        "description": "task_alt",
+        "default": {
+          "fontPath": "./media/webfonts/MaterialSymbolsSharp-subset.woff2",
+          "fontCharacter": "\\e2e6"
+        }
+      },
+      "mdi-hourglass-empty": {
+        "description": "hourglass_empty",
+        "default": {
+          "fontPath": "./media/webfonts/MaterialSymbolsSharp-subset.woff2",
+          "fontCharacter": "\\e88b"
+        }
+      },
+      "mdi-hourglass-disabled": {
+        "description": "hourglass_disabled",
+        "default": {
+          "fontPath": "./media/webfonts/MaterialSymbolsSharp-subset.woff2",
+          "fontCharacter": "\\ef53"
         }
       },
       "fa-trash-can": {
@@ -514,6 +577,21 @@
       ],
       "view/title": [
         {
+          "command": "fictionWriter.views.projectExplorer.show.toggle1",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.show.is == toggle1 && fictionWriter.views.projectExplorer.isOrdering == false",
+          "group": "navigation"
+        },
+        {
+          "command": "fictionWriter.views.projectExplorer.show.toggle2",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.show.is == toggle2 && fictionWriter.views.projectExplorer.isOrdering == false",
+          "group": "navigation"
+        },
+        {
+          "command": "fictionWriter.views.projectExplorer.show.toggle3",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.show.is == toggle3 && fictionWriter.views.projectExplorer.isOrdering == false",
+          "group": "navigation"
+        },
+        {
           "command": "fictionWriter.views.projectExplorer.sync.on",
           "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.sync.isOn == false && fictionWriter.views.projectExplorer.isOrdering == false",
           "group": "navigation"
@@ -548,7 +626,6 @@
           "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.isOrdering == true",
           "group": "navigation"
         },
-
         {
           "command": "fictionWriter.views.wordFrequency.refresh",
           "when": "view == fictionWriter.views.wordFrequency",
@@ -734,6 +811,24 @@
         "icon": "$(folder)"
       },
       {
+        "command": "fictionWriter.views.projectExplorer.show.toggle1",
+        "title": "Break virtual folder 1",
+        "category": "FictionWriter",
+        "icon": "$(symbol-text)"
+      },
+      {
+        "command": "fictionWriter.views.projectExplorer.show.toggle2",
+        "title": "Break virtual folder 2",
+        "category": "FictionWriter",
+        "icon": "$(tag)"
+      },
+      {
+        "command": "fictionWriter.views.projectExplorer.show.toggle3",
+        "title": "Break virtual folder 3",
+        "category": "FictionWriter",
+        "icon": "$(target)"
+      },
+      {
         "command": "fictionWriter.views.wordFrequency.refresh",
         "title": "Refresh Word Frequencies",
         "icon": "$(refresh)",
@@ -830,7 +925,6 @@
         "enablement": "editorLangId == markdown",
         "category": "Markdown Fiction Writer"
       }
-
     ],
     "customEditors": [
       {
@@ -902,8 +996,7 @@
           "when": "fictionWriter.metadata.filters.enabled == true"
         }
       ],
-      "fictionWriterMetadataExplorer": [
-      ],
+      "fictionWriterMetadataExplorer": [],
       "fictionWriterDocumentAnalysis": [
         {
           "id": "fictionWriter.views.statistics",
@@ -941,26 +1034,33 @@
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
     "check-types": "tsc --noEmit",
     "lint": "eslint src --ext ts",
-    "test": "vscode-test"
+    "test": "vscode-test",
+    "test:jest": "tsc -p . && jest --no-coverage"
   },
   "devDependencies": {
     "@types/codemirror": "^5.60.15",
+    "@types/deep-equal": "^1.0.4",
     "@types/glob": "^8.1.0",
+    "@types/jest": "^29.5.12",
     "@types/js-yaml": "^4.0.9",
     "@types/markdown-it": "^14.1.1",
     "@types/mocha": "^10.0.7",
     "@types/node": "20.x",
-    "@types/vscode": "^1.90.0",
+    "@types/sinon": "^17.0.3",
+    "@types/vscode": "^1.92.0",
     "@typescript-eslint/eslint-plugin": "^7.14.1",
     "@typescript-eslint/parser": "^7.11.0",
     "@vscode/test-cli": "^0.0.9",
-    "@vscode/test-electron": "^2.4.0",
+    "@vscode/test-electron": "^2.4.1",
     "chalk": "^5.3.0",
     "concurrently": "^8.2.2",
     "esbuild": "^0.21.5",
     "eslint": "^8.57.0",
+    "jest": "^29.7.0",
     "mocha": "^10.7.0",
     "npm-run-all": "^4.1.5",
+    "sinon": "^18.0.0",
+    "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5"
   },
@@ -974,6 +1074,7 @@
     "@codemirror/language-data": "^6.5.1",
     "@vscode/webview-ui-toolkit": "^1.4.0",
     "codemirror": "^6.0.1",
+    "deep-equal": "^2.2.3",
     "glob": "^11.0.0",
     "js-yaml": "^4.1.0",
     "markdown-it": "*",

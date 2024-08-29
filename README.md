@@ -47,10 +47,22 @@ fonttools ttLib MaterialSymbolsSharp-subset.ttf --flavor woff2 -o MaterialSymbol
 swap_vert e8d5
 link e250
 link_off e16f
+clock_loader_10 f726
+clock_loader_20 f725
+clock_loader_40 f724
+clock_loader_60 f723
+clock_loader_80 f722
+clock_loader_90 f721
+task_alt e2e6
+hourglass_empty e88b
+hourglass_disabled ef53
 
-
-fonttools subset material-design-icons/font/MaterialSymbolsSharp.ttf \
---unicodes=5f-7a,30-39,e8d5,e250,e16f \
+```sh
+python3 -m venv .venv
+source .venv/bin/activate
+fonttools subset MaterialSymbolsSharp.ttf \
+--unicodes=5f-7a,30-39,e8d5,e250,e16f,f726,f725,f724,f723,f722,f721,e2e6,e88b,ef53 \
 --no-layout-closure \
 --output-file=MaterialSymbolsSharp-subset.woff2 \
 --flavor=woff2
+```

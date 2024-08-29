@@ -6,9 +6,9 @@ import {FwFileInfo} from '../core/fwFileInfo';
 // as well as import your extension to test it
 // import * as myExtension from '../../extension';
 
-suite('FileNameManager', () => {
-    suite('parse', () => {
-        suite('filename matches convention', () => {
+describe('FileNameManager', () => {
+    describe('parse', () => {
+        describe('filename matches convention', () => {
             [
                 {path: "[1] fileManager1.fw.md", expected: {order: 1, name: "fileManager1"}},
                 {path: "[123] fileManager1.fw.md", expected: {order: 123, name: "fileManager1"}},
@@ -19,7 +19,7 @@ suite('FileNameManager', () => {
                     const file = FwFileInfo.parse(path, ['fw.md']);
 
                     assert.deepEqual(file, {
-                        id: path,
+                        fsPath: path,
                         location: "",
                         ext: ".fw.md",
                         isDir: false,
@@ -30,7 +30,7 @@ suite('FileNameManager', () => {
             });
         });
 
-        suite("filename does not match convention", () => {
+        describe("filename does not match convention", () => {
             [
                 {path: "]__file.Manager2.fw.md", expected: {order: 0, name: "]__file.Manager2"}},
                 {path: "justFilename.fw.md", expected: {order: 0, name: "justFilename"}},
@@ -40,7 +40,7 @@ suite('FileNameManager', () => {
                     const file = FwFileInfo.parse(path, ['fw.md']);
 
                     assert.deepEqual(file, {
-                        id: path,
+                        fsPath: path,
                         location: "",
                         name: expected.name,
                         isDir: false,

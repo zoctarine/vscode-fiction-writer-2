@@ -7,7 +7,7 @@ import {fileParser, fileSerializer, schema} from "./utils/fileExtensions";
 import {exampleSetup} from "prosemirror-example-setup";
 import {InputFileProcessor, processInputFile} from "../../processors";
 import {getNonce, getWebviewRootUri} from '../../core/nonce';
-import {StateManager} from '../../core/stateManager';
+import {ContextManager} from '../../core/contextManager';
 import {DisposeManager} from '../../core';
 import {RtEditorOptions} from './rtEditorOptions';
 import path from 'path';
@@ -17,7 +17,7 @@ export class ProseMirrorEditorProvider extends DisposeManager
     implements vscode.CustomTextEditorProvider {
 
     public static register(context: vscode.ExtensionContext,
-                           stateManager: StateManager,
+                           stateManager: ContextManager,
                            options: RtEditorOptions): vscode.Disposable {
         const provider = new ProseMirrorEditorProvider(context, stateManager, options);
 
@@ -39,7 +39,7 @@ export class ProseMirrorEditorProvider extends DisposeManager
 
     constructor(
         private readonly _context: vscode.ExtensionContext,
-        private readonly _stateManager: StateManager,
+        private readonly _stateManager: ContextManager,
         private readonly _options: RtEditorOptions
     ) {
         super();

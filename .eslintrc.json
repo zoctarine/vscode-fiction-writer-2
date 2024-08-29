@@ -26,5 +26,13 @@
         "out",
         "dist",
         "**/*.d.ts"
+    ],
+    "overrides": [
+        {
+            "files": ["tests/**/*"],
+            "env": {
+                "jest": true
+            }
+        }
     ]
 }

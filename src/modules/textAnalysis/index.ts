@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import {addCommand, DisposeManager} from '../../core';
-import {StateManager} from '../../core/stateManager';
+import {ContextManager} from '../../core/contextManager';
 import {TextAnalysisOptions} from './textAnalysisOptions';
 import {WordFrequencyTreeDataProvider} from './wordFrequencyTreeDataProvider';
 import {DocStatisticTreeDataProvider} from './docStatisticTreeDataProvider';
@@ -12,7 +12,7 @@ class TextAnalysisModule extends DisposeManager {
     options = new TextAnalysisOptions();
     wfTreeDataProvider: WordFrequencyTreeDataProvider | undefined;
     dsTreeDataProvider: DocStatisticTreeDataProvider | undefined;
-    stateManager: StateManager | undefined;
+    stateManager: ContextManager | undefined;
 
     constructor() {
         super();
@@ -64,7 +64,7 @@ class TextAnalysisModule extends DisposeManager {
             : this.deactivate();
     }
 
-    register(stateManager: StateManager): vscode.Disposable {
+    register(stateManager: ContextManager): vscode.Disposable {
         this.stateManager = stateManager;
 
         this.options.enabled.onChanged((enabled) => {

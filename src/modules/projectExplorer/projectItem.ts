@@ -7,6 +7,8 @@ export class ProjectItem {
     order: number = 0;
     description?: string;
     fsName: string = '';
+    icon?: string;
+    color?: string;
 
     public buildFsName(): string {
         return `${FwFile.toOrderString(this.order)} ${this.name}${this.ext}`;
