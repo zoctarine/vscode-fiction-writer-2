@@ -30,7 +30,13 @@ export interface IFileState {
     fileInfo?: FwFileInfo,
     metadata?: IMetaState,
     decoration?: IDecorationState,
-    statistics?: ITextAnalyzerState
+    analysis?: ITextAnalyzerState,
     writeTargets?: IWriteTargetsState
+    writeTargetsDecorations?: IDecorationState
     contentHash?: string;
+}
+
+export interface IFileStateSnapshot {
+    prevState: IFileState,
+    state: IFileState,
 }

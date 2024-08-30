@@ -31,6 +31,11 @@ const vscode = {
         getConfiguration: jest.fn(),
         onDidChangeConfiguration: jest.fn(),
         openTextDocument: jest.fn(),
+        createFileSystemWatcher: {
+            onDidChange: jest.fn().mockReturnValue({dispose: () => {}}),
+            onDidCreate: jest.fn().mockReturnValue({dispose: () => {}}),
+            onDidDelete: jest.fn().mockReturnValue({dispose: () => {}}),
+        }
     },
     window: {
         showInformationMessage: jest.fn(),

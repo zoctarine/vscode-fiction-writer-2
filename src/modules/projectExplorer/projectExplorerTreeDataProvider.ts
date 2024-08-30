@@ -20,6 +20,7 @@ import {
 import {ProjectItem} from './projectItem';
 import {ProjectsOptions} from './projectsOptions';
 import {StateManager} from '../../core/state';
+import {isNumber} from 'node:util';
 
 export class ProjectExplorerTreeDataProvider
     extends DisposeManager
@@ -35,7 +36,7 @@ export class ProjectExplorerTreeDataProvider
     private _mixFoldersAndFiles = true;
     private _syncWithActiveEditorEnabled = false;
     private _isBatchOrderingEnabled = false;
-    private _showToggle?: string;
+    private _showDecoration:string;
 
     constructor(
         private _options: ProjectsOptions,
@@ -70,8 +71,12 @@ export class ProjectExplorerTreeDataProvider
             })
         );
 
-        this.showNextFor();
-        this.reload();
+        this._showDecoration = this._contextManager.get(FictionWriter.views.projectExplorer.show.decorationIs, 'decoration1');
+        vscode.commands.executeCommand('setContext', FictionWriter.views.projectExplorer.show.decorationIs,  this._showDecoration)
+            .then(() => {
+                this.reload();
+            });
+
     }
 
     private buildHierarchy(fileInfos: FwFileInfo[]): ProjectNode {
@@ -126,7 +131,7 @@ export class ProjectExplorerTreeDataProvider
                             node.item.ext = fileInfo.ext;
                             node.item.name = fileInfo.name;
                         }
-                        const state = this._stateManager.get(fileInfo.fsPath);
+                        const {state, snapshots} = this._stateManager.getWithSnapshots(fileInfo.fsPath);
                         // TODO: refactor
                         // if (state?.metadata) {
                         //     if (this._options.fileDescriptionMetadataKey.value) {
@@ -136,20 +141,21 @@ export class ProjectExplorerTreeDataProvider
                         //     node.item.color = state.metadata['color'];
                         // }
 
-                        if (state?.decoration){
+                        if (state?.decoration && (!this._showDecoration || this._showDecoration === 'decoration1' || this._showDecoration === 'decoration2')) {
                             node.item.icon = state.decoration.icon;
                             node.item.color = state.decoration.color;
                             node.item.description = state.decoration.description ?? node.item.description;
-
-                            if (state.decoration.named && this._showToggle){
-                                const decoration = state.decoration.named.get(this._showToggle);
-                                if (decoration){
+                        }
+                        if (snapshots && (!this._showDecoration|| this._showDecoration === 'decoration1' || this._showDecoration === 'decoration3')){
+                                const decoration = state?.writeTargetsDecorations
+                                if (decoration) {
                                     node.item.icon = decoration.icon;
                                     node.item.color = decoration.color;
                                     node.item.description = decoration.description ?? node.item.description;
                                 }
-                            }
+
                         }
+
                     }
                     node.parent = current;
                     node.item.order = fileInfo.order;
@@ -221,7 +227,7 @@ export class ProjectExplorerTreeDataProvider
             collapsibleState: element?.type === NodeType.File
                 ? vscode.TreeItemCollapsibleState.None
                 : expanded ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed,
-            resourceUri: vscode.Uri.parse(element.id).with({scheme:FictionWriter.views.projectExplorer.id}),
+            resourceUri: vscode.Uri.parse(element.id).with({scheme: FictionWriter.views.projectExplorer.id}),
             contextValue: element.type,
             command: element.type == NodeType.File || element.type == NodeType.VirtualFolder ? {
                 title: 'Open',
@@ -462,26 +468,19 @@ export class ProjectExplorerTreeDataProvider
     public async redistribute() {
     }
 
-    public showNextFor(toggle?: string){
-        const toggles = ['toggle1', 'toggle2', 'toggle3'];
-        if (toggle) {
-            const crt = toggles.indexOf(toggle);
-            let next = crt;
-            if (crt >= 0) {
-                next = (crt + 1) % toggles.length;
-            }
-            vscode.commands.executeCommand('setContext', FictionWriter.views.projectExplorer.show.is, toggles[next])
-                .then(() => {
-                    this._showToggle = toggles[next];
-                    this._refreshTree();
-                });
-        } else {
-            vscode.commands.executeCommand('setContext', FictionWriter.views.projectExplorer.show.is, toggles[0])
-                .then(() => {
-                    this._showToggle = toggles[0];
-                    this._refreshTree();
-                });
+    public showNextFor(decoration: string) {
+        const decorations = ['decoration1', 'decoration2', 'decoration3', 'decoration4'];
+        const crt = decorations.indexOf(decoration);
+        let next = 0;
+        if (crt >= 0) {
+            next = (crt + 1) % decorations.length;
         }
+        vscode.commands.executeCommand('setContext', FictionWriter.views.projectExplorer.show.decorationIs, decorations[next])
+            .then(() => {
+                this._showDecoration = decorations[next];
+                this._refreshTree();
+                return this._contextManager.set(FictionWriter.views.projectExplorer.show.decorationIs, this._showDecoration);
+            });
     }
 
     public syncWithActiveEditorOn() {

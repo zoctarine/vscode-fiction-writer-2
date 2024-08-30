@@ -1,12 +1,8 @@
 import {ITextProcessor} from '../IProcessor';
-import {IMetaState, IWriteTargetsState, ITextAnalyzerState} from '../states';
+import {IFileState} from '../states';
 
-export class ComputeWriteTarget implements ITextProcessor {
-    async process(content: string, data: {
-        metadata?: IMetaState,
-        targets?: IWriteTargetsState,
-        analysis?: ITextAnalyzerState
-    }): Promise<string> {
+export class ComputeWriteTarget implements ITextProcessor<IFileState> {
+    async process(content: string, data:IFileState): Promise<string> {
         if (!data.metadata?.value?.target) return content;
         if (!data.analysis?.statistics) return content;
 
@@ -18,9 +14,9 @@ export class ComputeWriteTarget implements ITextProcessor {
         }
 
         const percent = Math.round(wordCount * 100 / target);
-        data.targets ??= {};
-        data.targets = {
-            ...data.targets,
+        data.writeTargets ??= {};
+        data.writeTargets = {
+            ...data.writeTargets,
             wordsTarget: target,
             wordsTargetAchieved: percent,
             progress: `${wordCount}/${target} (${percent}%)`,

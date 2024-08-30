@@ -3,11 +3,12 @@ import {Metadata} from './metadata';
 import vscode from 'vscode';
 import {FwFileInfo} from '../core';
 import {ITextProcessor} from './IProcessor';
+import {IFileState} from './states';
 
 ;
 
-export class LoadContent implements ITextProcessor {
-    async process(content: string, data: { fileInfo?: FwFileInfo }): Promise<string> {
+export class LoadContent implements ITextProcessor<IFileState> {
+    async process(content: string, data: IFileState): Promise<string> {
         if (data.fileInfo) {
             const doc = await vscode.workspace.openTextDocument(vscode.Uri.parse(data.fileInfo.fsPath));
             if (doc) {

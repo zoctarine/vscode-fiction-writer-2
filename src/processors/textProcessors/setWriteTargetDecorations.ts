@@ -1,16 +1,10 @@
 import {MdiIcons} from '../../core';
 import {ITextProcessor} from '../IProcessor';
-import {IDecorationState, IMetaState, IWriteTargetsState} from '../states';
+import {IFileState} from '../states';
 
-export class SetWriteTargetDecorations implements ITextProcessor {
-    constructor(public namedDecoration?: string) {
-    }
-
-    async process(content: string, data: {
-        targets?: IWriteTargetsState,
-        decoration?: IDecorationState,
-    }): Promise<string> {
-        if (!data.targets) {
+export class SetWriteTargetDecorations implements ITextProcessor<IFileState> {
+    async process(content: string, data: IFileState): Promise<string> {
+        if (!data.writeTargets) {
             return content;
         }
 
@@ -39,25 +33,14 @@ export class SetWriteTargetDecorations implements ITextProcessor {
             return steps[steps.length - 1];
         }
 
-        const step = getNearestStep(data.targets.wordsTargetAchieved ?? 0, [...steps.keys()]);
-        const newDecoration: IDecorationState = {
-            ...data.decoration,
+        const step = getNearestStep(data.writeTargets.wordsTargetAchieved ?? 0, [...steps.keys()]);
+
+        data.writeTargetsDecorations = {
+            ...data.writeTargetsDecorations,
             icon: steps.get(step)?.icon,
             color: steps.get(step)?.color,
-            description: data.targets.progress
+            description: data.writeTargets.progress
         };
-
-
-        if (this.namedDecoration){
-            if (!data.decoration?.named){
-                data.decoration = {...data.decoration, named: new Map<string, IDecorationState>()};
-            }
-
-            data.decoration.named!.set(this.namedDecoration, newDecoration);
-
-        } else {
-            data.decoration = newDecoration;
-        }
 
 
         return content;

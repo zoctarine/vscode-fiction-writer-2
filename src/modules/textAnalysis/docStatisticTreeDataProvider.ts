@@ -3,13 +3,16 @@ import {WordStatTreeItem} from './wordStatTreeItem';
 import {DisposeManager, RegEx} from '../../core';
 import {ContextManager} from '../../core/contextManager';
 import path from 'path';
-import {TextAnalyzer} from './textAnalyzer';
+import {ITextStatistics, TextAnalyzer} from './textAnalyzer';
+import {StateManager} from '../../core/state';
+import {IFileState} from '../../processors/states';
 
 export class DocStatisticTreeDataProvider extends DisposeManager implements vscode.TreeDataProvider<WordStatTreeItem> {
     private _document: vscode.TextDocument | undefined;
     private _treeView: vscode.TreeView<WordStatTreeItem> | undefined;
+    private _statistics: ITextStatistics | undefined;
 
-    constructor(private readonly _stateManager: ContextManager) {
+    constructor(private readonly _stateManager: StateManager) {
         super();
 
         this._treeView = vscode.window.createTreeView('fictionWriter.views.statistics', {treeDataProvider: this});
@@ -18,6 +21,12 @@ export class DocStatisticTreeDataProvider extends DisposeManager implements vsco
             this._treeView,
             this._treeView.onDidChangeVisibility((e) => {
                 if (e.visible) {
+                    this.refresh();
+                }
+            }),
+
+            this._stateManager.onFilesChanged((files) => {
+                if (this._document) {
                     this.refresh();
                 }
             })
@@ -36,6 +45,8 @@ export class DocStatisticTreeDataProvider extends DisposeManager implements vsco
         if (element) {
             return Promise.resolve([]);
         } else {
+            if (!this._statistics) return Promise.resolve([]);
+
             let {
                 wordCount,
                 charCount,
@@ -45,7 +56,7 @@ export class DocStatisticTreeDataProvider extends DisposeManager implements vsco
                 estWordCount,
                 estReadTimeMin,
                 estReadTimeSec
-            } = TextAnalyzer.analyze(this._document.getText());
+            } = this._statistics;
 
             const asString = (n: number) => `${n}`;
 
@@ -64,16 +75,24 @@ export class DocStatisticTreeDataProvider extends DisposeManager implements vsco
     private _onDidChangeTreeData: vscode.EventEmitter<WordStatTreeItem | undefined | null | void> = new vscode.EventEmitter<WordStatTreeItem | undefined | null | void>();
     readonly onDidChangeTreeData: vscode.Event<WordStatTreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
 
-    refresh(): void {
+    refresh(force: boolean= false): void {
         if (!this._treeView?.visible) return;
 
         this._document = vscode.window.activeTextEditor?.document;
+        if (this._document) {
+            this._statistics = force
+                ? TextAnalyzer.analyze(this._document.getText())
+                : this._stateManager.get(this._document.uri.fsPath)?.analysis?.statistics;
+        } else {
+            this._statistics = undefined;
+        }
 
         this._treeView.message = this._document?.fileName
             ? path.parse(this._document.uri.fsPath).base
             : '';
         this._onDidChangeTreeData.fire();
     }
+
 
     clear(): void {
         this._document = undefined;

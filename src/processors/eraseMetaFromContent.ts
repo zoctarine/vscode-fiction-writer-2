@@ -1,8 +1,9 @@
 import {ITextProcessor} from './IProcessor';
 import {DynamicObj, RegEx} from '../core';
+import {IFileState} from './states';
 
-export class EraseMetaFromContent implements ITextProcessor {
-    async process(content: string, data: DynamicObj): Promise<string> {
+export class EraseMetaFromContent implements ITextProcessor<IFileState> {
+    async process(content: string, data: IFileState): Promise<string> {
         return content.replace(RegEx.Pattern.METADATA, '');
     }
 }

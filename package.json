@@ -577,18 +577,23 @@
       ],
       "view/title": [
         {
-          "command": "fictionWriter.views.projectExplorer.show.toggle1",
-          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.show.is == toggle1 && fictionWriter.views.projectExplorer.isOrdering == false",
+          "command": "fictionWriter.views.projectExplorer.show.decoration1",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.show.decorationIs == decoration1 && fictionWriter.views.projectExplorer.isOrdering == false",
           "group": "navigation"
         },
         {
-          "command": "fictionWriter.views.projectExplorer.show.toggle2",
-          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.show.is == toggle2 && fictionWriter.views.projectExplorer.isOrdering == false",
+          "command": "fictionWriter.views.projectExplorer.show.decoration2",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.show.decorationIs == decoration2 && fictionWriter.views.projectExplorer.isOrdering == false",
           "group": "navigation"
         },
         {
-          "command": "fictionWriter.views.projectExplorer.show.toggle3",
-          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.show.is == toggle3 && fictionWriter.views.projectExplorer.isOrdering == false",
+          "command": "fictionWriter.views.projectExplorer.show.decoration3",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.show.decorationIs == decoration3 && fictionWriter.views.projectExplorer.isOrdering == false",
+          "group": "navigation"
+        },
+        {
+          "command": "fictionWriter.views.projectExplorer.show.decoration4",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.show.decorationIs == decoration4 && fictionWriter.views.projectExplorer.isOrdering == false",
           "group": "navigation"
         },
         {
@@ -811,22 +816,28 @@
         "icon": "$(folder)"
       },
       {
-        "command": "fictionWriter.views.projectExplorer.show.toggle1",
-        "title": "Break virtual folder 1",
+        "command": "fictionWriter.views.projectExplorer.show.decoration1",
+        "title": "Deocartins: Show all. Click to change",
         "category": "FictionWriter",
         "icon": "$(symbol-text)"
       },
       {
-        "command": "fictionWriter.views.projectExplorer.show.toggle2",
-        "title": "Break virtual folder 2",
+        "command": "fictionWriter.views.projectExplorer.show.decoration2",
+        "title": "Deocartins: Show only metadata. Click to change",
         "category": "FictionWriter",
         "icon": "$(tag)"
       },
       {
-        "command": "fictionWriter.views.projectExplorer.show.toggle3",
-        "title": "Break virtual folder 3",
+        "command": "fictionWriter.views.projectExplorer.show.decoration3",
+        "title": "Deocartins: Show only targets. Click to change",
         "category": "FictionWriter",
         "icon": "$(target)"
+      },
+      {
+        "command": "fictionWriter.views.projectExplorer.show.decoration4",
+        "title": "Deocartins: No decorations. Click to change",
+        "category": "FictionWriter",
+        "icon": "$(eye-closed)"
       },
       {
         "command": "fictionWriter.views.wordFrequency.refresh",
@@ -1086,6 +1097,7 @@
     "prosemirror-schema-basic": "^1.2.3",
     "prosemirror-schema-list": "^1.4.1",
     "prosemirror-state": "^1.4.3",
-    "prosemirror-view": "^1.33.9"
+    "prosemirror-view": "^1.33.9",
+    "rfdc": "^1.4.1"
   }
 }

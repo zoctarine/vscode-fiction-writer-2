@@ -32,14 +32,17 @@ class ProjectsModule extends DisposeManager {
         this.manageDisposable(
             this.projectExplorerDataProvider,
             new ProjectExplorerDecorationProvider(this.stateManager),
-            addCommand(FictionWriter.views.projectExplorer.show.toggle1, () => {
-                this.projectExplorerDataProvider?.showNextFor('toggle1');
+            addCommand(FictionWriter.views.projectExplorer.show.decoration1, () => {
+                this.projectExplorerDataProvider?.showNextFor('decoration1');
             }),
-            addCommand(FictionWriter.views.projectExplorer.show.toggle2, () => {
-                this.projectExplorerDataProvider?.showNextFor('toggle2');
+            addCommand(FictionWriter.views.projectExplorer.show.decoration2, () => {
+                this.projectExplorerDataProvider?.showNextFor('decoration2');
             }),
-            addCommand(FictionWriter.views.projectExplorer.show.toggle3, () => {
-                this.projectExplorerDataProvider?.showNextFor('toggle3');
+            addCommand(FictionWriter.views.projectExplorer.show.decoration3, () => {
+                this.projectExplorerDataProvider?.showNextFor('decoration3');
+            }),
+            addCommand(FictionWriter.views.projectExplorer.show.decoration4, () => {
+                this.projectExplorerDataProvider?.showNextFor('decoration4');
             }),
             addCommand(FictionWriter.views.projectExplorer.sync.on, () => {
                 this.projectExplorerDataProvider?.syncWithActiveEditorOn();

@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import {FwFile, RegEx} from "./fwFile";
 import * as path from "path";
 import {ProjectsOptions} from '../modules/projectExplorer/projectsOptions';
-import {DisposeManager} from './index';
+import {DisposeManager} from './disposable';
 import {glob} from 'glob';
 import fs from 'node:fs';
 import {FwFileInfo} from './fwFileInfo';

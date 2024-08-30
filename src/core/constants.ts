@@ -14,10 +14,11 @@ export const FictionWriter = {
             makeVirtualFolder: `${ViewsProjectExplorer}.makeVirtualFolder`,
             breakVirtualFolder: `${ViewsProjectExplorer}.breakVirtualFolder`,
             show:{
-                toggle1: `${ViewsProjectExplorer}.show.toggle1`,
-                toggle2: `${ViewsProjectExplorer}.show.toggle2`,
-                toggle3: `${ViewsProjectExplorer}.show.toggle3`,
-                is: `${ViewsProjectExplorer}.show.is`,
+                decoration1: `${ViewsProjectExplorer}.show.decoration1`,
+                decoration2: `${ViewsProjectExplorer}.show.decoration2`,
+                decoration3: `${ViewsProjectExplorer}.show.decoration3`,
+                decoration4: `${ViewsProjectExplorer}.show.decoration4`,
+                decorationIs: `${ViewsProjectExplorer}.show.decorationIs`,
             },
             reorder:{
                 start: `${ViewsProjectExplorer}.reorder.start`,

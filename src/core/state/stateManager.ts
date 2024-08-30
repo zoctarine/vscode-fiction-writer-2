@@ -4,11 +4,11 @@ import {ITextProcessor} from '../../processors';
 import {FwFileInfo} from '../fwFileInfo';
 
 import {FwFileState, FwFileStateChangedEvent} from './fwFileState';
-import {IFileState} from '../../processors/states';
+import {IFileState, IFileStateSnapshot} from '../../processors/states';
 
 export class FwStateChangedEvent {
     files: FwFileStateChangedEvent[] = [];
-    changed: (string | symbol)[] = [];
+    changed: (keyof IFileState)[] = [];
 }
 
 export class ProjectFileState {
@@ -16,6 +16,7 @@ export class ProjectFileState {
     public fileInfo!: FwFileInfo;
 
     dispose() {
+        this.state.delete();
         this.state.dispose();
     }
 }
@@ -26,7 +27,7 @@ export class StateManager extends DisposeManager {
     private _enqueue = false;
     private _onFilesChanged = new vscode.EventEmitter<FwStateChangedEvent>();
 
-    constructor(private _textProcessor: ITextProcessor) {
+    constructor(private _textProcessor: ITextProcessor<IFileState>) {
         super();
     }
 
@@ -44,7 +45,7 @@ export class StateManager extends DisposeManager {
 
         const file = new ProjectFileState();
         file.state = new FwFileState({fileInfo}, this._textProcessor);
-        this.manageDisposable(file.state.onDidChangeState((event) => {
+        this.manageDisposable(file.state.onDidChange((event) => {
             this._handleOnFileChanged(event);
         }));
         file.fileInfo = fileInfo;
@@ -91,15 +92,13 @@ export class StateManager extends DisposeManager {
                         if (!item) {
                             item = this.track(file);
                         }
-                        item.state.setState({fileInfo: item.fileInfo});
+                        item.state.replaceState({fileInfo: item.fileInfo});
                         await item.state.update(content);
                     }
                     // If the file does not exist
                 } else {
                     // If we tracked it, we delete it
                     if (item) {
-                        const oldState = this._fileStates.get(file.fsPath);
-                        await oldState?.state?.updateState({isDeleted: true});
                         this.unTrack(file.fsPath);
                     }
                 }
@@ -123,7 +122,7 @@ export class StateManager extends DisposeManager {
     }
 
     private _fire(fileEvents: FwFileStateChangedEvent[]) {
-        const allChanges = fileEvents.reduce((acc, val) => acc.concat(val.changed), [] as (string | symbol)[]);
+        const allChanges = fileEvents.reduce((acc, val) => acc.concat(val.changed), [] as (keyof IFileState)[]);
 
         const event = new FwStateChangedEvent();
         event.files = fileEvents;
@@ -152,13 +151,22 @@ export class StateManager extends DisposeManager {
         return [...this._fileStates.values()].map(s => s.state?.getState());
     }
 
-    get(fsPath: string) : IFileState | undefined {
+    get(fsPath: string): IFileState | undefined {
         const item = this._fileStates.get(fsPath);
         if (item) {
             return {...item.state.getState()};
         }
         return undefined;
     }
+
+    getWithSnapshots(fsPath: string): { state?: IFileState, snapshots?: Map<string, IFileStateSnapshot> } {
+        const item = this._fileStates.get(fsPath);
+        return {
+            state: item?.state.getState(),
+            snapshots: item?.state.getSnapshots()
+        };
+    }
+
 
     dispose() {
         super.dispose();

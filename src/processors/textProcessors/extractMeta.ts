@@ -2,10 +2,10 @@ import {ITextProcessor} from '../IProcessor';
 import {RegEx} from '../../core';
 import {Metadata} from '../metadata';
 
-import {IMetaState} from '../states';
+import {IFileState} from '../states';
 
-export class ExtractMeta implements ITextProcessor {
-    async process(content: string, data: { metadata?: IMetaState }): Promise<string> {
+export class ExtractMeta implements ITextProcessor<IFileState> {
+    async process(content: string, data: IFileState): Promise<string> {
         const matches = content.match(RegEx.Pattern.METADATA);
         data.metadata = matches
             ? {

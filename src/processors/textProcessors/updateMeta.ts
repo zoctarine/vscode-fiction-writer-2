@@ -2,13 +2,13 @@ import {ITextProcessor} from '../IProcessor';
 import {DynamicObj, RegEx} from '../../core';
 import {Metadata} from '../metadata';
 
-import {IMetaState} from '../states';
+import {IFileState} from '../states';
 
-export class UpdateMeta implements ITextProcessor {
+export class UpdateMeta implements ITextProcessor<IFileState> {
     constructor(private _transformMeta: (crtMeta: DynamicObj) => DynamicObj) {
     }
 
-    async process(content: string, data: { metadata?: IMetaState }): Promise<string> {
+    async process(content: string, data: IFileState): Promise<string> {
 
         const newValue = this._transformMeta(data.metadata?.value ?? {});
         const newText = Metadata.serializeObj(newValue);

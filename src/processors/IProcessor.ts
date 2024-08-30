@@ -1,9 +1,9 @@
 import {DynamicObj} from '../core';
 
-export interface IProcessor<T> {
-    process(content: T, data: DynamicObj): Promise<T>
+export interface IProcessor<T, TState> {
+    process(content: T, data: TState): Promise<T>
 }
 
-export interface ITextProcessor extends IProcessor<string> {
+export interface ITextProcessor<TState> extends IProcessor<string, TState> {
 
 }

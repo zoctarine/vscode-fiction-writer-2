@@ -1,13 +1,10 @@
 import {MdiIcons} from '../../core';
 import {ITextProcessor} from '../IProcessor';
-import {IDecorationState, IMetaState, IWriteTargetsState} from '../states';
+import {IDecorationState, IFileState, IMetaState, IWriteTargetsState} from '../states';
 import {IconResolver} from '../../modules/metadata';
 
-export class SetMetaDecorations implements ITextProcessor {
-    async process(content: string, data: {
-        metadata?: IMetaState,
-        decoration?: IDecorationState,
-    }): Promise<string> {
+export class SetMetaDecorations implements ITextProcessor<IFileState> {
+    async process(content: string, data: IFileState): Promise<string> {
         if (!data.metadata) return content;
 
         const colorMeta = data.metadata.value?.color;

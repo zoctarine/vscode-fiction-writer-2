@@ -21,14 +21,14 @@ export function activate(context: vscode.ExtensionContext) {
         .add(new SetMetaDecorations())
         .add(new ComputeTextStatistics())
         .add(new ComputeWriteTarget())
-        .add(new SetWriteTargetDecorations('toggle3'))
+        .add(new SetWriteTargetDecorations)
         .add(new ComputeContentHash())
     ;
 
 
     context.subscriptions.push(
         projectsModule.register(core.fileManager, core.contextManager, core.stateManager),
-        textAnalysisModule.register(core.contextManager),
+        textAnalysisModule.register(core.stateManager),
         metadataModule.register(context, core.contextManager, projectsModule.fileManager),
         richTextEditorModule.register(context, core.contextManager),
         filtersModule.register(core.contextManager, core.stateManager, metadataModule.metadataTreeDataProvider, metadataModule.resolvers),

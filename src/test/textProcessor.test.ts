@@ -74,14 +74,14 @@ describe('TextProcessors', () => {
                     .mockResolvedValue(mockApi);
 
                 const sut = new ChainedTextProcessor()
-                    .add(new ExtractMeta())
-                    .add(new ComputeTextStatistics())
+                    .add(new ExtractMeta(), "meta")
+                    .add(new ComputeTextStatistics(), "statistics")
                     .add(new ComputeWriteTarget());
                 // compute icons, compute colors, ... etc
                 let calls = 0;
 
                 const state = new FwFileState({}, sut);
-                state.onDidChangeState(({state, changed}) => {
+                state.onDidChange(({state, changed, snapshots}) => {
 
                     state.fileInfo = new FwFileInfo();
                     state.fileInfo.fsPath = "test";
@@ -92,13 +92,15 @@ describe('TextProcessors', () => {
                             case 1:
                                 assert.deepEqual(state.writeTargets, {
                                     wordsTarget: 10,
-                                    wordsTargetAchieved: 30
+                                    wordsTargetAchieved: 30,
+                                    progress: "3/10 (30%)"
                                 });
                                 break;
                             case 2:
                                 assert.deepEqual(state.writeTargets, {
                                     wordsTarget: 10,
-                                    wordsTargetAchieved: 60
+                                    wordsTargetAchieved: 60,
+                                    progress: "6/10 (60%)"
                                 });
                                 done();
                                 break;

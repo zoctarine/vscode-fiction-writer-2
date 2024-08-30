@@ -5,6 +5,7 @@ import {TextAnalysisOptions} from './textAnalysisOptions';
 import {WordFrequencyTreeDataProvider} from './wordFrequencyTreeDataProvider';
 import {DocStatisticTreeDataProvider} from './docStatisticTreeDataProvider';
 import {WordStatTreeItemSelector} from './wordStatTreeItemSelector';
+import {StateManager} from '../../core/state';
 
 
 class TextAnalysisModule extends DisposeManager {
@@ -12,7 +13,7 @@ class TextAnalysisModule extends DisposeManager {
     options = new TextAnalysisOptions();
     wfTreeDataProvider: WordFrequencyTreeDataProvider | undefined;
     dsTreeDataProvider: DocStatisticTreeDataProvider | undefined;
-    stateManager: ContextManager | undefined;
+    stateManager: StateManager | undefined;
 
     constructor() {
         super();
@@ -41,7 +42,7 @@ class TextAnalysisModule extends DisposeManager {
                 this.wfTreeDataProvider?.clear();
             }),
             addCommand('views.statistics.refresh', () => {
-                this.dsTreeDataProvider?.refresh();
+                this.dsTreeDataProvider?.refresh(true);
             }),
             vscode.window.onDidChangeActiveTextEditor(() => {
                 if (this.options.autoRefresh) {
@@ -64,7 +65,7 @@ class TextAnalysisModule extends DisposeManager {
             : this.deactivate();
     }
 
-    register(stateManager: ContextManager): vscode.Disposable {
+    register(stateManager: StateManager): vscode.Disposable {
         this.stateManager = stateManager;
 
         this.options.enabled.onChanged((enabled) => {
