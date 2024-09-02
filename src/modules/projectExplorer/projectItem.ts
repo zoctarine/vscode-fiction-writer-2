@@ -9,7 +9,8 @@ export class ProjectItem {
     fsName: string = '';
     icon?: string;
     color?: string;
-
+    checked?:boolean;
+    
     public buildFsName(): string {
         return `${FwFile.toOrderString(this.order)} ${this.name}${this.ext}`;
     }

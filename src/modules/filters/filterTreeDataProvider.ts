@@ -68,7 +68,7 @@ export class FilterTreeDataProvider extends DisposeManager
             this._treeView,
             window.registerFileDecorationProvider(this),
             this._onDidChangeTreeData,
-            this._stateManager.onFilesChanged(() => {
+            this._stateManager.onFilesStateChanged(() => {
                 this._refreshTree();
             }),
             this._treeView.onDidCollapseElement((e) => {

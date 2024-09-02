@@ -4,7 +4,7 @@ import {DumpOptions} from 'js-yaml';
 type YamlKind = 'sequence' | 'scalar' | 'mapping';
 
 class CustomTag {
-    constructor(public type:any, public data:any) {
+    constructor(public type: any, public data: any) {
     }
 }
 
@@ -13,15 +13,15 @@ export class Metadata {
 
     constructor(meta: string | object) {
 
-        const tags = [ 'scalar', 'sequence', 'mapping' ].map(function (kind) {
+        const tags = ['scalar', 'sequence', 'mapping'].map(function (kind) {
             // first argument here is a prefix, so this type will handle anything starting with !
             return new yaml.Type('', {
                 kind: kind as YamlKind,
                 multi: true,
-                representName: function (object:any) {
+                representName: function (object: any) {
                     return object.type;
                 },
-                represent: function (object:any) {
+                represent: function (object: any) {
                     return object.data;
                 },
                 instanceOf: CustomTag,
@@ -44,7 +44,7 @@ export class Metadata {
 
         try {
             if (typeof meta === "string") {
-                return yaml.load(meta,{
+                return yaml.load(meta, {
                     schema: SCHEMA,
                     json: false,
                 });
@@ -55,9 +55,14 @@ export class Metadata {
             return {};
         }
     }
-    public static serializeObj(obj:{}, opts?: DumpOptions): string {
 
-        return yaml.dump(obj, opts);
+    public static serializeObj(obj: {}, opts?: DumpOptions): string {
+
+        return yaml.dump(obj, {
+            flowLevel: 1,
+            noArrayIndent: true,
+            schema: yaml.FAILSAFE_SCHEMA, ...opts
+        });
     }
 
     public get(key: string): any {

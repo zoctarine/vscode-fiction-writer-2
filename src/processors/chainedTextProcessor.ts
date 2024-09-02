@@ -6,7 +6,7 @@ const clone = rfdc();
 
 export class ChainedTextProcessor implements ITextProcessor<IFileState> {
     private _processors: ITextProcessor<IFileState>[] = [];
-    private _cacheKeys = new Map<ITextProcessor<IFileState>, {key: string, snapshotOnly: boolean}>();
+    private _cacheKeys = new Map<ITextProcessor<IFileState>, string>();
     private _snapshots = new Map<string, IFileStateSnapshot>();
 
     constructor() {
@@ -15,7 +15,7 @@ export class ChainedTextProcessor implements ITextProcessor<IFileState> {
     add(processor: ITextProcessor<IFileState>, snapshotKey?: string, snapshotOnly?: boolean): ChainedTextProcessor {
         this._processors.push(processor);
         if (snapshotKey) {
-            this._cacheKeys.set(processor, {key: snapshotKey, snapshotOnly: snapshotOnly ?? false});
+            this._cacheKeys.set(processor, snapshotKey);
         }
         return this;
     }
@@ -24,18 +24,12 @@ export class ChainedTextProcessor implements ITextProcessor<IFileState> {
         let lastContent = content;
         this._snapshots.clear();
         for (const processor of this._processors) {
-            const snapshot = this._cacheKeys.get(processor);
-            if (snapshot) {
+            const snapshotKey = this._cacheKeys.get(processor);
+            if (snapshotKey) {
                 let before = clone({...data});
+                lastContent = await processor.process(lastContent, data);
                 let after = clone({...data});
-
-                if (snapshot.snapshotOnly){
-                    lastContent = await processor.process(lastContent, after);
-                } else {
-                    lastContent = await processor.process(lastContent, data);
-                    after = clone({...data});
-                }
-                this._snapshots.set(snapshot.key, {prevState: before, state: after});
+                this._snapshots.set(snapshotKey, {prevState: before, state: after});
             } else {
                 lastContent = await processor.process(lastContent, data);
             }

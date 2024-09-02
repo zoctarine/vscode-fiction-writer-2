@@ -80,7 +80,10 @@ describe('TextProcessors', () => {
                 // compute icons, compute colors, ... etc
                 let calls = 0;
 
-                const state = new FwFileState({}, sut);
+                const state = new FwFileState({}, {
+                    createUpdateMetaProcessor: alterState => sut,
+                    createTextProcessor:()=>sut
+                });
                 state.onDidChange(({state, changed, snapshots}) => {
 
                     state.fileInfo = new FwFileInfo();
@@ -111,11 +114,14 @@ describe('TextProcessors', () => {
                     }
                 });
 
-                const state1 = new FwFileState({}, sut);
-                state1.update(text);
+                const state1 = new FwFileState({}, {
+                    createTextProcessor: () => sut,
+                    createUpdateMetaProcessor: alterState => sut
+                });
+                state1.loadState(text, {});
 
-                state.update(text).then(() =>
-                    state.update(text + "this are some words")
+                state.loadState(text, {}).then(() =>
+                    state.loadState(text + "this are some words", {})
                 );
             });
         });

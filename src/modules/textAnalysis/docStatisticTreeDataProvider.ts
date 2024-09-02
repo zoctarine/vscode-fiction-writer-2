@@ -25,7 +25,7 @@ export class DocStatisticTreeDataProvider extends DisposeManager implements vsco
                 }
             }),
 
-            this._stateManager.onFilesChanged((files) => {
+            this._stateManager.onFilesStateChanged((files) => {
                 if (this._document) {
                     this.refresh();
                 }

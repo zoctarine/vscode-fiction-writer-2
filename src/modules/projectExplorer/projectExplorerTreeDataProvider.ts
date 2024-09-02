@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import {ThemeColor, ThemeIcon, ViewBadge} from 'vscode';
+import {ThemeColor, ThemeIcon, TreeItemCheckboxState, ViewBadge} from 'vscode';
 import {OrderHandler} from "./orderHandler";
 import {asPosix, FwFileManager} from "../../core/fwFileManager";
 import * as path from 'path';
@@ -20,7 +20,12 @@ import {
 import {ProjectItem} from './projectItem';
 import {ProjectsOptions} from './projectsOptions';
 import {StateManager} from '../../core/state';
-import {isNumber} from 'node:util';
+
+const action = {
+    none: undefined,
+    ordering: 'ordering',
+    compiling: 'compiling',
+};
 
 export class ProjectExplorerTreeDataProvider
     extends DisposeManager
@@ -36,7 +41,7 @@ export class ProjectExplorerTreeDataProvider
     private _mixFoldersAndFiles = true;
     private _syncWithActiveEditorEnabled = false;
     private _isBatchOrderingEnabled = false;
-    private _showDecoration:string;
+    private _showDecoration: string;
 
     constructor(
         private _options: ProjectsOptions,
@@ -47,14 +52,15 @@ export class ProjectExplorerTreeDataProvider
             treeDataProvider: this,
             showCollapseAll: true,
             canSelectMany: false,
-            dragAndDropController: this
+            dragAndDropController: this,
+            manageCheckboxStateManually: true,
         });
 
         this.manageDisposable(
             this._treeView,
             this._onDidChangeTreeData,
             this._options.fileDescriptionMetadataKey.onChanged(_ => this.reload()),
-            this._stateManager.onFilesChanged(() => {
+            this._stateManager.onFilesStateChanged(() => {
                 this.reload(); // TODO: Improve this, to not overlap with onFilesChanged
             }),
             // this._fileManager.onFilesChanged((files) => {
@@ -66,13 +72,18 @@ export class ProjectExplorerTreeDataProvider
             this._treeView.onDidExpandElement((e) => {
                 this._contextManager.set("tree_expanded_" + e.element.id, true);
             }),
+            this._treeView.onDidChangeCheckboxState(e => {
+                for (let [node, state] of e.items) {
+                    node.item.checked = state === TreeItemCheckboxState.Checked
+                }
+            }),
             vscode.window.onDidChangeActiveTextEditor(e => {
                 this._handleActiveTextEditorChanged(e);
             })
         );
 
         this._showDecoration = this._contextManager.get(FictionWriter.views.projectExplorer.show.decorationIs, 'decoration1');
-        vscode.commands.executeCommand('setContext', FictionWriter.views.projectExplorer.show.decorationIs,  this._showDecoration)
+        vscode.commands.executeCommand('setContext', FictionWriter.views.projectExplorer.show.decorationIs, this._showDecoration)
             .then(() => {
                 this.reload();
             });
@@ -141,19 +152,23 @@ export class ProjectExplorerTreeDataProvider
                         //     node.item.color = state.metadata['color'];
                         // }
 
+                        // if (state?.metadata?.value?.compile === 'exclude'){
+                        //     node.item.checked = false;
+                        // } else {
+                        //     node.item.checked = true;
+                        // }
                         if (state?.decoration && (!this._showDecoration || this._showDecoration === 'decoration1' || this._showDecoration === 'decoration2')) {
                             node.item.icon = state.decoration.icon;
                             node.item.color = state.decoration.color;
                             node.item.description = state.decoration.description ?? node.item.description;
                         }
-                        if (snapshots && (!this._showDecoration|| this._showDecoration === 'decoration1' || this._showDecoration === 'decoration3')){
-                                const decoration = state?.writeTargetsDecorations
-                                if (decoration) {
-                                    node.item.icon = decoration.icon;
-                                    node.item.color = decoration.color;
-                                    node.item.description = decoration.description ?? node.item.description;
-                                }
-
+                        if (snapshots && (!this._showDecoration || this._showDecoration === 'decoration1' || this._showDecoration === 'decoration3')) {
+                            const decoration = state?.writeTargetsDecorations
+                            if (decoration) {
+                                node.item.icon = decoration.icon;
+                                node.item.color = decoration.color;
+                                node.item.description = decoration.description ?? node.item.description;
+                            }
                         }
 
                     }
@@ -211,12 +226,12 @@ export class ProjectExplorerTreeDataProvider
     }
 
     public getTreeItem(element: ProjectNode): vscode.TreeItem {
-        const tooltip = new vscode.MarkdownString(`$(zap) Tooltip for ${element.id}`, true);
+        const tooltip = new vscode.MarkdownString(`$(zap) ${element.id}`, true);
         const expanded = this._contextManager.get("tree_expanded_" + element.id, false);
 
         const color = element.item.color ? new ThemeColor(`fictionWriter.${element.item.color}`) : new ThemeColor('foreground');
         const icon = element.item.icon ? new ThemeIcon(element.item.icon, color) : undefined;
-        const item = {
+        const item: vscode.TreeItem = {
             label: <any>{
                 label: element.item.name,
                 highlights: []
@@ -257,25 +272,32 @@ export class ProjectExplorerTreeDataProvider
                 break;
             case NodeType.WorkspaceFolder:
                 item.iconPath = new ThemeIcon(FaIcons.inbox);
-                item.label.label = `[${element.item.name}]`;
+                item.label = `[${element.item.name}]`;
                 item.description = "";
 
                 break;
             case NodeType.Filter:
                 item.iconPath = new ThemeIcon(FaIcons.link);
-                item.label.label = '...';//`${element.name}`;
+                item.label = '...';//`${element.name}`;
                 break;
             case NodeType.FilterRoot:
                 item.iconPath = new ThemeIcon(FaIcons.magnifyingGlass);
-                item.label.label = '...';//`${element.name}`;
+                item.label = '...';//`${element.name}`;
                 break;
             case NodeType.Root:
                 item.iconPath = new ThemeIcon("root-folder");
-                item.label.label = "/";
+                item.label = "/";
                 item.description = "";
                 break;
         }
 
+        if (element.item.checked === true) {
+            item.checkboxState = vscode.TreeItemCheckboxState.Checked;
+        } else if (element.item.checked === false) {
+            item.checkboxState = vscode.TreeItemCheckboxState.Unchecked;
+        } else {
+            item.checkboxState = undefined;
+        }
 
         return item;
     }
@@ -444,7 +466,7 @@ export class ProjectExplorerTreeDataProvider
 
 
     public enableOrdering() {
-        vscode.commands.executeCommand('setContext', FictionWriter.views.projectExplorer.isOrdering, true)
+        vscode.commands.executeCommand('setContext', FictionWriter.views.projectExplorer.is, action.ordering)
             .then(() => {
                 this._isBatchOrderingEnabled = true;
                 this._treeView.description = "Reordering";
@@ -453,7 +475,7 @@ export class ProjectExplorerTreeDataProvider
     }
 
     public async disableOrdering(discardChanges: boolean = true) {
-        await vscode.commands.executeCommand('setContext', FictionWriter.views.projectExplorer.isOrdering, false);
+        await vscode.commands.executeCommand('setContext', FictionWriter.views.projectExplorer.is, action.none);
 
         this._isBatchOrderingEnabled = false;
         this._treeView.description = "";
@@ -551,6 +573,49 @@ export class ProjectExplorerTreeDataProvider
         if (element) {
             this._treeView.reveal(element);
         }
+    }
+
+    public startSelection(e: ProjectNode) {
+        const node = this._tree.getNode(e.id);
+        if (node) {
+            vscode.commands.executeCommand('setContext',
+                    FictionWriter.views.projectExplorer.is, action.compiling)
+                .then(() => {
+                    this._tree.toList().forEach(f => {
+                        if (f.item.checked === undefined)
+                        f.item.checked = false;
+                    });
+                    this._treeView.description = "Compile";
+
+                    this._updateCheckboxBasedOnMeta(node);
+                    this._onDidChangeTreeData.fire();
+                });
+        }
+    }
+
+    public retrieveSelection(): string[] {
+        this.discardSelection();
+        return this._tree.toList()
+            .filter(l => l.item.checked && l.hasTextContent)
+            .map(l => l.id);
+    }
+
+    public discardSelection() {
+        vscode.commands.executeCommand('setContext',
+                FictionWriter.views.projectExplorer.is, action.none)
+            .then(() => {
+                this._tree.toList().forEach(f => {
+                    f.item.checked = undefined;
+                });
+                this._treeView.description = undefined;
+
+                this._onDidChangeTreeData.fire();
+            });
+    }
+
+    private _updateCheckboxBasedOnMeta(root: ProjectNode) {
+        root.item.checked = this._stateManager.get(root.id)?.metadata?.value?.compile !== 'exclude';
+        root.children?.forEach(c => this._updateCheckboxBasedOnMeta(c as ProjectNode));
     }
 }
 

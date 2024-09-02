@@ -17,7 +17,7 @@ export class ProjectExplorerDecorationProvider implements FileDecorationProvider
         this.disposables = [];
         this.disposables.push(
             window.registerFileDecorationProvider(this),
-            this._stateManager.onFilesChanged((f) => {
+            this._stateManager.onFilesStateChanged((f) => {
                 this._onDidChangeFileDecorations.fire(
                     f.files
                         .filter(p => p.state.fileInfo?.fsPath)

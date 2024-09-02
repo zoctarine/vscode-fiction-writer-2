@@ -14,11 +14,13 @@ export class Node<T> {
         this.item = value;
     }
 
-     acceptsChild(child: Node<T>): boolean {return true;}
+    acceptsChild(child: Node<T>): boolean {return true;}
 
     get acceptsChildren(): boolean {return true;}
 
     get isDraggable(): boolean {return true;}
+
+    get hasTextContent(): boolean {return this.type === NodeType.File || this.type === NodeType.VirtualFolder;}
 
     public can(permission:NodePermission): boolean {
         return (this.permissions & permission) === permission;

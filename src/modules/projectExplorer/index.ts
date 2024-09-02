@@ -11,7 +11,7 @@ import {ProjectNode} from './projectNodes';
 import {ProjectExplorerDecorationProvider} from './projectExplorerDecorationProvider';
 import {StateManager} from '../../core/state';
 
-class ProjectsModule extends DisposeManager {
+export class ProjectsModule extends DisposeManager {
     active = false;
     options = new ProjectsOptions();
     fileManager!: FwFileManager;

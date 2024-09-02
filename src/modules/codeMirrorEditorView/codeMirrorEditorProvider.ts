@@ -181,9 +181,6 @@ export class CodeMirrorEditorProvider implements vscode.CustomTextEditorProvider
 
 		const edit = new vscode.WorkspaceEdit();
 
-		// Just replace the entire document.
-		// For long documents, this might not be the most efficient, so use it only
-		// when necessary.
 		edit.replace(
 			document.uri,
 			new vscode.Range(0, 0, document.lineCount, 0),

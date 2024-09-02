@@ -140,4 +140,19 @@ export class FwFileManager extends DisposeManager {
 
         return Promise.resolve();
     }
+
+    public async updateFile(fsPath: string, newContent:string, save: boolean = true): Promise<void> {
+        const doc = await vscode.workspace.openTextDocument(vscode.Uri.parse(fsPath));
+        if (!doc) return;
+        const edit = new vscode.WorkspaceEdit();
+
+        edit.replace(
+            doc.uri,
+            new vscode.Range(0, 0, doc.lineCount, 0),
+            newContent);
+
+        if (await vscode.workspace.applyEdit(edit)){
+            if (save) doc.save();
+        }
+    }
 }

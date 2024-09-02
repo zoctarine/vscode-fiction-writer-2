@@ -1,12 +1,13 @@
 const ViewsProjectExplorer = 'fictionWriter.views.projectExplorer';
 const ViewsMetadata = 'fictionWriter.views.metadata';
 const Security = 'fictionWriter.security';
+const Compile = 'fictionWriter.compile';
 
 export const FictionWriter = {
     views: {
         projectExplorer: {
             id: `${ViewsProjectExplorer}`,
-            isOrdering: `${ViewsProjectExplorer}.isOrdering`,
+            is: `${ViewsProjectExplorer}.is`,
             newFile: `${ViewsProjectExplorer}.newFile`,
             newFolder: `${ViewsProjectExplorer}.newFolder`,
             rename: `${ViewsProjectExplorer}.rename`,
@@ -31,14 +32,20 @@ export const FictionWriter = {
                 off: `${ViewsProjectExplorer}.sync.off`,
                 isOn: `${ViewsProjectExplorer}.sync.isOn`,
             },
+            compile: {
+                startHere: `${ViewsProjectExplorer}.compile.startHere`,
+                commit: `${ViewsProjectExplorer}.compile.commit`,
+                discard: `${ViewsProjectExplorer}.compile.discard`,
+            }
         },
         metadata: {
             id: `${ViewsMetadata}`,
-            isLinked: `${ViewsMetadata}.isLinked`
+            isLinked: `${ViewsMetadata}.isLinked`,
+            editSingle: `${ViewsMetadata}.editSingle`,
         }
     },
     security:{
         exportKeys: `${Security}.exportKeys`,
-    },
+    }
 };
 

@@ -24,6 +24,10 @@ export class IconResolver {
         ['warning', 'warning'],
         ['colors', 'symbol-color'],
         ['color', 'symbol-color'],
+        ['target', 'target'],
+        ['badge', 'bookmark '],
+        ['icon', 'account'],
+        ['compile', 'desktop-download']
     ]);
     public allIcons = new Map<string, string>();
 

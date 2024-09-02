@@ -6,6 +6,7 @@ import rfdc from 'rfdc';
 import {IFileState, IFileStateSnapshot} from '../../processors/states';
 import {DynamicObj} from '../types';
 import {ProjectFileState} from './stateManager';
+import {IStateProcessorFactory} from '../index';
 
 const clone = rfdc();
 
@@ -27,14 +28,16 @@ export class FwFileState extends DisposeManager {
     private _onDidChange = new vscode.EventEmitter<FwFileStateChangedEvent>();
     private _state: IFileState = {};
     private _snapshots = new Map<string, IFileStateSnapshot>();
+    private _processor: ITextProcessor<IFileState>;
 
     constructor(
         initialState: any,
-        private _processor: ITextProcessor<IFileState>,
+        private _processorFactory: IStateProcessorFactory<IFileState>,
         disposables?: IDisposable[]) {
+
         super();
         this._state = {...initialState};
-
+        this._processor = _processorFactory.createTextProcessor();
         this.manageDisposable(
             this._onDidChange,
             ...(disposables ?? []));
@@ -44,13 +47,10 @@ export class FwFileState extends DisposeManager {
         return this._onDidChange.event;
     }
 
-    update(content: string) {
-        return this._update(async stateProxy => {
-            const nextContent = await this._processor.process(content, stateProxy);
-
-            // if (this._onDidChangeContent && nextContent !== content) {
-            //     this._onDidChangeContent(content, nextContent);
-            // }
+    async loadState(content: string, initialState: IFileState) {
+        this._state = initialState;
+        await this._process(async stateProxy => {
+            return this._processor.process(content, stateProxy);
         });
     }
 
@@ -69,10 +69,6 @@ export class FwFileState extends DisposeManager {
         this._snapshots = new Map<string, IFileStateSnapshot>();
     }
 
-    replaceState(state: IFileState) {
-        this._state = state;
-    }
-
     getState(): IFileState {
         return clone(this._state);
     }
@@ -81,7 +77,7 @@ export class FwFileState extends DisposeManager {
         return clone(this._snapshots);
     }
 
-    async _update(actionCallback: (stateProxy: any) => Promise<void>) {
+    async _process(actionCallback: (stateProxy: any) => Promise<any>) {
         const dirtyProperties = new Set<string | symbol>();
         const prevState = clone(this._state);
         let stateProxy = new Proxy<any>(this._state, {
@@ -96,7 +92,6 @@ export class FwFileState extends DisposeManager {
                 return Reflect.deleteProperty(target, p);
             }
         });
-
         try {
             await actionCallback(stateProxy);
         } catch (error) {

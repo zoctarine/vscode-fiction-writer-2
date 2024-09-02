@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import {addCommand, DisposeManager, mapExtensions} from '../../core';
+import {addCommand, DisposeManager, FictionWriter, mapExtensions} from '../../core';
 import {ContextManager} from '../../core/contextManager';
 import {MetadataTreeDataProvider} from './metadataTreeDataProvider';
 import {MetadataOptions} from './metadataOptions';
@@ -7,13 +7,14 @@ import {ExtensionContext} from 'vscode';
 import {MetadataTreeDecorationProvider} from './metadataDecoration';
 import {FwFileManager} from '../../core/fwFileManager';
 import {ColorResolver, IconResolver} from './iconsAndColors';
+import {StateManager} from '../../core/state';
 
 export * from './iconsAndColors';
 
 class MetadataModule extends DisposeManager {
     active = false;
-    stateManager: ContextManager | undefined;
-    private fileManager: FwFileManager | undefined;
+    contextManager: ContextManager | undefined;
+    private stateManager!: StateManager;
     private context: ExtensionContext | undefined;
     private options = new MetadataOptions();
     metadataTreeDataProvider: MetadataTreeDataProvider | undefined;
@@ -31,7 +32,7 @@ class MetadataModule extends DisposeManager {
         this.resolvers.iconResolver.setCustom(mapExtensions.objectToMap(this.options.metadataIcons.value));
         this.resolvers.colorResolver.setCustom(mapExtensions.objectToMap(this.options.metadataColors.value));
 
-        this.metadataTreeDataProvider = new MetadataTreeDataProvider(this.options, this.resolvers);
+        this.metadataTreeDataProvider = new MetadataTreeDataProvider(this.options, this.stateManager, this.resolvers);
         this.metadataDecorationProvider = new MetadataTreeDecorationProvider(this.resolvers);
 
         this.manageDisposable(
@@ -44,6 +45,10 @@ class MetadataModule extends DisposeManager {
             }),
             this.options.metadataIcons.onChanged((customIcons) => {
                 this.resolvers.iconResolver.setCustom(mapExtensions.objectToMap(customIcons));
+            }),
+
+            addCommand(FictionWriter.views.metadata.editSingle, (item)=>{
+              return  this.metadataTreeDataProvider?.editMetadata(item);
             })
         );
     };
@@ -59,9 +64,9 @@ class MetadataModule extends DisposeManager {
             : this.deactivate();
     }
 
-    register(context: ExtensionContext, stateManager: ContextManager, fileManager: FwFileManager | undefined): vscode.Disposable {
-        this.fileManager = fileManager;
+    register(context: ExtensionContext, contextManager: ContextManager, stateManager: StateManager): vscode.Disposable {
         this.stateManager = stateManager;
+        this.contextManager = contextManager;
         this.context = context;
 
         this.options.enabled.onChanged((enabled) => {

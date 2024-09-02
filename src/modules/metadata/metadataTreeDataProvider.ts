@@ -1,19 +1,21 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import {FileDecoration, ThemeColor, ThemeIcon, Uri} from 'vscode';
-import {DisposeManager} from '../../core';
+import {allKnownIcons, CodeIcons, DisposeManager, FaIcons, MdiIcons} from '../../core';
 import {InputFileProcessor} from '../../processors/inputFileProcessor';
 import {Node} from '../../core/tree/node';
-import {Metadata} from '../../processors';
+import {IMetaState, Metadata} from '../../processors';
 import {MetadataOptions} from './metadataOptions';
 import {MetadataTreeDecorationProvider} from './metadataDecoration';
 import {ColorResolver, IconResolver} from './iconsAndColors';
+import {StateManager} from '../../core/state';
+import {selectMetadataColor, selectMetadataIcon, selectMetadataTarget} from './inputBoxes';
 
 export class MetadataTreeDataProvider extends DisposeManager implements vscode.TreeDataProvider<MetadataTreeItem> {
     public static readonly viewType = 'fictionWriter.views.metadata';
     private _treeView: vscode.TreeView<MetadataTreeItem>;
     private _document: vscode.TextDocument | undefined;
-    private _metadata: Metadata | undefined;
+    private _metadata: IMetaState | undefined;
     private _onDidChangeTreeData: vscode.EventEmitter<MetadataTreeItem | undefined | null | void> = new vscode.EventEmitter<MetadataTreeItem | undefined | null | void>();
     readonly onDidChangeTreeData: vscode.Event<MetadataTreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
 
@@ -21,10 +23,12 @@ export class MetadataTreeDataProvider extends DisposeManager implements vscode.T
     private _onDidChangeSelection: vscode.EventEmitter<MetadataTreeItem | undefined> = new vscode.EventEmitter<MetadataTreeItem | undefined>();
     public readonly onDidChangeSelection: vscode.Event<MetadataTreeItem | undefined> = this._onDidChangeSelection.event;
 
-    constructor(private _options: MetadataOptions, private _resolvers: {
-        iconResolver: IconResolver;
-        colorResolver: ColorResolver
-    }) {
+    constructor(private _options: MetadataOptions,
+                private _stateManager: StateManager,
+                private _resolvers: {
+                    iconResolver: IconResolver;
+                    colorResolver: ColorResolver,
+                }) {
         super();
 
         this._loadDocument(vscode.window.activeTextEditor?.document);
@@ -36,15 +40,13 @@ export class MetadataTreeDataProvider extends DisposeManager implements vscode.T
             // dragAndDropController: this
         });
 
-        const watcher = vscode.workspace.createFileSystemWatcher('**/*');
         this.manageDisposable(
-            watcher,
             this._treeView,
             vscode.window.onDidChangeActiveTextEditor((e) => {
                 this._loadDocument(e?.document);
             }),
-            watcher.onDidChange((e) => {
-                if (e.fsPath === this._document?.uri.fsPath) {
+            this._stateManager.onFilesStateChanged(e => {
+                if (e.files.map(f => f.state.fileInfo?.fsPath).includes(this._document?.uri.fsPath)) {
                     this._loadDocument(this._document);
                 }
             }),
@@ -70,7 +72,11 @@ export class MetadataTreeDataProvider extends DisposeManager implements vscode.T
 
     private _loadDocument(document: vscode.TextDocument | undefined) {
         this._document = document;
-        this._metadata = new InputFileProcessor(document?.getText() ?? "").metadata;
+        this._metadata = undefined;
+        if (document?.uri.fsPath) {
+            const fileState = this._stateManager.get(document?.uri?.fsPath);
+            this._metadata = fileState?.metadata;
+        }
         this._onDidChangeTreeData.fire();
     }
 
@@ -108,10 +114,13 @@ export class MetadataTreeDataProvider extends DisposeManager implements vscode.T
                         desc,
                         value && Object.keys(value).length > 0 ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None,
                         children,
-                        this._getIcon(key, desc, Array.isArray(value) ? 'array' : 'symbol-object')
+                        this._getIcon(key, desc, Array.isArray(value) ? 'array' : 'symbol-object'),
+                        false
                     );
                 } else {
-                    return new MetadataTreeItem(newKey, key, value + '', vscode.TreeItemCollapsibleState.None, undefined, this._getIcon(key, value));
+                    return new MetadataTreeItem(newKey, key, value + '', vscode.TreeItemCollapsibleState.None, undefined,
+                        this._getIcon(key, value),
+                        true);
                 }
             });
         } else if (Array.isArray(meta)) {
@@ -124,13 +133,16 @@ export class MetadataTreeDataProvider extends DisposeManager implements vscode.T
                         desc,
                         vscode.TreeItemCollapsibleState.Collapsed,
                         children,
-                        this._getIcon(newKey, desc, Array.isArray(item) ? 'array' : 'symbol-object'));
+                        this._getIcon(newKey, desc, Array.isArray(item) ? 'array' : 'symbol-object'),
+                        false);
                 } else {
-                    return new MetadataTreeItem(newKey, item, '', vscode.TreeItemCollapsibleState.None, undefined, this._getIcon(newKey, item));
+                    return new MetadataTreeItem(newKey, item, '', vscode.TreeItemCollapsibleState.None, undefined, this._getIcon(newKey, item),
+                        false);
                 }
             });
         } else {
-            return [new MetadataTreeItem(parentKey, meta, '', vscode.TreeItemCollapsibleState.None, undefined, this._getIcon(parentKey, meta))];
+            return [new MetadataTreeItem(parentKey, meta, '', vscode.TreeItemCollapsibleState.None, undefined, this._getIcon(parentKey, meta),
+                true)];
         }
     }
 
@@ -139,9 +151,41 @@ export class MetadataTreeDataProvider extends DisposeManager implements vscode.T
             ?? this._resolvers.colorResolver.resolve(key, true)
             ?? new ThemeColor("foreground");
 
-        return this._resolvers.iconResolver.resolve(value, color, key==='icon')
+        return this._resolvers.iconResolver.resolve(value, color, key === 'icon')
             ?? this._resolvers.iconResolver.resolve(key, color)
             ?? new ThemeIcon(defaultIcon, color);
+    }
+
+    public async editMetadata(item: MetadataTreeItem) {
+        const prevValue = item.description?.toString();
+        let selectedValue = prevValue;
+
+        if (item.id === 'icon'){
+            selectedValue = await selectMetadataIcon(selectedValue);
+        } else if (item.id === 'color'){
+            selectedValue = await selectMetadataColor(selectedValue);
+        } else if (item.id === 'target'){
+            selectedValue = await selectMetadataTarget(selectedValue);
+        } else {
+            selectedValue = await vscode.window.showInputBox({
+                title: `${item.id}:`,
+                prompt: `Enter new value for metadata key '${item.id}':`,
+                value: prevValue
+            });
+        }
+
+        if (!selectedValue || selectedValue === prevValue) return;
+
+        if (this._document?.uri.fsPath) {
+            await this._stateManager.updateFile(this._document?.uri.fsPath,
+                (processorFactory) => processorFactory
+                    .createUpdateMetaProcessor(crtMeta => {
+                        crtMeta[item.id] = selectedValue;
+                        return {...crtMeta};
+                    })
+            );
+        }
+
     }
 }
 
@@ -153,10 +197,12 @@ export class MetadataTreeItem extends vscode.TreeItem {
         private subtitle: string,
         public readonly collapsibleState: vscode.TreeItemCollapsibleState,
         public readonly children: MetadataTreeItem[] = [],
-        public icon: ThemeIcon | undefined) {
+        public icon: ThemeIcon | undefined,
+        public editable: boolean) {
         super(title, collapsibleState);
         this.id = id;
         this.description = this.subtitle;
+        this.contextValue = editable ? 'editable' : 'readonly';
         this.iconPath = icon;
         this.resourceUri = vscode.Uri.parse(`fictionWriter://${MetadataTreeDataProvider.viewType}/#${id}`);
         this.tooltip = this.resourceUri.toString();
