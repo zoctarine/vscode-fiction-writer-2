@@ -1,5 +1,4 @@
-import { mapExtensions } from "../../core";
-import {Options} from "../../core";
+import {Options} from "../../core/options";
 export const defaultIcons = new Map<string, string>([
     ['pov', 'eye'],
     ['povs', 'eye'],

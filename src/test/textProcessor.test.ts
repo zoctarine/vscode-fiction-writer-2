@@ -5,9 +5,9 @@ import {
     InjectMetaIntoContent,
     EraseMetaFromContent,
     UpdateMeta, ComputeWriteTarget, ComputeTextStatistics, ITextProcessor, LoadContent
-} from '../processors';
+} from '../core/processors';
 
-import {FwFile, FwFileInfo} from '../core';
+import {FwFile, FwFileInfo} from '../core/fwFiles';
 import deepEqual from 'deep-equal';
 import * as vscode from 'vscode';
 

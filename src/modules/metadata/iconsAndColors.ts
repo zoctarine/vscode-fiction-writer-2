@@ -1,5 +1,5 @@
 import vscode from 'vscode';
-import {isValidCodicon} from '../../core';
+import {allKnownIcons} from '../../core/decorations';
 
 export class IconResolver {
     public defaultIcons = new Map<string, string>([
@@ -43,7 +43,7 @@ export class IconResolver {
         if (!text) return undefined;
         text = text.trim();
         let icon = match(text, this.allIcons);
-        if (resolveValues && !icon && isValidCodicon(text)) { icon=text;}
+        if (resolveValues && !icon && allKnownIcons.includes(text)) { icon=text;}
 
         return icon ? new vscode.ThemeIcon(icon, color) : undefined;
     }

@@ -1,5 +1,15 @@
 import * as vscode from 'vscode';
-import {Event, EventEmitter, FileDecoration, FileDecorationProvider, ThemeColor, ThemeIcon, Uri, window} from 'vscode';
+import {
+    ConfigurationTarget,
+    Event,
+    EventEmitter,
+    FileDecoration,
+    FileDecorationProvider,
+    ThemeColor,
+    ThemeIcon,
+    Uri,
+    window
+} from 'vscode';
 import * as path from 'path';
 import {DisposeManager} from "../../core/disposable";
 import {ContextManager} from '../../core/contextManager';
@@ -143,7 +153,7 @@ export class FilterTreeDataProvider extends DisposeManager
                 item.tooltip = "";
                 item.collapsibleState = expandAll ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed;
                 item.contextValue = "filterItemMetadataValue";
-                item.iconPath = this._getIcon(element.data.icon);
+                item.iconPath = undefined;//this._getIcon(element.data.icon);
                 break;
             case FilterItemType.File:
                 item.collapsibleState = vscode.TreeItemCollapsibleState.None;
@@ -240,7 +250,7 @@ export class FilterTreeDataProvider extends DisposeManager
                 valueData.description = "";
                 valueData.type = FilterItemType.Value;
                 valueData.fsPath = "";
-                valueData.icon = data.icon;
+                valueData.icon = undefined;
                 let child = new TreeNode<FilterItem>(node.id + valueItem.value.toString(), valueData);
                 this._tree.addChild(child, node);
                 for (const file of valueItem.files) {
@@ -402,7 +412,9 @@ export class FilterTreeDataProvider extends DisposeManager
 
     public async toggleMetadataViewLink() {
         let isLinked = this._contextManager.get("fictionWriter.views.metadata.isLinked", false);
-        this.setMetadataViewLink(!isLinked);
+        await this.setMetadataViewLink(!isLinked);
     }
+
+
 }
 

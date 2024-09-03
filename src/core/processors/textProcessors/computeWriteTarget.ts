@@ -1,5 +1,5 @@
 import {ITextProcessor} from '../IProcessor';
-import {IFileState} from '../states';
+import {IFileState} from '../../state/states';
 
 export class ComputeWriteTarget implements ITextProcessor<IFileState> {
     async process(content: string, data:IFileState): Promise<string> {

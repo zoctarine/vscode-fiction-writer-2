@@ -1,4 +1,3 @@
-
 export class RegEx {
 
     public static escape(string: string) {
@@ -28,9 +27,9 @@ export class RegEx {
 
         SENTENCE_SEPARATORS: /([\.\?\!\:\;])([\s]+)/g,
 
-        MARKDOWN_INCLUDE_FILE:  /^\s*{(.*?)}/g,
+        MARKDOWN_INCLUDE_FILE: /^\s*{(.*?)}/g,
 
-        MARKDOWN_INCLUDE_FILE_BOUNDARIES:  /[{}]/g,
+        MARKDOWN_INCLUDE_FILE_BOUNDARIES: /[{}]/g,
 
         NEWLINE: /\r?\n/g,
 
@@ -47,20 +46,3 @@ export class RegEx {
         METADATA: /^(---[\r\n]+)([\s\S]*)(---|\.\.\.[\r\n]+)/im
     };
 }
-
-
-export class FwFile {
-    public static fixedGap = 10000;
-    public static maxPad = 20;
-    public static pad = 8;
-    public static radix = 10;
-    public static nameRegExp = /^([a-zA-Z0-9]+)(?:__)(.*)$/i;
-
-    public static orderNameRegExp = /^((?:\[[a-zA-Z0-9]+\])+)(?: )(.*)$/i;
-    public static orderRegExp = /\[([a-zA-Z0-9]+)\]/gi;
-
-    public static toOrderString(order: number) {
-        return `[${order.toString(FwFile.radix).toLowerCase().padStart(FwFile.pad, '0')}]`;
-    }
-}
-

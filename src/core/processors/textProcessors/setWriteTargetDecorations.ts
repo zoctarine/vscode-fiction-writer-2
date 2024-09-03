@@ -1,6 +1,6 @@
-import {MdiIcons} from '../../core';
+import {MdiIcons} from '../../decorations';
 import {ITextProcessor} from '../IProcessor';
-import {IFileState} from '../states';
+import {IFileState} from '../../state/states';
 
 export class SetWriteTargetDecorations implements ITextProcessor<IFileState> {
     async process(content: string, data: IFileState): Promise<string> {

@@ -1,11 +1,12 @@
 import {DisposeManager} from '../disposable';
 import vscode from 'vscode';
-import {ITextProcessor} from '../../processors';
-import {FwFileInfo} from '../fwFileInfo';
+import {ITextProcessor} from '../processors';
+import {FwFileInfo} from '../fwFiles/fwFileInfo';
 
 import {FwFileState, FwFileStateChangedEvent} from './fwFileState';
-import {IFileState, IFileStateSnapshot} from '../../processors/states';
-import {IStateProcessorFactory} from '../index';
+import {IFileState, IFileStateSnapshot} from './states';
+
+import {IStateProcessorFactory} from '../processors/IStateProcessorFactory';
 
 export class FwStateChangedEvent {
     files: FwFileStateChangedEvent[] = [];

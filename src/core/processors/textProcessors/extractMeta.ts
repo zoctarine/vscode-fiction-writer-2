@@ -1,8 +1,8 @@
 import {ITextProcessor} from '../IProcessor';
-import {RegEx} from '../../core';
-import {Metadata} from '../metadata';
+import {RegEx} from '../../index';
+import {Metadata} from '../../metadata/metadata';
 
-import {IFileState} from '../states';
+import {IFileState} from '../../state/states';
 
 export class ExtractMeta implements ITextProcessor<IFileState> {
     async process(content: string, data: IFileState): Promise<string> {

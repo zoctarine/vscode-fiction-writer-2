@@ -1,6 +1,6 @@
 import {ProjectsOptions} from '../../modules/projectExplorer/projectsOptions';
 import {ProjectItem} from '../../modules/projectExplorer/projectItem';
-import {FwFile} from '../fwFile';
+import {FwFile} from '../fwFiles/fwFile';
 
 export class TreeNode<T> {
     public id: string;

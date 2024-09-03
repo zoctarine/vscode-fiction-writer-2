@@ -1,6 +1,6 @@
-import { TextAnalyzer} from '../../modules/textAnalysis/textAnalyzer';
+import { TextAnalyzer} from '../../../modules/textAnalysis/textAnalyzer';
 import {ITextProcessor} from '../IProcessor';
-import {IFileState} from '../states';
+import {IFileState} from '../../state/states';
 
 export class ComputeTextStatistics implements ITextProcessor<IFileState> {
     async process(content: string, data: IFileState): Promise<string> {

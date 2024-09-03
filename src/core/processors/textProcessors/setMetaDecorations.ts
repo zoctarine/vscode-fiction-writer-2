@@ -1,7 +1,5 @@
-import {MdiIcons} from '../../core';
 import {ITextProcessor} from '../IProcessor';
-import {IDecorationState, IFileState, IMetaState, IWriteTargetsState} from '../states';
-import {IconResolver} from '../../modules/metadata';
+import {IFileState} from '../../state';
 
 export class SetMetaDecorations implements ITextProcessor<IFileState> {
     async process(content: string, data: IFileState): Promise<string> {

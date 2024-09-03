@@ -1,7 +1,7 @@
 import {ITextProcessor} from '../IProcessor';
-import {RegEx} from '../../core';
-import {Metadata} from '../metadata';
-import {IFileState} from '../states';
+import {RegEx} from '../../index';
+import {Metadata} from '../../metadata/metadata';
+import {IFileState} from '../../state/states';
 
 export class UpdateMeta implements ITextProcessor<IFileState> {
     constructor(private _transformMeta: (crtMeta: any) => any) {

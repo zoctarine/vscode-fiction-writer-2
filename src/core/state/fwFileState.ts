@@ -1,12 +1,10 @@
-import {DisposeManager, IDisposable} from '../disposable';
 import vscode from 'vscode';
-import {ChainedTextProcessor, ITextProcessor} from '../../processors';
 import deepEqual from 'deep-equal';
 import rfdc from 'rfdc';
-import {IFileState, IFileStateSnapshot} from '../../processors/states';
-import {DynamicObj} from '../types';
-import {ProjectFileState} from './stateManager';
-import {IStateProcessorFactory} from '../index';
+import {DisposeManager, IDisposable} from '../disposable';
+import {ChainedTextProcessor, ITextProcessor} from '../processors';
+import {IFileState, IFileStateSnapshot} from './states';
+import {IStateProcessorFactory} from '../processors/IStateProcessorFactory';
 
 const clone = rfdc();
 

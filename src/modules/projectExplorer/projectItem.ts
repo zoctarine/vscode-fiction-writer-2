@@ -1,5 +1,4 @@
-import {NodeType} from './nodeType';
-import {FwFile} from '../../core';
+import {FwFile} from '../../core/fwFiles';
 
 export class ProjectItem {
     public name: string = "";
@@ -10,7 +9,7 @@ export class ProjectItem {
     icon?: string;
     color?: string;
     checked?:boolean;
-    
+
     public buildFsName(): string {
         return `${FwFile.toOrderString(this.order)} ${this.name}${this.ext}`;
     }

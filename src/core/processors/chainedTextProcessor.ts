@@ -1,6 +1,6 @@
-import {ITextProcessor} from './IProcessor';
 import rfdc from 'rfdc';
-import {IFileState, IFileStateSnapshot} from './states';
+import {ITextProcessor} from './IProcessor';
+import {IFileState, IFileStateSnapshot} from '../state';
 
 const clone = rfdc();
 

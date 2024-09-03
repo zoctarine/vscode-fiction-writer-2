@@ -1,8 +1,8 @@
 import {ITextProcessor} from '../IProcessor';
-import {DynamicObj, RegEx} from '../../core';
-import {Metadata} from '../metadata';
+import {DynamicObj, RegEx} from '../../index';
+import {Metadata} from '../../metadata/metadata';
 
-import {IFileState} from '../states';
+import {IFileState} from '../../state/states';
 
 export class AlterState implements ITextProcessor<IFileState> {
     constructor(private _transformMeta: (crtState: IFileState) => IFileState) {

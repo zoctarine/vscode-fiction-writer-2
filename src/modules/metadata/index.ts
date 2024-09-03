@@ -3,9 +3,8 @@ import {addCommand, DisposeManager, FictionWriter, mapExtensions} from '../../co
 import {ContextManager} from '../../core/contextManager';
 import {MetadataTreeDataProvider} from './metadataTreeDataProvider';
 import {MetadataOptions} from './metadataOptions';
-import {ExtensionContext} from 'vscode';
+import {ConfigurationTarget, ExtensionContext} from 'vscode';
 import {MetadataTreeDecorationProvider} from './metadataDecoration';
-import {FwFileManager} from '../../core/fwFileManager';
 import {ColorResolver, IconResolver} from './iconsAndColors';
 import {StateManager} from '../../core/state';
 
@@ -49,6 +48,13 @@ class MetadataModule extends DisposeManager {
 
             addCommand(FictionWriter.views.metadata.editSingle, (item)=>{
               return  this.metadataTreeDataProvider?.editMetadata(item);
+            }),
+            addCommand(FictionWriter.views.metadata.filters.setFileDescriptionMetadataKey, (item) => {
+                if (item?.id) {
+                    return vscode.workspace.getConfiguration('fictionWriter.projects')
+                        .update('fileDescriptionMetadataKey', item.id,
+                            ConfigurationTarget.Global);
+                }
             })
         );
     };

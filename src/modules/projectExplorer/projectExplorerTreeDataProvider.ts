@@ -1,14 +1,13 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import {ThemeColor, ThemeIcon, TreeItemCheckboxState, ViewBadge} from 'vscode';
 import {OrderHandler} from "./orderHandler";
-import {asPosix, FwFileManager} from "../../core/fwFileManager";
-import * as path from 'path';
-import {FwFile} from "../../core/fwFile";
-import {DisposeManager} from "../../core/disposable";
+import {DisposeManager} from "../../core";
 import {NodeType} from './nodeType';
-import {NodeTree} from '../../core/tree/nodeTree';
-import {FwFileInfo, FwType} from '../../core/fwFileInfo';
-import {FaIcons, FictionWriter} from '../../core';
+import {NodeTree} from '../../core/tree';
+import {FwFileInfo, FwType, FwFile, asPosix, FwFileManager} from '../../core/fwFiles';
+import {FictionWriter} from '../../core';
+import {FaIcons} from '../../core/decorations';
 import {ContextManager} from '../../core/contextManager';
 import {FwFilter} from '../filters/models/fwFilter';
 import {
@@ -162,8 +161,17 @@ export class ProjectExplorerTreeDataProvider
                             node.item.color = state.decoration.color;
                             node.item.description = state.decoration.description ?? node.item.description;
                         }
-                        if (snapshots && (!this._showDecoration || this._showDecoration === 'decoration1' || this._showDecoration === 'decoration3')) {
-                            const decoration = state?.writeTargetsDecorations
+                        if (state?.metadata?.value && this._options.fileDescriptionMetadataKey.value) {
+                            node.item.description = state.metadata.value[this._options.fileDescriptionMetadataKey.value]?.toString();
+                        }
+                        if (!this._showDecoration || this._showDecoration === 'decoration1' || this._showDecoration === 'decoration3') {
+                            if (this._showDecoration && this._showDecoration === 'decoration3') {
+                                const decoration = state?.textStatisticsDecorations;
+                                if (decoration) {
+                                    node.item.description = decoration.description ?? node.item.description;
+                                }
+                            }
+                            const decoration = state?.writeTargetsDecorations;
                             if (decoration) {
                                 node.item.icon = decoration.icon;
                                 node.item.color = decoration.color;

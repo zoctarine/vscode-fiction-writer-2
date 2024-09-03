@@ -1,5 +1,3 @@
-import {DynamicObj} from '../core';
-
 export interface IProcessor<T, TState> {
     process(content: T, data: TState): Promise<T>
 }

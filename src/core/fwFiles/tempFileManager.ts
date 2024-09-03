@@ -1,5 +1,5 @@
 import vscode from 'vscode';
-import {FileEncryptor} from '../modules/security/fileEncryptor';
+import {FileEncryptor} from '../../modules/security/fileEncryptor';
 import path from 'path';
 import crypto from 'crypto';
 

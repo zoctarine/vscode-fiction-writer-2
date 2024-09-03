@@ -42,6 +42,9 @@ export const FictionWriter = {
             id: `${ViewsMetadata}`,
             isLinked: `${ViewsMetadata}.isLinked`,
             editSingle: `${ViewsMetadata}.editSingle`,
+            filters: {
+                setFileDescriptionMetadataKey: `${ViewsMetadata}.filters.setFileDescriptionMetadataKey`
+            }
         }
     },
     security:{

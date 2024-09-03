@@ -1,5 +1,5 @@
 import {NodeType, RootFolderType} from './nodeType';
-import {FwFile} from '../../core/fwFile';
+import {FwFile} from '../../core/fwFiles/fwFile';
 import path from 'path';
 import {Node, NodePermission} from '../../core/tree';
 import {ProjectItem} from './projectItem';

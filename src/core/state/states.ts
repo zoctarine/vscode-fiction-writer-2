@@ -1,5 +1,5 @@
-import {ITextStatistics} from '../modules/textAnalysis/textAnalyzer';
-import {FwFileInfo} from '../core';
+import {ITextStatistics} from '../../modules/textAnalysis/textAnalyzer';
+import {FwFileInfo} from '../fwFiles';
 
 export interface IMetaState {
     value: any,
@@ -26,6 +26,7 @@ export interface IWriteTargetsState {
     progress?: string;
 }
 
+
 export interface IFileState {
     fileInfo?: FwFileInfo,
     metadata?: IMetaState,
@@ -33,6 +34,7 @@ export interface IFileState {
     analysis?: ITextAnalyzerState,
     writeTargets?: IWriteTargetsState
     writeTargetsDecorations?: IDecorationState
+    textStatisticsDecorations?: IDecorationState
     contentHash?: string;
 }
 

@@ -252,6 +252,7 @@
           "fictionWriter.projects.fileDescriptionMetadataKey": {
             "type": "string",
             "default": "title",
+            "scope": "application",
             "markdownDescription": "Shows the value of this metadata key, as a description, after the fileName, in the project tree. Leave blank if you don't want to show anything.",
             "order": 38
           }
@@ -774,6 +775,11 @@
           "command": "fictionWriter.views.metadata.filters.hideFilter",
           "when": "view == fictionWriter.views.metadata.filters && viewItem == filterItemMetadataKey",
           "group": "1_fictionWriter@1"
+        },
+        {
+          "command": "fictionWriter.views.metadata.filters.setFileDescriptionMetadataKey",
+          "when": "(view == fictionWriter.views.metadata && viewItem == editable) || (view == fictionWriter.views.metadata.filters && viewItem == filterItemMetadataKey)",
+          "group": "2_fictionWriterMeta@1"
         }
       ]
     },
@@ -989,6 +995,11 @@
         "command": "fictionWriter.views.metadata.filters.linkWithFileView.off",
         "title": "Sync with File Metadata: Disable",
         "icon": "$(mdi-link-off)",
+        "category": "Markdown Fiction Writer"
+      },
+      {
+        "command": "fictionWriter.views.metadata.filters.setFileDescriptionMetadataKey",
+        "title": "Show in Project View",
         "category": "Markdown Fiction Writer"
       },
       {

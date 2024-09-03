@@ -1,4 +1,4 @@
-import {RegEx} from '../../core/fwFile';
+import {RegEx} from '../../core/regEx';
 
 export interface ITextStatistics {
     wordCount: number;

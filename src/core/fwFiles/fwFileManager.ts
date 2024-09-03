@@ -1,11 +1,12 @@
 import * as vscode from "vscode";
-import {FwFile, RegEx} from "./fwFile";
+import {FwFile} from "./fwFile";
 import * as path from "path";
-import {ProjectsOptions} from '../modules/projectExplorer/projectsOptions';
-import {DisposeManager} from './disposable';
+import {ProjectsOptions} from '../../modules/projectExplorer/projectsOptions';
+import {DisposeManager} from '../disposable';
 import {glob} from 'glob';
 import fs from 'node:fs';
 import {FwFileInfo} from './fwFileInfo';
+import {RegEx} from '../regEx';
 
 
 export const asPosix = (mixedPath: string) => path.posix.normalize(mixedPath.split(path.sep).join(path.posix.sep));

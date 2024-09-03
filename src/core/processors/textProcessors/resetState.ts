@@ -1,6 +1,6 @@
 import {ITextProcessor} from '../IProcessor';
-import {IFileState} from '../states';
-import {FileEncryptor} from '../../modules/security/fileEncryptor';
+import {IFileState} from '../../state/states';
+import {FileEncryptor} from '../../../modules/security/fileEncryptor';
 
 export class ComputeContentHash implements ITextProcessor<IFileState> {
     async process(content: string, data: IFileState): Promise<string> {

@@ -1,32 +1,19 @@
-import {DisposeManager, IDisposable} from './disposable';
-import {StateManager} from './state';
-import {ChainedTextProcessor, IMetaState, ITextProcessor} from '../processors';
-import {FwFileManager} from './fwFileManager';
+import vscode from 'vscode';
+import {DisposeManager} from './disposable';
+import {StateManager, IFileState} from './state';
+import {FwFileManager} from './fwFiles';
 import {ProjectsOptions} from '../modules/projectExplorer/projectsOptions';
 import {ContextManager} from './contextManager';
-import vscode from 'vscode';
-import {projectsModule} from '../modules/projectExplorer';
-import {IFileState} from '../processors/states';
+import {IStateProcessorFactory} from './processors/IStateProcessorFactory';
 
-export * from "./commandExtensions";
-export * from "./disposable";
-export * from "./fwFile";
-export * from "./logger";
-export * from "./nonce";
-export * from "./options";
-export {FwFileInfo} from './fwFileInfo';
-export * as mapExtensions from "./mapExtensions";
-export * from "./constants";
-export * from "./iconHelper";
-export * from "./types";
-export * from './contributedIcons';
-export * from './contributedColors';
-
-export interface IStateProcessorFactory<TState>{
-    createTextProcessor:() => ITextProcessor<TState>;
-    createAlterStateProcessor?:(alterState: (state: IFileState) => IFileState) => ITextProcessor<TState>;
-    createUpdateMetaProcessor:(alterState: (prevMeta: any) => any) => ITextProcessor<TState>;
-}
+export * from './commandExtensions';
+export * from './constants';
+export * from './disposable';
+export * from './logger';
+export * as mapExtensions from './mapExtensions';
+export * from './types';
+export * from './regEx';
+export * from './nonce';
 
 export class CoreModule extends DisposeManager {
     stateManager: StateManager;
@@ -62,5 +49,7 @@ export class CoreModule extends DisposeManager {
             })
         );
     }
-
 }
+
+export {RegEx} from './regEx';
+export {OptionValue} from './options/optionValue';

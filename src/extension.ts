@@ -15,8 +15,8 @@ import {
     UpdateMeta,
     AlterState,
     ComputeContentHash,
-    SetMetaDecorations, ChainedTextProcessor
-} from './processors';
+    SetMetaDecorations, ChainedTextProcessor, SetTextStatisticsDecorations
+} from './core/processors';
 
 import {CoreModule} from './core';
 import {compileModule} from './modules/compile';
@@ -28,6 +28,7 @@ export function activate(context: vscode.ExtensionContext) {
             .add(new ExtractMeta())
             .add(new SetMetaDecorations())
             .add(new ComputeTextStatistics())
+            .add(new SetTextStatisticsDecorations())
             .add(new ComputeWriteTarget())
             .add(new SetWriteTargetDecorations)
             .add(new ComputeContentHash()),

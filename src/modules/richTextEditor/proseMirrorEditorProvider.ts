@@ -5,7 +5,7 @@ import {EditorState} from "prosemirror-state";
 import {Step} from "prosemirror-transform";
 import {fileParser, fileSerializer, schema} from "./utils/fileExtensions";
 import {exampleSetup} from "prosemirror-example-setup";
-import {InputFileProcessor, processInputFile} from "../../processors";
+import {InputFileProcessor, processInputFile} from "../../core/processors";
 import {getNonce, getWebviewRootUri} from '../../core/nonce';
 import {ContextManager} from '../../core/contextManager';
 import {DisposeManager} from '../../core';

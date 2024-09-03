@@ -1,5 +1,5 @@
 import vscode, {QuickPickItem, QuickPickItemKind, ThemeColor, ThemeIcon} from 'vscode';
-import {allKnownColors, allKnownIcons} from '../../core';
+import {allKnownColors, allKnownIcons} from '../../core/decorations';
 
 export async function selectMetadataIcon(selectedValue?: string) {
     let items: QuickPickItem[] = allKnownIcons.map(icon => ({

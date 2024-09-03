@@ -1,6 +1,6 @@
 import {ITextProcessor} from '../IProcessor';
 
-import {IFileState, IMetaState} from '../states';
+import {IFileState, IMetaState} from '../../state/states';
 
 export class InjectMetaIntoContent implements ITextProcessor<IFileState> {
     async process(content: string, data: IFileState): Promise<string> {

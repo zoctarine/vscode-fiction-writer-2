@@ -5,7 +5,7 @@ import {ContextManager} from '../../core/contextManager';
 import path from 'path';
 import {ITextStatistics, TextAnalyzer} from './textAnalyzer';
 import {StateManager} from '../../core/state';
-import {IFileState} from '../../processors/states';
+import {IFileState} from '../../core/state/states';
 
 export class DocStatisticTreeDataProvider extends DisposeManager implements vscode.TreeDataProvider<WordStatTreeItem> {
     private _document: vscode.TextDocument | undefined;

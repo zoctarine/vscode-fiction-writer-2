@@ -1,4 +1,4 @@
-import {Options} from "../../core/options";
+import {Options} from "../../core/options/options";
 
 export class FilterOptions extends Options {
     public static readonly SectionName = 'metadata.filters';

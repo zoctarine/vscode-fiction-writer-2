@@ -1,4 +1,4 @@
-import {Options} from "../../core/options";
+import {Options} from "../../core/options/options";
 
 export class RtEditorOptions extends Options {
     public static readonly SectionName = 'editors.richTextEditor';

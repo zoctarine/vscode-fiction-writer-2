@@ -1,11 +1,8 @@
-import {RegEx} from '../core/fwFile';
-import {Metadata} from './metadata';
 import vscode from 'vscode';
-import {FwFileInfo} from '../core';
+import {Metadata} from '../metadata/metadata';
 import {ITextProcessor} from './IProcessor';
-import {IFileState} from './states';
-
-;
+import {IFileState} from '../state';
+import {RegEx} from '../regEx';
 
 export class LoadContent implements ITextProcessor<IFileState> {
     async process(content: string, data: IFileState): Promise<string> {

@@ -1,8 +1,4 @@
 import {Node} from './node';
-import {NodeType} from '../../modules/projectExplorer/nodeType';
-import {FwFile} from '../index';
-import {RootNode} from '../../modules/projectExplorer/projectNodes';
-import {NodePermission} from './nodePermission';
 
 export class NodeTree<T extends Node<any>>{
     public root: T;

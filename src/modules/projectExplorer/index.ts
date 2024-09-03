@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import {Disposable} from "vscode";
 
 import {ProjectExplorerTreeDataProvider} from "./projectExplorerTreeDataProvider";
-import {FwFileManager} from "../../core/fwFileManager";
+import {FwFileManager} from "../../core/fwFiles/fwFileManager";
 import {ProjectsOptions} from "./projectsOptions";
 import {DisposeManager} from "../../core/disposable";
 import {addCommand, FictionWriter} from '../../core';

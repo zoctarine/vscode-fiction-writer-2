@@ -1,15 +1,11 @@
 import * as vscode from 'vscode';
-import * as path from 'path';
 import {FileDecoration, ThemeColor, ThemeIcon, Uri} from 'vscode';
-import {allKnownIcons, CodeIcons, DisposeManager, FaIcons, MdiIcons} from '../../core';
-import {InputFileProcessor} from '../../processors/inputFileProcessor';
-import {Node} from '../../core/tree/node';
-import {IMetaState, Metadata} from '../../processors';
+import {IMetaState, Metadata} from '../../core/processors';
 import {MetadataOptions} from './metadataOptions';
-import {MetadataTreeDecorationProvider} from './metadataDecoration';
 import {ColorResolver, IconResolver} from './iconsAndColors';
 import {StateManager} from '../../core/state';
 import {selectMetadataColor, selectMetadataIcon, selectMetadataTarget} from './inputBoxes';
+import {DisposeManager} from '../../core';
 
 export class MetadataTreeDataProvider extends DisposeManager implements vscode.TreeDataProvider<MetadataTreeItem> {
     public static readonly viewType = 'fictionWriter.views.metadata';

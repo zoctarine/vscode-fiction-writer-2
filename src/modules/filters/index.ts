@@ -1,17 +1,19 @@
 import * as vscode from "vscode";
 
-import {FilterTreeDataProvider} from "./filterTreeDataProvider";
+import {FilterItem, FilterTreeDataProvider} from "./filterTreeDataProvider";
 import {DisposeManager} from "../../core/disposable";
 import * as logger from "../../core/logger";
 import {ContextManager} from '../../core/contextManager';
 import {FilterOptions} from './filterOptions';
 import {ColorResolver, IconResolver} from '../metadata';
-import {addCommand} from '../../core';
+import {addCommand, FictionWriter} from '../../core';
 import {MetadataTreeDataProvider} from '../metadata/metadataTreeDataProvider';
 import {StateManager} from '../../core/state';
+import {TreeNode} from '../../core/tree/treeStructure';
+import {ConfigurationTarget} from 'vscode';
 
 const log = logger.makeLog("[ProjectsModule]", "red");
-
+log.warn("da");
 class FiltersModule extends DisposeManager {
     active = false;
     options = new FilterOptions();
@@ -48,6 +50,14 @@ class FiltersModule extends DisposeManager {
             }),
             addCommand('views.metadata.filters.linkWithFileView.off', () => {
                 this.filterDataProvider?.toggleMetadataViewLink();
+            }),
+            addCommand(FictionWriter.views.metadata.filters.setFileDescriptionMetadataKey, (item) => {
+                if (item?.data?.name) {
+
+                    return vscode.workspace.getConfiguration('fictionWriter.projects')
+                        .update('fileDescriptionMetadataKey', item.data.name,
+                            ConfigurationTarget.Global);
+                }
             })
         );
     };
