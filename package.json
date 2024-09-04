@@ -773,8 +773,8 @@
           "group": "inline"
         },
         {
-          "command": "fictionWriter.views.metadata.editSingle",
-          "when": "view == fictionWriter.views.metadata && viewItem == editable",
+          "command": "fictionWriter.views.metadata.editValue",
+          "when": "view == fictionWriter.views.metadata && (viewItem == metaValue || viewItem == metaInlineValue)",
           "group": "inline"
         },
         {
@@ -789,7 +789,7 @@
         },
         {
           "command": "fictionWriter.views.metadata.filters.setFileDescriptionMetadataKey",
-          "when": "(view == fictionWriter.views.metadata && viewItem == editable) || (view == fictionWriter.views.metadata.filters && viewItem == filterItemMetadataKey)",
+          "when": "(view == fictionWriter.views.metadata && (viewItem == metaKey || viewItem == metaInlineValue)) || (view == fictionWriter.views.metadata.filters && viewItem == filterItemMetadataKey)",
           "group": "2_fictionWriterMeta@1"
         }
       ]
@@ -964,7 +964,7 @@
         "when": "false"
       },
       {
-        "command": "fictionWriter.views.metadata.editSingle",
+        "command": "fictionWriter.views.metadata.editValue",
         "title": "Edit single metadata entry",
         "icon": "$(edit)",
         "category": "Markdown Fiction Writer",

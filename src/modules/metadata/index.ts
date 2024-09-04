@@ -57,8 +57,8 @@ class MetadataModule extends DisposeManager {
               return  this.metadataTreeDataProvider?.editMetadata(item);
             }),
             addCommand(FictionWriter.views.metadata.filters.setFileDescriptionMetadataKey, (item) => {
-                if (item?.id) {
-                    this.projectsOptions.fileDescriptionMetadataKey.update(item.id);
+                if (item?.data.key) {
+                    this.projectsOptions.fileDescriptionMetadataKey.update(item.data.key);
                 }
             }),
 

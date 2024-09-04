@@ -47,6 +47,7 @@ export class Metadata {
                 return yaml.load(meta, {
                     schema: SCHEMA,
                     json: false,
+
                 });
             } else {
                 return meta;

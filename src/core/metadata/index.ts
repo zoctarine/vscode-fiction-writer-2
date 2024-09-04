@@ -1,9 +1,10 @@
 export * from './metadata';
 
-export enum MetaFragment {
+export enum MetaNodeType {
     None = "unknownMeta",
     Key = "metaKey",
     Value = "metaValue",
+    InlineValue = "metaInlineValue",
     Object = "metaObject",
     Link = "metaFileLink",
 }

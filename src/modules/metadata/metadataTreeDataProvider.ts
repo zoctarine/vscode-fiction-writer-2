@@ -1,22 +1,36 @@
 import * as vscode from 'vscode';
-import {FileDecoration, ThemeColor, ThemeIcon, Uri} from 'vscode';
+import {FileDecoration, ThemeColor, ThemeIcon, TreeItem, TreeItemCollapsibleState, Uri} from 'vscode';
 import {IMetaState, StateManager} from '../../core/state';
 import {MetadataOptions} from './metadataOptions';
 import {ColorResolver, IconResolver} from './iconsAndColors';
 import {selectMetadataColor, selectMetadataIcon, selectMetadataTarget} from './inputBoxes';
 import {DisposeManager} from '../../core';
+import {Metadata, MetaNodeType} from '../../core/metadata';
+import {TreeNode, TreeStructure} from '../../core/tree/treeStructure';
 
-export class MetadataTreeDataProvider extends DisposeManager implements vscode.TreeDataProvider<MetadataTreeItem> {
+export class MetaItem {
+    name: string = "";
+    key: string = "";
+    value?: any;
+    icon?: string;
+    description?: string;
+    type: MetaNodeType = MetaNodeType.None;
+    update = (newValue: any) => {
+    };
+}
+
+export class MetadataTreeDataProvider extends DisposeManager implements vscode.TreeDataProvider<TreeNode<MetaItem>> {
     public static readonly viewType = 'fictionWriter.views.metadata';
-    private _treeView: vscode.TreeView<MetadataTreeItem>;
+    private _tree: TreeStructure<MetaItem>;
+    private _treeView: vscode.TreeView<TreeNode<MetaItem>>;
     private _document: vscode.TextDocument | undefined;
     private _metadata: IMetaState | undefined;
-    private _onDidChangeTreeData: vscode.EventEmitter<MetadataTreeItem | undefined | null | void> = new vscode.EventEmitter<MetadataTreeItem | undefined | null | void>();
-    readonly onDidChangeTreeData: vscode.Event<MetadataTreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
+    private _onDidChangeTreeData: vscode.EventEmitter<TreeNode<MetaItem> | undefined | null | void> = new vscode.EventEmitter<TreeNode<MetaItem> | undefined | null | void>();
+    readonly onDidChangeTreeData: vscode.Event<TreeNode<MetaItem> | undefined | null | void> = this._onDidChangeTreeData.event;
 
     // EventEmitter and Event for selection changes
-    private _onDidChangeSelection: vscode.EventEmitter<MetadataTreeItem | undefined> = new vscode.EventEmitter<MetadataTreeItem | undefined>();
-    public readonly onDidChangeSelection: vscode.Event<MetadataTreeItem | undefined> = this._onDidChangeSelection.event;
+    private _onDidChangeSelection: vscode.EventEmitter<TreeNode<MetaItem> | undefined> = new vscode.EventEmitter<TreeNode<MetaItem> | undefined>();
+    public readonly onDidChangeSelection: vscode.Event<TreeNode<MetaItem> | undefined> = this._onDidChangeSelection.event;
 
     constructor(private _options: MetadataOptions,
                 private _stateManager: StateManager,
@@ -25,15 +39,14 @@ export class MetadataTreeDataProvider extends DisposeManager implements vscode.T
                     colorResolver: ColorResolver,
                 }) {
         super();
-
-        this._loadDocument(vscode.window.activeTextEditor?.document);
-
+        this._tree = new TreeStructure(new TreeNode<MetaItem>('root', new MetaItem()));
         this._treeView = vscode.window.createTreeView(MetadataTreeDataProvider.viewType, {
             treeDataProvider: this,
             showCollapseAll: true,
             canSelectMany: false,
             // dragAndDropController: this
         });
+        this._loadDocument(vscode.window.activeTextEditor?.document);
 
         this.manageDisposable(
             this._treeView,
@@ -47,13 +60,13 @@ export class MetadataTreeDataProvider extends DisposeManager implements vscode.T
             }),
             this._treeView.onDidCollapseElement((e) => {
                 if (e.element.children) {
-                    e.element.description = `${e.element.children.map(c => c.title).join(', ')}`;
+                    e.element.data.description = `${e.element.children.map(c => c.data.name).join(', ')}`;
                 }
                 this._onDidChangeTreeData.fire(e.element);
             }),
             this._treeView.onDidExpandElement((e) => {
                 if (e.element.children) {
-                    e.element.description = '';
+                    e.element.data.description = '';
                 }
                 this._onDidChangeTreeData.fire(e.element);
             }),
@@ -71,25 +84,92 @@ export class MetadataTreeDataProvider extends DisposeManager implements vscode.T
         if (document?.uri.fsPath) {
             const fileState = this._stateManager.get(document?.uri?.fsPath);
             this._metadata = fileState?.metadata;
+
         }
+        this._refreshTree();
+    }
+
+    getTreeItem(node: TreeNode<MetaItem>): vscode.TreeItem {
+        const item: vscode.TreeItem = {
+            label: {
+                label: node.data.name
+            },
+            collapsibleState: node.children.length > 0 ? TreeItemCollapsibleState.Collapsed : TreeItemCollapsibleState.None,
+            description: node.data.description,
+            iconPath: this._getIcon(node.data.name, node.data.value?.toString()),
+            tooltip: `${node.id}: ${node.data.type}`,
+            contextValue: `${node.data.type}`
+        };
+
+        return item;
+    }
+
+    // getTreeItem(element: MetadataTreeItem): vscode.TreeItem {
+    //     return element;
+    // }
+
+    public getChildren(element: TreeNode<MetaItem>): TreeNode<MetaItem>[] {
+        const children = element?.children ?? this._tree.root.children;
+        return children.filter((e) => e.visible);
+    }
+
+    // getChildren(element?: MetadataTreeItem): Thenable<MetadataTreeItem[]> {
+    //     if (element) {
+    //         return Promise.resolve(element.children);
+    //     } else {
+    //         const all = this.getChildItems();
+    //
+    //         return Promise.resolve(all);
+    //     }
+    // }
+
+    private _buildHierarchy(meta: any = this._metadata?.value, parentKey: string = ""): TreeNode<MetaItem>[] {
+        if (!meta) {
+            return [];
+        }
+        if (Array.isArray(meta)) {
+            return meta.flatMap((arrayItem, index) => {
+                const path = parentKey ? `${parentKey}[${index}]` : `[${index}]`;
+                return this._buildHierarchy(arrayItem, path);
+            });
+        } else if (typeof meta === 'object') {
+            return Object.keys(meta).flatMap((key) => {
+                const item = new MetaItem();
+                item.name = key;
+                item.key = key;
+                item.value = meta[key];
+                item.type = MetaNodeType.Key;
+                const path = parentKey ? `${parentKey}.${key}` : key;
+                const node = new TreeNode(path, item);
+
+                node.children = this._buildHierarchy(item.value, path);
+                item.description = node.children.length <= 0 ? '' : node.children.map(c => c.data.name).join(', ') + '';
+                if (typeof (item.value) !== 'object') {
+                    node.children = [];
+                    item.name = key;
+                    item.type = MetaNodeType.InlineValue;
+                }
+                return node;
+            });
+        } else {
+            const path = parentKey;
+            const item = new MetaItem();
+            item.name = meta.toString();
+            item.key = parentKey;
+            item.value = meta;
+            item.type = MetaNodeType.Value;
+            const node = new TreeNode(path, item);
+            return [node];
+        }
+    }
+
+    private _refreshTree() {
+        this._tree.clear();
+        this._tree.root.children = this._buildHierarchy();
         this._onDidChangeTreeData.fire();
     }
 
-    getTreeItem(element: MetadataTreeItem): vscode.TreeItem {
-        return element;
-    }
-
-    getChildren(element?: MetadataTreeItem): Thenable<MetadataTreeItem[]> {
-        if (element) {
-            return Promise.resolve(element.children);
-        } else {
-            const all = this.getChildItems();
-
-            return Promise.resolve(all);
-        }
-    }
-
-    getSelectedItem(): MetadataTreeItem | undefined {
+    getSelectedItem(): TreeNode<MetaItem> | undefined {
         return this._treeView.selection ? this._treeView.selection[0] : undefined;
     }
 
@@ -151,8 +231,8 @@ export class MetadataTreeDataProvider extends DisposeManager implements vscode.T
             ?? new ThemeIcon(defaultIcon, color);
     }
 
-    public async editMetadata(item: MetadataTreeItem) {
-        const prevValue = item.description?.toString();
+    public async editMetadata(item: TreeNode<MetaItem>) {
+        const prevValue = item.data.description?.toString();
         let selectedValue = prevValue;
 
         if (item.id === 'icon') {
@@ -175,13 +255,37 @@ export class MetadataTreeDataProvider extends DisposeManager implements vscode.T
             await this._stateManager.updateFile(this._document?.uri.fsPath,
                 (processorFactory) => processorFactory
                     .createUpdateMetaProcessor(crtMeta => {
-                        crtMeta[item.id] = selectedValue;
+                        this.setPropertyByString(crtMeta, item.id, selectedValue);
+                        // crtMeta[item.id] = selectedValue;
                         return {...crtMeta};
                     })
             );
         }
 
     }
+
+    private setPropertyByString(obj: any, path: string, value: any) {
+        // Split the path into an array of parts
+        const parts = path.match(/([^[.\]]+)/g);
+
+        if (parts === null) {
+            return;
+        }
+
+        let current = obj;
+
+        // Traverse to the second-to-last part of the path
+        for (let i = 0; i < parts.length - 1; i++) {
+            if (!current[parts[i]]) {
+                current[parts[i]] = isNaN(Number(parts[i + 1])) ? {} : []; // Create array if the next part is an index
+            }
+            current = current[parts[i]];
+        }
+
+        // Set the property value
+        current[parts[parts.length - 1]] = value;
+    }
+
 }
 
 

@@ -17,7 +17,7 @@ import {TreeNode, TreeStructure} from '../../core/tree/treeStructure';
 import {ColorResolver, IconResolver} from './index';
 import * as yaml from 'js-yaml';
 import {MetadataOptions} from './metadataOptions';
-import {MetadataTreeDataProvider, MetadataTreeItem} from './metadataTreeDataProvider';
+import {MetadataTreeDataProvider, MetadataTreeItem, MetaItem} from './metadataTreeDataProvider';
 import {StateManager} from '../../core/state';
 import {log} from '../../core';
 
@@ -99,9 +99,7 @@ export class FilterTreeDataProvider extends DisposeManager
 
     // Tree data provider
     public getChildren(element: TreeNode<FilterItem>): TreeNode<FilterItem>[] {
-
         const children = element?.children ?? this._tree.root.children;
-
         return children.filter((e) => e.visible);
     }
 
@@ -384,11 +382,11 @@ export class FilterTreeDataProvider extends DisposeManager
         this._contextManager.set("fictionWriter.views.metadata.isLinked", isLinked);
         if (!this._metadataView) return;
 
-        const applyFilter = (e: MetadataTreeItem | undefined) => {
+        const applyFilter = (e: TreeNode<MetaItem> | undefined) => {
             // TODO: make MetadataTreeItem a TreeItem<MetadataItem> so we can trace back parent
-            let filter = e?.title;
-            if (e?.description && (!e?.children || e.children.length === 0)) {
-                filter = e.description.toString();
+            let filter = e?.data.name;
+            if (e?.data.description && (!e?.children || e.children.length === 0)) {
+                filter = e.data.description.toString();
             }
             this.addFilter({value: filter, exactMatch: true, expandFiles: true});
         };
