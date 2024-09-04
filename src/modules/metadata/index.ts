@@ -3,10 +3,12 @@ import {addCommand, DisposeManager, FictionWriter, mapExtensions} from '../../co
 import {ContextManager} from '../../core/contextManager';
 import {MetadataTreeDataProvider} from './metadataTreeDataProvider';
 import {MetadataOptions} from './metadataOptions';
-import {ConfigurationTarget, ExtensionContext} from 'vscode';
+import {ExtensionContext} from 'vscode';
 import {MetadataTreeDecorationProvider} from './metadataDecoration';
 import {ColorResolver, IconResolver} from './iconsAndColors';
 import {StateManager} from '../../core/state';
+import {ProjectsOptions} from '../projectExplorer/projectsOptions';
+import {FilterTreeDataProvider} from './filterTreeDataProvider';
 
 export * from './iconsAndColors';
 
@@ -17,11 +19,13 @@ class MetadataModule extends DisposeManager {
     private context: ExtensionContext | undefined;
     private options = new MetadataOptions();
     metadataTreeDataProvider: MetadataTreeDataProvider | undefined;
+    filterDataProvider: FilterTreeDataProvider | undefined;
     private metadataDecorationProvider: MetadataTreeDecorationProvider | undefined;
     resolvers = {
         iconResolver: new IconResolver(),
         colorResolver: new ColorResolver(),
     };
+    private projectsOptions!: ProjectsOptions;
 
     constructor() {
         super();
@@ -33,6 +37,10 @@ class MetadataModule extends DisposeManager {
 
         this.metadataTreeDataProvider = new MetadataTreeDataProvider(this.options, this.stateManager, this.resolvers);
         this.metadataDecorationProvider = new MetadataTreeDecorationProvider(this.resolvers);
+        this.filterDataProvider = new FilterTreeDataProvider(
+            this.options, this.stateManager, this.contextManager!,
+            this.metadataTreeDataProvider,
+            this.resolvers!);
 
         this.manageDisposable(
             this.metadataTreeDataProvider,
@@ -45,23 +53,42 @@ class MetadataModule extends DisposeManager {
             this.options.metadataIcons.onChanged((customIcons) => {
                 this.resolvers.iconResolver.setCustom(mapExtensions.objectToMap(customIcons));
             }),
-
             addCommand(FictionWriter.views.metadata.editSingle, (item)=>{
               return  this.metadataTreeDataProvider?.editMetadata(item);
             }),
             addCommand(FictionWriter.views.metadata.filters.setFileDescriptionMetadataKey, (item) => {
                 if (item?.id) {
-                    return vscode.workspace.getConfiguration('fictionWriter.projects')
-                        .update('fileDescriptionMetadataKey', item.id,
-                            ConfigurationTarget.Global);
+                    this.projectsOptions.fileDescriptionMetadataKey.update(item.id);
                 }
-            })
+            }),
+
+          //  this.filterDataProvider,
+            addCommand('views.metadata.filters.hideFilter', (e) => {
+                this.filterDataProvider?.toggleFilter(e?.data?.name);
+            }),
+            addCommand('views.metadata.filters.showFilter', (e) => {
+                this.filterDataProvider?.toggleFilter(e?.data?.name);
+            }),
+            addCommand('views.metadata.filters.setFilter', () => {
+                this.filterDataProvider?.setFilter();
+            }),
+            addCommand('views.metadata.filters.removeFilter', () => {
+                this.filterDataProvider?.removeFilter();
+            }),
+            addCommand('views.metadata.filters.linkWithFileView.on', () => {
+                this.filterDataProvider?.toggleMetadataViewLink();
+            }),
+            addCommand('views.metadata.filters.linkWithFileView.off', () => {
+                this.filterDataProvider?.toggleMetadataViewLink();
+            }),
         );
     };
 
     deactivate(): void {
         this.dispose();
         this.metadataTreeDataProvider = undefined;
+        this.filterDataProvider = undefined;
+        this.metadataDecorationProvider = undefined;
     };
 
     private updateState(enabled: boolean) {
@@ -70,11 +97,11 @@ class MetadataModule extends DisposeManager {
             : this.deactivate();
     }
 
-    register(context: ExtensionContext, contextManager: ContextManager, stateManager: StateManager): vscode.Disposable {
+    register(context: ExtensionContext, contextManager: ContextManager, stateManager: StateManager, projectsOptions: ProjectsOptions): vscode.Disposable {
         this.stateManager = stateManager;
         this.contextManager = contextManager;
         this.context = context;
-
+        this.projectsOptions = projectsOptions;
         this.options.enabled.onChanged((enabled) => {
             this.updateState(enabled);
         });

@@ -175,12 +175,14 @@
         "title": "Editors",
         "properties": {
           "fictionWriter.editors.richTextEditor.enabled": {
+            "scope": "application",
             "type": "boolean",
             "default": true,
             "markdownDescription": "Enables an experimental rich text editor (based on [ProseMirror](https://prosemirror.net/)).",
             "order": 1
           },
           "fictionWriter.editors.richTextEditor.focusMode": {
+            "scope": "application",
             "type": "string",
             "enum": [
               "none",
@@ -192,18 +194,21 @@
             "order": 2
           },
           "fictionWriter.editors.richTextEditor.showMergeEditorOnClose": {
+            "scope": "application",
             "type": "boolean",
             "default": true,
             "markdownDescription": "Show merge editor when closing the rich text editor.\n> **Note**: this is recommended, as the text editor will parse and serialze the original file markdown content.",
             "order": 3
           },
           "fictionWriter.editors.enableAltMarkdownEditor": {
+            "scope": "application",
             "type": "boolean",
             "default": true,
             "description": "Enables an alternative markdown editor (based on CodeMirror).",
             "order": 4
           },
           "fictionWriter.editors.autoSyncIntervalInSeconds": {
+            "scope": "application",
             "type": "number",
             "default": 10,
             "minimum": 5,
@@ -217,12 +222,14 @@
         "title": "Projects",
         "properties": {
           "fictionWriter.projects.enabled": {
+            "scope": "application",
             "order": 1,
             "type": "boolean",
             "default": true,
             "description": "Enable Projects"
           },
           "fictionWriter.projects.fileTypes": {
+            "scope": "application",
             "order": 20,
             "type": "array",
             "items": {
@@ -238,21 +245,23 @@
             "markdownDescription": "What file extensions should be considered as project files. (eg. `md` for `.md` files.)"
           },
           "fictionWriter.projects.fileAndFolderTrackingTag": {
+            "scope": "application",
             "order": 18,
             "type": "string",
             "default": "fw",
             "markdownDescription": "Only manage files and folders ending with this tag in project view.\n\n**Example:** if project tag is `fw` you will need to name your files like `Chapter1.fw/Scene1.fw.md` to be visible in the project view."
           },
           "fictionWriter.projects.rootFoldersEnabled": {
+            "scope": "application",
             "order": 25,
             "type": "boolean",
             "default": true,
             "description": "Enable Root Folders inside Projects"
           },
           "fictionWriter.projects.fileDescriptionMetadataKey": {
+            "scope": "application",
             "type": "string",
             "default": "title",
-            "scope": "application",
             "markdownDescription": "Shows the value of this metadata key, as a description, after the fileName, in the project tree. Leave blank if you don't want to show anything.",
             "order": 38
           }
@@ -262,12 +271,14 @@
         "title": "Text Analysis",
         "properties": {
           "fictionWriter.textAnalysis.enabled": {
+            "scope": "application",
             "order": 1,
             "type": "boolean",
             "default": true,
             "description": "Enable Text Analysis"
           },
           "fictionWriter.textAnalysis.autoRefreshWhenPossible": {
+            "scope": "application",
             "order": 2,
             "type": "boolean",
             "default": true,
@@ -279,12 +290,14 @@
         "title": "Metadata",
         "properties": {
           "fictionWriter.metadata.view.enabled": {
+            "scope": "application",
             "order": 1,
             "type": "boolean",
             "default": true,
             "description": "Enable File Metadata View"
           },
           "fictionWriter.metadata.default": {
+            "scope": "application",
             "order": 2,
             "type": "object",
             "default": {
@@ -297,6 +310,7 @@
             }
           },
           "fictionWriter.metadata.view.icons": {
+            "scope": "application",
             "order": 3,
             "type": "object",
             "markdownDescription": "Icons for metadata. Select any value from [Code Icons](https://code.visualstudio.com/api/references/icons-in-labels#icon-listing). The icon will be set if any partial or full match of the `Item` is found in the metadata key or value.",
@@ -305,6 +319,7 @@
             }
           },
           "fictionWriter.metadata.view.colors": {
+            "scope": "application",
             "order": 4,
             "type": "object",
             "markdownDescription": "The color will be set if the text from `Item` is found in the metadata key or value. You can customize these colors in [workbench customizations](https://code.visualstudio.com/api/extension-guides/color-theme#workbench-colors). Find [here](#) the full lsit of color ids.",
@@ -331,13 +346,8 @@
               ]
             }
           },
-          "fictionWriter.metadata.filters.enabled": {
-            "order": 5,
-            "type": "boolean",
-            "default": true,
-            "description": "Enable Global Metadata Filters"
-          },
           "fictionWriter.metadata.filters.countBadges.enabled": {
+            "scope": "application",
             "order": 6,
             "type": "boolean",
             "default": true,
@@ -349,13 +359,14 @@
         "title": "Security",
         "properties": {
           "fictionWriter.security.encrypt.globalPassword": {
+            "scope": "application",
             "type": "string",
             "default": "FiCtIoNwRiTeR#2",
             "markdownDescription": "Set a global password for all encrypted files.\n\n**`⚠️ Warning!`** *Changing this password will make decrypting **ALL** previously encrypted files unreadable!*",
-            "scope": "application",
             "order": 1
           },
           "fictionWriter.security.encrypt.temporaryFies.enabled": {
+            "scope": "application",
             "type": "boolean",
             "default": true,
             "markdownDescription": "Encrypts all temporary files created in extension storage folder with the `#fictionWriter.security.encrypt.globalPassword#`",
@@ -1088,7 +1099,7 @@
           "id": "fictionWriter.views.metadata.filters",
           "name": "Project Metadata",
           "icon": "$(filter)",
-          "when": "fictionWriter.metadata.filters.enabled == true"
+          "when": "fictionWriter.metadata.view.enabled == true"
         }
       ],
       "fictionWriterMetadataExplorer": [],

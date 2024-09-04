@@ -13,7 +13,7 @@ import {StateManager} from '../../core/state';
 
 export class ProjectsModule extends DisposeManager {
     active = false;
-    options = new ProjectsOptions();
+    options!: ProjectsOptions;
     fileManager!: FwFileManager;
     stateManager!: StateManager;
     contextManager!: ContextManager;
@@ -94,10 +94,11 @@ export class ProjectsModule extends DisposeManager {
             : this.deactivate();
     }
 
-    register(fileManager: FwFileManager, contextManager: ContextManager, stateManager: StateManager): vscode.Disposable {
+    register(fileManager: FwFileManager, contextManager: ContextManager, stateManager: StateManager, projectOptions: ProjectsOptions): vscode.Disposable {
         this.fileManager = fileManager;
         this.contextManager = contextManager;
         this.stateManager = stateManager;
+        this.options = projectOptions;
 
         this.options.enabled.onChanged((enabled) => {
             this.updateState(enabled);
@@ -105,7 +106,7 @@ export class ProjectsModule extends DisposeManager {
 
         this.options.enabled.emit();
 
-        return Disposable.from(this.options, this);
+        return Disposable.from(this);
     }
 }
 

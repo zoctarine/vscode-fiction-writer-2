@@ -1,9 +1,8 @@
 import * as vscode from 'vscode';
 import {FileDecoration, ThemeColor, ThemeIcon, Uri} from 'vscode';
-import {IMetaState, Metadata} from '../../core/processors';
+import {IMetaState, StateManager} from '../../core/state';
 import {MetadataOptions} from './metadataOptions';
 import {ColorResolver, IconResolver} from './iconsAndColors';
-import {StateManager} from '../../core/state';
 import {selectMetadataColor, selectMetadataIcon, selectMetadataTarget} from './inputBoxes';
 import {DisposeManager} from '../../core';
 
@@ -156,11 +155,11 @@ export class MetadataTreeDataProvider extends DisposeManager implements vscode.T
         const prevValue = item.description?.toString();
         let selectedValue = prevValue;
 
-        if (item.id === 'icon'){
+        if (item.id === 'icon') {
             selectedValue = await selectMetadataIcon(selectedValue);
-        } else if (item.id === 'color'){
+        } else if (item.id === 'color') {
             selectedValue = await selectMetadataColor(selectedValue);
-        } else if (item.id === 'target'){
+        } else if (item.id === 'target') {
             selectedValue = await selectMetadataTarget(selectedValue);
         } else {
             selectedValue = await vscode.window.showInputBox({

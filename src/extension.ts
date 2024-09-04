@@ -5,8 +5,9 @@ import {richTextEditorModule} from './modules/richTextEditor';
 import {projectsModule} from './modules/projectExplorer';
 import {textAnalysisModule} from './modules/textAnalysis';
 import {metadataModule} from './modules/metadata';
-import {filtersModule} from './modules/filters';
 import {securityModule} from './modules/security';
+import {log} from './core/logging';
+
 import {
     ComputeTextStatistics,
     ComputeWriteTarget, EraseMetaFromContent,
@@ -39,18 +40,27 @@ export function activate(context: vscode.ExtensionContext) {
             .add(new InjectMetaIntoContent())
     });
 
-
     context.subscriptions.push(
-        projectsModule.register(core.fileManager, core.contextManager, core.stateManager),
+        projectsModule.register(core.fileManager, core.contextManager, core.stateManager, core.projectsOptions),
         textAnalysisModule.register(core.stateManager),
-        metadataModule.register(context, core.contextManager, core.stateManager),
+        metadataModule.register(context, core.contextManager, core.stateManager, core.projectsOptions),
         richTextEditorModule.register(context, core.contextManager),
-        filtersModule.register(core.contextManager, core.stateManager, metadataModule.metadataTreeDataProvider, metadataModule.resolvers),
         securityModule.register(),
-        compileModule.register(projectsModule)
+        compileModule.register(projectsModule),
+        log
     );
 
-    console.log(context.storageUri?.fsPath);
+    log.enabled = true;
+
+    log.text("FICTION WRITER is now active!");
+    log.text('');
+    log.text("Warning: this extension is in early preview. Use it ONLY for testing purposes.");
+    log.text('');
+    log.text("Watch this window for information on how your files are being processed.");
+    log.text("These logs might prove useful when sending error reports.");
+    log.text('');
+
+
     // context.subscriptions.push(CodeMirrorEditorProvider.register(context));
 
 

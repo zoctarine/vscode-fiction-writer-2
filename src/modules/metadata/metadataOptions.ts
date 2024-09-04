@@ -67,6 +67,7 @@ export class MetadataOptions extends Options {
     public enabled = this.valueOf('enabled', true, true);
     public metadataIcons = this.valueOf('icons',{});
     public metadataColors = this.valueOf('colors',{});
+    public countBadgesEnabled = this.valueOf('filters.countBadges.enabled', true);
 
     constructor() {
         super(MetadataOptions.SectionName);

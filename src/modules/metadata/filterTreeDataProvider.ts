@@ -14,11 +14,12 @@ import * as path from 'path';
 import {DisposeManager} from "../../core/disposable";
 import {ContextManager} from '../../core/contextManager';
 import {TreeNode, TreeStructure} from '../../core/tree/treeStructure';
-import {ColorResolver, IconResolver} from '../metadata';
+import {ColorResolver, IconResolver} from './index';
 import * as yaml from 'js-yaml';
-import {FilterOptions} from './filterOptions';
-import {MetadataTreeDataProvider, MetadataTreeItem} from '../metadata/metadataTreeDataProvider';
+import {MetadataOptions} from './metadataOptions';
+import {MetadataTreeDataProvider, MetadataTreeItem} from './metadataTreeDataProvider';
 import {StateManager} from '../../core/state';
+import {log} from '../../core';
 
 enum FilterItemType {
     Key,
@@ -58,7 +59,7 @@ export class FilterTreeDataProvider extends DisposeManager
     private _activeFilter?: MetaFilter;
     private _onChangeMetadataViewSubscription?: vscode.Disposable;
     private readonly TreeViewId = 'fictionWriter.views.metadata.filters';
-    constructor(private _options: FilterOptions, private _stateManager: StateManager, private _contextManager: ContextManager,
+    constructor(private _options: MetadataOptions, private _stateManager: StateManager, private _contextManager: ContextManager,
                 private _metadataView?: MetadataTreeDataProvider,
                 private _resolvers?: { iconResolver: IconResolver; colorResolver: ColorResolver }) {
         super();
@@ -70,8 +71,6 @@ export class FilterTreeDataProvider extends DisposeManager
             dragAndDropController: this
         });
         this.reload();
-
-
         this.setMetadataViewLink(this._contextManager.get("fictionWriter.views.metadata.isLinked", false));
 
         this.manageDisposable(
@@ -341,7 +340,7 @@ export class FilterTreeDataProvider extends DisposeManager
         this._onDidChangeTreeData.fire();
     }
 
-    public async addFilter(value?: MetaFilter, options?: FilterOptions) {
+    public async addFilter(value?: MetaFilter, options?: MetadataOptions) {
         if (!value) return this.removeFilter();
 
         vscode.commands.executeCommand('setContext', 'fictionWriter.views.metadata.hasFilter', true);
@@ -414,7 +413,5 @@ export class FilterTreeDataProvider extends DisposeManager
         let isLinked = this._contextManager.get("fictionWriter.views.metadata.isLinked", false);
         await this.setMetadataViewLink(!isLinked);
     }
-
-
 }
 

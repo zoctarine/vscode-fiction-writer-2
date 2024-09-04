@@ -9,7 +9,6 @@ import {FwFileInfo, FwType, FwFile, asPosix, FwFileManager} from '../../core/fwF
 import {FictionWriter} from '../../core';
 import {FaIcons} from '../../core/decorations';
 import {ContextManager} from '../../core/contextManager';
-import {FwFilter} from '../filters/models/fwFilter';
 import {
     FileNode,
     FolderNode, ProjectNode,
@@ -128,10 +127,7 @@ export class ProjectExplorerTreeDataProvider
                         if (fileInfo.type === FwType.Folder) {
                             node = new FileNode(tmpId);
                             // Ignore filter folder names, they will be built in the Filter View
-                            if (FwFilter.isFilterFolderName(fileInfo.name)) {
-                                return;
-
-                            } else {
+                           {
                                 node = new FolderNode(tmpId);
                                 node.item.name = fileInfo.name;
                                 node.item.ext = fileInfo.ext;
