@@ -17,7 +17,7 @@ import {TreeNode, TreeStructure} from '../../core/tree/treeStructure';
 import {ColorResolver, IconResolver} from './index';
 import * as yaml from 'js-yaml';
 import {MetadataOptions} from './metadataOptions';
-import {MetadataTreeDataProvider, MetadataTreeItem, MetaItem} from './metadataTreeDataProvider';
+import {MetadataTreeDataProvider, MetaItem} from './metadataTreeDataProvider';
 import {StateManager} from '../../core/state';
 import {log} from '../../core';
 

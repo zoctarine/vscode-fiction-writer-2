@@ -7,6 +7,7 @@ import {glob} from 'glob';
 import fs from 'node:fs';
 import {FwFileInfo} from './fwFileInfo';
 import {RegEx} from '../regEx';
+import {log} from '../logging';
 
 
 export const asPosix = (mixedPath: string) => path.posix.normalize(mixedPath.split(path.sep).join(path.posix.sep));
@@ -30,6 +31,7 @@ export class FwFileManager extends DisposeManager {
             watcher.onDidChange((f) => this._fileChangeHandler(f)),
             watcher.onDidCreate((f) => this._fileChangeHandler(f)),
             watcher.onDidDelete((f) => this._fileChangeHandler(f)),
+
             watcher);
     }
 
@@ -52,6 +54,7 @@ export class FwFileManager extends DisposeManager {
     }
 
     private _fileChangeHandler(e: vscode.Uri): void {
+        log.debug('FwFileChanged');
         if (this._silentUpdates) return;
         if (this.isFwFile(e.fsPath)) {
 

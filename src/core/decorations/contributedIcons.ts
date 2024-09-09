@@ -25,7 +25,9 @@ export const MdiIcons = {
     clockLoader90: 'mdi-clock-loader-90',
     taskAlt: 'mdi-task-alt',
     hourglassEmpty: 'mdi-hourglass-empty',
-    hourglassDisabled: 'mdi-hourglass-disabled'
+    hourglassDisabled: 'mdi-hourglass-disabled',
+    formatLineSpacing: 'mdi-format-line-spacing',
+    vertical_distribute: 'mdi-vertical-distribute'
 };
 
 export const CodeIcons = [

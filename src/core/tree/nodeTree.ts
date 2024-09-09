@@ -31,7 +31,7 @@ export class NodeTree<T extends Node<any>>{
                 result = [...node.children.values() as IterableIterator<T>];
             }
         }
-        // result.sort((a: T, b: T) => a.order - b.order);
+        result.sort((a: T, b: T) => a.item.order - b.item.order);
         return [...result];
     }
 

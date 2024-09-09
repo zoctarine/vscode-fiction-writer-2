@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import {addCommand} from '../../../core/commandExtensions';
 import {ProseMirrorEditorProvider} from '../proseMirrorEditorProvider';
-import {RtEditorOptions} from '../rtEditorOptions';
 
 export const openInProseMirror = () => addCommand('editors.proseMirror.openInProseMirror',
     async () => {
@@ -9,9 +8,11 @@ export const openInProseMirror = () => addCommand('editors.proseMirror.openInPro
             const docUri = vscode.window.activeTextEditor?.document.uri;
             if (!docUri) return;
 
-            vscode.commands.executeCommand('vscode.openWith',
+            await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
+            await vscode.commands.executeCommand('vscode.openWith',
                 docUri,
                 ProseMirrorEditorProvider.viewType);
+
         }
     });
 

@@ -1,15 +1,16 @@
-import {DisposeManager} from '../../core';
+import {addCommand, CoreModule, DisposeManager} from '../../core';
 import {ContextManager} from '../../core/contextManager';
 import vscode from 'vscode';
 import {ProseMirrorEditorProvider} from './proseMirrorEditorProvider';
 import * as commandBuilder from './commands';
 import {RtEditorOptions} from './rtEditorOptions';
 import {DoNothingEditor} from './doNothingEditor';
+import {ActiveDocumentMonitor} from '../../core/fwFiles/activeDocumentMonitor';
 
 
 class RichTextEditorModule extends DisposeManager {
     active = false;
-    contextManager: ContextManager | undefined;
+    core!: CoreModule;
     context: vscode.ExtensionContext | undefined;
     options = new RtEditorOptions();
     doNothingEditor:vscode.Disposable|undefined;
@@ -23,9 +24,20 @@ class RichTextEditorModule extends DisposeManager {
         this.doNothingEditor = undefined;
 
         this.manageDisposable(
-            ProseMirrorEditorProvider.register(this.context!, this.contextManager!, this.options),
-
+            ProseMirrorEditorProvider.register(this.context!,
+                this.core.contextManager!,
+                this.core.activeDocumentMonitor,
+                this.options),
             commandBuilder.openInProseMirror(),
+            addCommand('editors.proseMirror.openInTextEditor',
+                async () => {
+
+                    const docUri = this.core.activeDocumentMonitor.activeDocument?.uri;
+                    if (!docUri) return;
+
+                    await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
+                    await vscode.commands.executeCommand('vscode.open', docUri);
+                })
         );
     };
 
@@ -41,8 +53,8 @@ class RichTextEditorModule extends DisposeManager {
             : this.deactivate();
     }
 
-    register(context: vscode.ExtensionContext, contextManager: ContextManager): vscode.Disposable {
-        this.contextManager = contextManager;
+    register(context: vscode.ExtensionContext, core: CoreModule): vscode.Disposable {
+        this.core = core;
         this.context = context;
 
         this.options.enabled.onChanged((enabled) => {

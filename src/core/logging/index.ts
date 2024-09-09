@@ -15,40 +15,44 @@ class Logger extends DisposeManager {
         );
     }
 
-    debug(text: string, obj?:any): void {
-        this._log("Debug", text, obj);
+    debug(text?: string, ...obj: any[]) {
+        return this._log("Debug", text, obj);
     }
-    info(text: string, obj?:any): void {
-        this._log("Info", text, obj);
+
+    info(text?: string, ...obj: any[]) {
+        return this._log("Info", text, obj);
     }
-    trace(text: string, obj?:any): void {
-        this._log("Trace", text, obj);
+
+    trace(text?: string, ...obj: any[]) {
+        return this._log("Trace", text, obj);
     }
-    warn(text: string, obj?:any): void {
-        this._log("Warning", text, obj);
+
+    warn(text?: string, ...obj: any[]) {
+        return this._log("Warning", text, obj);
     }
-    error(text: string, obj?:any): void {
+
+    error(text?: string, ...obj: any[]) {
         this._log("Error", text, obj);
     }
 
-    text(text: string): void {
-        if (!this.enabled) return;
-        this._outputChannel.appendLine(text);
+    text(text?: string): Logger {
+        if (!this.enabled) return this;
+        this._outputChannel.appendLine(text ?? '');
+        return this;
     }
 
-    private _format(type: string, message: string){
-        return `[${new Date().toLocaleString()}] ${type}: ${message}`;
+    private _format(type: string, message: string) {
+        return `[${new Date().toLocaleTimeString()}] ${type}: ${message}`;
     }
 
-    private _log(type: string, text: string, obj?:any){
-        if (!this.enabled) return;
+    private _log(type: string, text?: string, obj?: any[]) {
+        if (!this.enabled) return this;
         this._outputChannel.appendLine("");
-        this._outputChannel.append(this._format(type, text));
-        if (obj){
-            this._outputChannel.append(" " + JSON.stringify(obj));
+        this._outputChannel.append(this._format(type, text ?? ''));
+        if (obj !== undefined) {
+            obj.forEach((o => this._outputChannel.append(" " + JSON.stringify(o))));
         }
-        this._outputChannel.appendLine("");
-
+        return this;
     }
 }
 

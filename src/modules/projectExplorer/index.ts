@@ -5,7 +5,7 @@ import {ProjectExplorerTreeDataProvider} from "./projectExplorerTreeDataProvider
 import {FwFileManager} from "../../core/fwFiles/fwFileManager";
 import {ProjectsOptions} from "./projectsOptions";
 import {DisposeManager} from "../../core/disposable";
-import {addCommand, FictionWriter} from '../../core';
+import {addCommand, CoreModule, FictionWriter} from '../../core';
 import {ContextManager} from '../../core/contextManager';
 import {ProjectNode} from './projectNodes';
 import {ProjectExplorerDecorationProvider} from './projectExplorerDecorationProvider';
@@ -14,9 +14,7 @@ import {StateManager} from '../../core/state';
 export class ProjectsModule extends DisposeManager {
     active = false;
     options!: ProjectsOptions;
-    fileManager!: FwFileManager;
-    stateManager!: StateManager;
-    contextManager!: ContextManager;
+    core!: CoreModule;
     projectExplorerDataProvider: ProjectExplorerTreeDataProvider | undefined;
 
     constructor() {
@@ -26,12 +24,12 @@ export class ProjectsModule extends DisposeManager {
     activate(): void {
         this.projectExplorerDataProvider = new ProjectExplorerTreeDataProvider(
             this.options,
-            this.fileManager, this.contextManager, this.stateManager);
+            this.core.fileManager, this.core.contextManager, this.core.stateManager);
 
 
         this.manageDisposable(
             this.projectExplorerDataProvider,
-            new ProjectExplorerDecorationProvider(this.stateManager),
+            new ProjectExplorerDecorationProvider(this.core.stateManager),
             addCommand(FictionWriter.views.projectExplorer.show.decoration1, () => {
                 this.projectExplorerDataProvider?.showNextFor('decoration1');
             }),
@@ -94,11 +92,9 @@ export class ProjectsModule extends DisposeManager {
             : this.deactivate();
     }
 
-    register(fileManager: FwFileManager, contextManager: ContextManager, stateManager: StateManager, projectOptions: ProjectsOptions): vscode.Disposable {
-        this.fileManager = fileManager;
-        this.contextManager = contextManager;
-        this.stateManager = stateManager;
-        this.options = projectOptions;
+    register(core:CoreModule): vscode.Disposable {
+        this.core = core;
+        this.options = core.projectsOptions;
 
         this.options.enabled.onChanged((enabled) => {
             this.updateState(enabled);

@@ -56,12 +56,13 @@ clock_loader_90 f721
 task_alt e2e6
 hourglass_empty e88b
 hourglass_disabled ef53
-
+format_line_spacing e240
+vertical_distribute e076
 ```sh
 python3 -m venv .venv
 source .venv/bin/activate
 fonttools subset MaterialSymbolsSharp.ttf \
---unicodes=5f-7a,30-39,e8d5,e250,e16f,f726,f725,f724,f723,f722,f721,e2e6,e88b,ef53 \
+--unicodes=5f-7a,30-39,e8d5,e250,e16f,f726,f725,f724,f723,f722,f721,e2e6,e88b,ef53,e240,e076 \
 --no-layout-closure \
 --output-file=MaterialSymbolsSharp-subset.woff2 \
 --flavor=woff2

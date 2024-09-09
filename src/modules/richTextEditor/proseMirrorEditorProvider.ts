@@ -8,18 +8,22 @@ import {exampleSetup} from "prosemirror-example-setup";
 import {InputFileProcessor, processInputFile} from "../../core/processors";
 import {getNonce, getWebviewRootUri} from '../../core/nonce';
 import {ContextManager} from '../../core/contextManager';
-import {DisposeManager} from '../../core';
+import {addCommand, DisposeManager} from '../../core';
 import {RtEditorOptions} from './rtEditorOptions';
 import path from 'path';
+import {ActiveDocumentMonitor} from '../../core/fwFiles/activeDocumentMonitor';
 
 
 export class ProseMirrorEditorProvider extends DisposeManager
     implements vscode.CustomTextEditorProvider {
 
+
     public static register(context: vscode.ExtensionContext,
                            stateManager: ContextManager,
-                           options: RtEditorOptions): vscode.Disposable {
-        const provider = new ProseMirrorEditorProvider(context, stateManager, options);
+                           activeDocumentMonitor: ActiveDocumentMonitor,
+                           options: RtEditorOptions,
+    ): vscode.Disposable {
+        const provider = new ProseMirrorEditorProvider(context, stateManager, options, activeDocumentMonitor);
 
         return vscode.Disposable.from(
             vscode.window.registerCustomEditorProvider(
@@ -40,8 +44,8 @@ export class ProseMirrorEditorProvider extends DisposeManager
     constructor(
         private readonly _context: vscode.ExtensionContext,
         private readonly _stateManager: ContextManager,
-        private readonly _options: RtEditorOptions
-    ) {
+        private readonly _options: RtEditorOptions,
+        private readonly _activeDocumentMonitor: ActiveDocumentMonitor) {
         super();
     }
 
@@ -103,7 +107,7 @@ export class ProseMirrorEditorProvider extends DisposeManager
                 // ? path.posix.join(
                 //     tmpStorageLocation.fsPath, filename + hsh + ".tmp")
                 // :
-                    document.uri.fsPath + ".tmp";
+                document.uri.fsPath + ".tmp";
 
             return vscode.Uri.parse(tmpUri);
         }
@@ -120,10 +124,12 @@ export class ProseMirrorEditorProvider extends DisposeManager
             }
 
             if (e.webviewPanel.active) {
-                this._stateManager.activeTextDocument = document;
+                this._activeDocumentMonitor.activeDocument = document;
                 updateWebview(this.getWebViewOptions());
             } else {
-                //  this._stateManager.activeTextDocument = undefined;
+                // if (this._activeDocumentMonitor) {
+                //     this._activeDocumentMonitor.activeDocument = undefined;
+                // }
             }
         }, subscriptions);
 
@@ -238,9 +244,12 @@ export class ProseMirrorEditorProvider extends DisposeManager
             }
         });
 
+
+
         if (this._options.showMergeEditor) {
             vscode.workspace.fs.copy(document.uri, getTmpFile(document), {overwrite: true});
         }
+        this._activeDocumentMonitor.activeDocument = document;
         updateWebview(this.getWebViewOptions());
     }
 

@@ -5,6 +5,8 @@ import {FwFileManager} from './fwFiles';
 import {ProjectsOptions} from '../modules/projectExplorer/projectsOptions';
 import {ContextManager} from './contextManager';
 import {IStateProcessorFactory} from './processors/IStateProcessorFactory';
+import {ActiveDocumentMonitor} from './fwFiles/activeDocumentMonitor';
+import {log} from './logging';
 
 export * from './commandExtensions';
 export * from './constants';
@@ -21,6 +23,7 @@ export class CoreModule extends DisposeManager {
     contextManager: ContextManager;
     projectsOptions = new ProjectsOptions();
     processorFactory!: IStateProcessorFactory<IFileState>;
+    activeDocumentMonitor: ActiveDocumentMonitor;
 
     constructor(context: vscode.ExtensionContext, processorFactory: IStateProcessorFactory<IFileState>) {
         super();
@@ -28,6 +31,7 @@ export class CoreModule extends DisposeManager {
         this.stateManager = new StateManager(this.processorFactory);
         this.fileManager = new FwFileManager(this.projectsOptions);
         this.contextManager = new ContextManager(context);
+        this.activeDocumentMonitor = new ActiveDocumentMonitor();
 
         this.fileManager.loadFiles().then((files) => {
             this.stateManager.initialize(files);
@@ -39,13 +43,14 @@ export class CoreModule extends DisposeManager {
             this.fileManager,
             // this.storageManager,
             this.projectsOptions,
-
+            this.activeDocumentMonitor,
             this.fileManager.onFilesChanged(files => {
+                log.debug("filesChanged", files.length);
                 return this.stateManager.reload(files);
             }),
 
             this.stateManager.onFilesStateChanged(e => {
-                console.log("BATCH", e);
+               log.debug("StateFileChanged", e?.files.length);
             })
         );
     }

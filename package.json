@@ -466,6 +466,20 @@
           "fontCharacter": "\\ef53"
         }
       },
+      "mdi-format-line-spacingd": {
+        "description": "format_line_spacing",
+        "default": {
+          "fontPath": "./media/webfonts/MaterialSymbolsSharp-subset.woff2",
+          "fontCharacter": "\\e240"
+        }
+      },
+      "mdi-vertical-distribute": {
+        "description": "vertical_distribute",
+        "default": {
+          "fontPath": "./media/webfonts/MaterialSymbolsSharp-subset.woff2",
+          "fontCharacter": "\\e076"
+        }
+      },
       "fa-trash-can": {
         "description": "trash-can",
         "default": {
@@ -606,6 +620,11 @@
         {
           "when": "resourceLangId == markdown && !activeCustomEditorId && fictionWriter.editors.richTextEditor.enabled == true",
           "command": "fictionWriter.editors.proseMirror.openInProseMirror",
+          "group": "navigation"
+        },
+        {
+          "when": "resourceLangId == markdown && activeCustomEditorId && fictionWriter.editors.richTextEditor.enabled == true",
+          "command": "fictionWriter.editors.proseMirror.openInTextEditor",
           "group": "navigation"
         }
       ],
@@ -797,9 +816,15 @@
     "commands": [
       {
         "command": "fictionWriter.editors.proseMirror.openInProseMirror",
-        "title": "Open in ProseMirror Editor",
+        "title": "Switch to RichText editor",
         "category": "FictionWriter",
         "icon": "$(fa-pen-nib)"
+      },
+      {
+        "command": "fictionWriter.editors.proseMirror.openInTextEditor",
+        "title": "Switch to default editor",
+        "category": "FictionWriter",
+        "icon": "$(code)"
       },
       {
         "command": "fictionWriter.editors.codeMirror.openInCodeMirror",

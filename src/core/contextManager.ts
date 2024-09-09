@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import {Memento, TextDocument} from 'vscode';
+import {EventEmitter, Memento, TextDocument} from 'vscode';
 
 export class ContextManager {
     private _state: Memento;
@@ -14,14 +14,6 @@ export class ContextManager {
 
     get<T>(key: string, defaultValue: T): T {
         return this._state.get(key, defaultValue);
-    }
-
-    get activeTextDocument(): TextDocument | undefined {
-        return this.get('activeTextDocument', undefined);
-    }
-
-    set activeTextDocument(value: TextDocument | undefined) {
-        this.set('activeTextDocument', value);
     }
 
     remove(key: string): Thenable<void> {

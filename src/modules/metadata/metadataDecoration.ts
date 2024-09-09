@@ -1,7 +1,6 @@
 import {window, Tab, TabInputText, Uri, Disposable, Event,
     EventEmitter, FileDecoration, FileDecorationProvider, ThemeColor} from 'vscode';
 import vscode from 'vscode';
-import {MetadataTreeItem} from './metadataTreeDataProvider';
 import {ColorResolver, IconResolver} from './iconsAndColors';
 
 export class MetadataTreeDecorationProvider implements FileDecorationProvider {
@@ -17,13 +16,12 @@ export class MetadataTreeDecorationProvider implements FileDecorationProvider {
     }
 
     async file(): Promise<void>  {
-
      return this._onDidChangeFileDecorations.fire(vscode.Uri.parse(`fictionWriter://metadata/1`));
 
     }
 
     async provideFileDecoration(uri: Uri): Promise<FileDecoration | undefined> {
-        return MetadataTreeItem.provideFileDecoration(uri);
+        return {}
     }
 
     dispose() {

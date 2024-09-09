@@ -1,5 +1,5 @@
 import {DisposeManager} from '../disposable';
-import vscode from 'vscode';
+import vscode, {WorkspaceEdit} from 'vscode';
 import {ITextProcessor} from '../processors';
 import {FwFileInfo} from '../fwFiles/fwFileInfo';
 
@@ -7,6 +7,7 @@ import {FwFileState, FwFileStateChangedEvent} from './fwFileState';
 import {IFileState, IFileStateSnapshot} from './states';
 
 import {IStateProcessorFactory} from '../processors/IStateProcessorFactory';
+import {log} from '../logging';
 
 export class FwStateChangedEvent {
     files: FwFileStateChangedEvent[] = [];
@@ -127,16 +128,28 @@ export class StateManager extends DisposeManager {
                 }
                 // If file exists
                 if (stat) {
+                    // TODO: move to fwfilemamnager
                     if (stat.type === vscode.FileType.File) {
-                        const rawBytes = await vscode.workspace.fs.readFile(path);
-                        const content = rawBytes ? new TextDecoder().decode(rawBytes) : "";
+                        const doc = await vscode.workspace.openTextDocument(path);
+                        const content = doc.getText();
                         const newContent = await contentProcessor(this._processorFactory)
                             .process(content, item);
 
                         if (newContent !== content) {
-                            await vscode.workspace.fs.writeFile(path, new TextEncoder().encode(newContent));
+                            const edit = new WorkspaceEdit();
+                            edit.replace(
+                                doc.uri,
+                                new vscode.Range(0, 0, doc.lineCount, 0),
+                                newContent);
+                            vscode.workspace.applyEdit(edit)
+                                .then(() => doc.save().then(status => {
+
+                                    log.debug("Updating file content: ", {
+                                        status,
+                                        path: path.fsPath
+                                    });
+                                }));
                         }
-                        console.log("Written to: ", path, newContent);
                     }
                 }
             }

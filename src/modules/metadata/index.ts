@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import {addCommand, DisposeManager, FictionWriter, mapExtensions} from '../../core';
+import {addCommand, CoreModule, DisposeManager, FictionWriter, mapExtensions} from '../../core';
 import {ContextManager} from '../../core/contextManager';
 import {MetadataTreeDataProvider} from './metadataTreeDataProvider';
 import {MetadataOptions} from './metadataOptions';
@@ -9,13 +9,13 @@ import {ColorResolver, IconResolver} from './iconsAndColors';
 import {StateManager} from '../../core/state';
 import {ProjectsOptions} from '../projectExplorer/projectsOptions';
 import {FilterTreeDataProvider} from './filterTreeDataProvider';
+import {ActiveDocumentMonitor} from '../../core/fwFiles/activeDocumentMonitor';
 
 export * from './iconsAndColors';
 
 class MetadataModule extends DisposeManager {
     active = false;
-    contextManager: ContextManager | undefined;
-    private stateManager!: StateManager;
+    private core!: CoreModule;
     private context: ExtensionContext | undefined;
     private options = new MetadataOptions();
     metadataTreeDataProvider: MetadataTreeDataProvider | undefined;
@@ -35,10 +35,10 @@ class MetadataModule extends DisposeManager {
         this.resolvers.iconResolver.setCustom(mapExtensions.objectToMap(this.options.metadataIcons.value));
         this.resolvers.colorResolver.setCustom(mapExtensions.objectToMap(this.options.metadataColors.value));
 
-        this.metadataTreeDataProvider = new MetadataTreeDataProvider(this.options, this.stateManager, this.resolvers);
+        this.metadataTreeDataProvider = new MetadataTreeDataProvider(this.options, this.core.stateManager, this.resolvers, this.core.activeDocumentMonitor);
         this.metadataDecorationProvider = new MetadataTreeDecorationProvider(this.resolvers);
         this.filterDataProvider = new FilterTreeDataProvider(
-            this.options, this.stateManager, this.contextManager!,
+            this.options, this.core.stateManager, this.core.contextManager!,
             this.metadataTreeDataProvider,
             this.resolvers!);
 
@@ -62,7 +62,6 @@ class MetadataModule extends DisposeManager {
                 }
             }),
 
-          //  this.filterDataProvider,
             addCommand('views.metadata.filters.hideFilter', (e) => {
                 this.filterDataProvider?.toggleFilter(e?.data?.name);
             }),
@@ -97,11 +96,9 @@ class MetadataModule extends DisposeManager {
             : this.deactivate();
     }
 
-    register(context: ExtensionContext, contextManager: ContextManager, stateManager: StateManager, projectsOptions: ProjectsOptions): vscode.Disposable {
-        this.stateManager = stateManager;
-        this.contextManager = contextManager;
-        this.context = context;
-        this.projectsOptions = projectsOptions;
+    register(context: ExtensionContext,
+            core: CoreModule): vscode.Disposable {
+        this.core = core;
         this.options.enabled.onChanged((enabled) => {
             this.updateState(enabled);
         });
