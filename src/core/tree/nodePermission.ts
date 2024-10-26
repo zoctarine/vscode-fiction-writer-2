@@ -7,6 +7,7 @@ export enum NodePermission {
     Rename = 1 << 5, // 32
     Sort = 1 << 6, // 32
 
+
     All = Read | Write | Move | Delete | Rename | Sort,
     ReadWrite = Read | Write
 }

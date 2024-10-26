@@ -640,6 +640,16 @@
       ],
       "view/title": [
         {
+          "command": "fictionWriter.views.projectExplorer.filters.allFiles",
+          "when": "view == fictionWriter.views.projectExplorer && !fictionWriter.views.projectExplorer.is && fictionWriter.views.projectExplorer.filters.is == projectFiles",
+          "group": "navigation"
+        },
+        {
+          "command": "fictionWriter.views.projectExplorer.filters.projectFiles",
+          "when": "view == fictionWriter.views.projectExplorer && !fictionWriter.views.projectExplorer.is && fictionWriter.views.projectExplorer.filters.is == allFiles",
+          "group": "navigation"
+        },
+        {
           "command": "fictionWriter.views.projectExplorer.show.decoration1",
           "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.show.decorationIs == decoration1 && !fictionWriter.views.projectExplorer.is",
           "group": "navigation"
@@ -958,9 +968,21 @@
       },
       {
         "command": "fictionWriter.views.projectExplorer.compile.discard",
-        "title": "Combile: Discard",
+        "title": "Compile: Discard",
         "category": "Markdown Fiction Writer",
         "icon": "$(remove-close)"
+      },
+       {
+        "command": "fictionWriter.views.projectExplorer.filters.allFiles",
+        "title": "A: Show/hide all files",
+        "category": "Markdown Fiction Writer",
+        "icon": "$(filter)"
+      },
+      {
+        "command": "fictionWriter.views.projectExplorer.filters.projectFiles",
+        "title": "A: Show/hide all files",
+        "category": "Markdown Fiction Writer",
+        "icon": "$(filter-filled)"
       },
       {
         "command": "fictionWriter.views.wordFrequency.refresh",

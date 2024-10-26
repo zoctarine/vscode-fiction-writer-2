@@ -66,7 +66,7 @@ export class ProjectNode extends Node<ProjectItem> {
             collapsibleState: this.canHaveChildren ? vscode.TreeItemCollapsibleState.Collapsed : TreeItemCollapsibleState.None,
             resourceUri: vscode.Uri.parse(this.id).with({scheme: FictionWriter.views.projectExplorer.id}),
             contextValue: this.type,
-            command: this.can(NodePermission.Read) ? {
+            command: this.can(NodePermission.ReadWrite) ? {
                 title: 'Open',
                 command: 'vscode.open',
                 arguments: [vscode.Uri.parse(this.id)]
@@ -79,7 +79,7 @@ export class WorkspaceFolderNode extends ProjectNode {
     constructor(id: string) {
         super(id, new ProjectItem());
         this.type = NodeType.WorkspaceFolder;
-        this.permissions = NodePermission.Read | NodePermission.Write;
+        this.permissions = NodePermission.Read;
 
         this.item.icon = FaIcons.inbox;
         this.item.name = `[${this.item.name}]`;
@@ -91,7 +91,7 @@ export class FolderNode extends ProjectNode {
     constructor(id: string) {
         super(id, new ProjectItem());
         this.type = NodeType.Folder;
-        this.permissions = NodePermission.Read | NodePermission.Write | NodePermission.Delete | NodePermission.Rename | NodePermission.Move;
+        this.permissions = NodePermission.Read | NodePermission.Delete | NodePermission.Rename | NodePermission.Move;
 
         this.item.icon = FaIcons.folder;
     }
@@ -119,7 +119,7 @@ export class TextFileNode extends ProjectNode {
     constructor(id: string) {
         super(id, new ProjectItem());
         this.type = NodeType.TextFile;
-        this.permissions = NodePermission.Read | NodePermission.Rename;
+        this.permissions = NodePermission.ReadWrite | NodePermission.Rename;
         this.canHaveChildren = false;
 
         this.item.icon = 'file';
@@ -140,7 +140,7 @@ export class OtherFileNode extends ProjectNode {
     constructor(id: string) {
         super(id, new ProjectItem());
         this.type = NodeType.OtherFile;
-        this.permissions = NodePermission.Read | NodePermission.Rename;
+        this.permissions = NodePermission.ReadWrite | NodePermission.Rename;
         this.canHaveChildren = false;
 
         this.item.color = 'disabledForeground';

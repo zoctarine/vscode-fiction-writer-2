@@ -1,19 +1,20 @@
 import * as vscode from 'vscode';
+import {TreeItemCheckboxState} from 'vscode';
 import * as path from 'path';
-import {ThemeColor, ThemeIcon, TreeItemCheckboxState, ViewBadge} from 'vscode';
 import {OrderHandler} from "./orderHandler";
-import {DisposeManager, log} from "../../core";
+import {DisposeManager, FictionWriter} from "../../core";
 import {NodeType} from './nodeType';
 import {NodeTree} from '../../core/tree';
-import {FwFileInfo, FwType, FwFile, asPosix, FwFileManager, FwControl} from '../../core/fwFiles';
-import {FictionWriter} from '../../core';
-import {FaIcons} from '../../core/decorations';
+import {asPosix, FwControl, FwFile, FwFileInfo, FwFileManager, FwType} from '../../core/fwFiles';
 import {ContextManager} from '../../core/contextManager';
 import {
+    FolderNode,
+    OtherFileNode,
     ProjectFileNode,
-    FolderNode, ProjectNode,
-    RootNode, TextFileNode,
-    WorkspaceFolderNode, OtherFileNode
+    ProjectNode,
+    RootNode,
+    TextFileNode,
+    WorkspaceFolderNode
 } from './projectNodes';
 import {ProjectItem} from './projectItem';
 import {ProjectsOptions} from './projectsOptions';
@@ -40,6 +41,7 @@ export class ProjectExplorerTreeDataProvider
     private _syncWithActiveEditorEnabled = false;
     private _isBatchOrderingEnabled = false;
     private _showDecoration: string;
+    private _fileFilter: IFileFilter = OnlyProjectFilesFilter;
 
     constructor(
         private _options: ProjectsOptions,
@@ -83,9 +85,13 @@ export class ProjectExplorerTreeDataProvider
         this._showDecoration = this._contextManager.get(FictionWriter.views.projectExplorer.show.decorationIs, 'decoration1');
         vscode.commands.executeCommand('setContext', FictionWriter.views.projectExplorer.show.decorationIs, this._showDecoration)
             .then(() => {
-                this.reload();
+                const fileFilter = this._contextManager.get(FictionWriter.views.projectExplorer.filters.is, 'projectFiles');
+                vscode.commands.executeCommand('setContext', FictionWriter.views.projectExplorer.filters.is, fileFilter)
+                    .then(() => {
+                        this._fileFilter = fileFilter === 'projectFiles' ? OnlyProjectFilesFilter : AllFilesFilter;
+                        return this.reload();
+                    });
             });
-
     }
 
     private buildHierarchy(fileInfos: FwFileInfo[]): ProjectNode {
@@ -95,6 +101,8 @@ export class ProjectExplorerTreeDataProvider
         const workspaceFolders = vscode.workspace.workspaceFolders?.map(f => asPosix(f.uri.fsPath)) ?? [];
         fileInfos.forEach((fileInfo) => {
             if (workspaceFolders.includes(fileInfo.fsPath)) return;
+
+            if (!this._fileFilter.check(fileInfo)) return;
 
             const relativePath = vscode.workspace.asRelativePath(fileInfo.fsPath, true);
 
@@ -221,12 +229,12 @@ export class ProjectExplorerTreeDataProvider
     public getTreeItem(element: ProjectNode): vscode.TreeItem {
         const expanded = this._contextManager.get("tree_expanded_" + element.id, false);
         const item = element.asTreeItem();
-        item.description =`${this._isBatchOrderingEnabled ? `(${element.item.order}) ` : ''}${element.item.description ?? ''}`,
-        item.collapsibleState = item.collapsibleState === vscode.TreeItemCollapsibleState.None
-            ? vscode.TreeItemCollapsibleState.None
-            : expanded
-                ? vscode.TreeItemCollapsibleState.Expanded
-                : vscode.TreeItemCollapsibleState.Collapsed;
+        item.description = `${this._isBatchOrderingEnabled ? `(${element.item.order}) ` : ''}${element.item.description ?? ''}`,
+            item.collapsibleState = item.collapsibleState === vscode.TreeItemCollapsibleState.None
+                ? vscode.TreeItemCollapsibleState.None
+                : expanded
+                    ? vscode.TreeItemCollapsibleState.Expanded
+                    : vscode.TreeItemCollapsibleState.Collapsed;
 
         if (element.item.checked === true) {
             item.checkboxState = vscode.TreeItemCheckboxState.Checked;
@@ -557,11 +565,42 @@ export class ProjectExplorerTreeDataProvider
             });
     }
 
+    public async filter(filterName: string) {
+        await this._contextManager.set(
+            FictionWriter.views.projectExplorer.filters.is,
+            filterName);
+
+        await vscode.commands.executeCommand('setContext',
+            FictionWriter.views.projectExplorer.filters.is,
+            filterName);
+
+        this._fileFilter = filterName === 'projectFiles' ? OnlyProjectFilesFilter : AllFilesFilter;
+        return this.reload();
+    }
+
     private _updateCheckboxBasedOnMeta(root: ProjectNode) {
         root.item.checked = this._stateManager.get(root.id)?.metadata?.value?.compile !== 'exclude';
         root.children?.forEach(c => this._updateCheckboxBasedOnMeta(c as ProjectNode));
     }
+
 }
+
+interface IFileFilter {
+    check(fileInfo: FwFileInfo): boolean;
+}
+
+const OnlyProjectFilesFilter: IFileFilter = {
+    check(fileInfo: FwFileInfo): boolean {
+        return fileInfo.control === FwControl.Active ||
+            fileInfo.type === FwType.Folder;
+    }
+};
+
+const AllFilesFilter: IFileFilter = {
+    check(fileInfo: FwFileInfo): boolean {
+        return true;
+    }
+};
 
 interface IFileOrderFormat {
     format(order: number): string;

@@ -73,10 +73,18 @@ export class ProjectsModule extends DisposeManager {
                 this.projectExplorerDataProvider?.disableOrdering();
             }),
             addCommand(FictionWriter.views.projectExplorer.reorder.commit, () => {
-               this.projectExplorerDataProvider?.commitOrdering();
+                this.projectExplorerDataProvider?.commitOrdering();
             }),
             addCommand(FictionWriter.views.projectExplorer.reorder.redistribute, (node: ProjectNode) => {
                 this.projectExplorerDataProvider?.redistribute(node);
+            }),
+
+            addCommand(FictionWriter.views.projectExplorer.filters.allFiles, () => {
+                this.projectExplorerDataProvider?.filter("allFiles");
+            }),
+
+            addCommand(FictionWriter.views.projectExplorer.filters.projectFiles, () => {
+                this.projectExplorerDataProvider?.filter("projectFiles");
             })
         );
     };
@@ -92,7 +100,7 @@ export class ProjectsModule extends DisposeManager {
             : this.deactivate();
     }
 
-    register(core:CoreModule): vscode.Disposable {
+    register(core: CoreModule): vscode.Disposable {
         this.core = core;
         this.options = core.projectsOptions;
 

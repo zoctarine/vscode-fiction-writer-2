@@ -14,6 +14,11 @@ export const FictionWriter = {
             trash: `${ViewsProjectExplorer}.trash`,
             makeVirtualFolder: `${ViewsProjectExplorer}.makeVirtualFolder`,
             breakVirtualFolder: `${ViewsProjectExplorer}.breakVirtualFolder`,
+            filters: {
+                is: `${ViewsProjectExplorer}.filters.is`,
+                allFiles: `${ViewsProjectExplorer}.filters.allFiles`,
+                projectFiles: `${ViewsProjectExplorer}.filters.projectFiles`,
+            },
             show:{
                 decoration1: `${ViewsProjectExplorer}.show.decoration1`,
                 decoration2: `${ViewsProjectExplorer}.show.decoration2`,
