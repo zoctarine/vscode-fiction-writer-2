@@ -7,6 +7,7 @@ import {ContextManager} from './contextManager';
 import {IStateProcessorFactory} from './processors/IStateProcessorFactory';
 import {ActiveDocumentMonitor} from './fwFiles/activeDocumentMonitor';
 import {log} from './logging';
+import {registerMarkdownFormatters} from './markdown';
 
 export * from './commandExtensions';
 export * from './constants';
@@ -44,6 +45,7 @@ export class CoreModule extends DisposeManager {
             // this.storageManager,
             this.projectsOptions,
             this.activeDocumentMonitor,
+            registerMarkdownFormatters(),
             this.fileManager.onFilesChanged(files => {
                 log.debug("filesChanged", files.length);
                 return this.stateManager.reload(files);

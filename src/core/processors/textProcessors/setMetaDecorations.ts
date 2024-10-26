@@ -1,11 +1,14 @@
 import {ITextProcessor} from '../IProcessor';
 import {IFileState} from '../../state';
+import {log} from '../../logging';
 
 export class SetMetaDecorations implements ITextProcessor<IFileState> {
     async process(content: string, data: IFileState): Promise<string> {
         if (!data.metadata) return content;
 
-        const colorMeta = data.metadata.value?.color;
+        const colorMeta = data.metadata.value?.color
+            ?  `fictionWriter.${data.metadata.value?.color}`
+            : undefined;
         const iconMeta = data.metadata.value?.icon;
         const titleMeta = data.metadata.value?.title;
         const badgeMeta = this.generateAbbreviation(data.metadata.value?.badge?.toString());
@@ -13,10 +16,11 @@ export class SetMetaDecorations implements ITextProcessor<IFileState> {
         data.decoration = {
             ...data.decoration,
             icon: iconMeta,
-            color: colorMeta,
+            color: data.metadata.value?.compile === 'exclude'
+                ? 'disabledForeground' : colorMeta,
             description: titleMeta,
             badge: badgeMeta,
-            highlightColor: data.metadata.value?.compile === 'exclude' ? 'disabledForeground' : undefined,
+            highlightColor:  undefined,
         };
 
         return content;

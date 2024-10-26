@@ -22,7 +22,6 @@ export class OrderHandler {
     public insertAfter(afterId: string, currentId: string) {
         const index = this.fileNumbers.findIndex(a => a.id === afterId);
 
-
         if (this.to(index + 1) - this.from(index) <= 1) {
             this.redistribute(index + 1);
         }

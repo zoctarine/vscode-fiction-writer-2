@@ -2,18 +2,18 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import {ThemeColor, ThemeIcon, TreeItemCheckboxState, ViewBadge} from 'vscode';
 import {OrderHandler} from "./orderHandler";
-import {DisposeManager} from "../../core";
+import {DisposeManager, log} from "../../core";
 import {NodeType} from './nodeType';
 import {NodeTree} from '../../core/tree';
-import {FwFileInfo, FwType, FwFile, asPosix, FwFileManager} from '../../core/fwFiles';
+import {FwFileInfo, FwType, FwFile, asPosix, FwFileManager, FwControl} from '../../core/fwFiles';
 import {FictionWriter} from '../../core';
 import {FaIcons} from '../../core/decorations';
 import {ContextManager} from '../../core/contextManager';
 import {
-    FileNode,
+    ProjectFileNode,
     FolderNode, ProjectNode,
-    RootNode,
-    WorkspaceFolderNode
+    RootNode, TextFileNode,
+    WorkspaceFolderNode, OtherFileNode
 } from './projectNodes';
 import {ProjectItem} from './projectItem';
 import {ProjectsOptions} from './projectsOptions';
@@ -112,8 +112,7 @@ export class ProjectExplorerTreeDataProvider
                 if (!current.children?.has(tmpId)) {
                     const isLeaf = index === segments.length - 1;
                     if (!isLeaf) basePath = path.posix.join(basePath, segment);
-                    let node: ProjectNode = new FileNode(tmpId);
-
+                    let node: ProjectNode = new ProjectFileNode(tmpId);
 
                     if (!isLeaf && workspaceFolders.includes(basePath)) {
                         node = new WorkspaceFolderNode(tmpId);
@@ -125,36 +124,26 @@ export class ProjectExplorerTreeDataProvider
                         node.item.name = segment;
                     } else if (isLeaf) {
                         if (fileInfo.type === FwType.Folder) {
-                            node = new FileNode(tmpId);
-                            // Ignore filter folder names, they will be built in the Filter View
-                           {
-                                node = new FolderNode(tmpId);
-                                node.item.name = fileInfo.name;
-                                node.item.ext = fileInfo.ext;
-                            }
+                            node = new FolderNode(tmpId);
+                            node.item.name = fileInfo.name;
+                            node.item.ext = fileInfo.ext;
                         } else {
-                            node = new FileNode(tmpId);
+                            if (fileInfo.control === FwControl.Active) {
+                                node = new ProjectFileNode(tmpId);
+                            } else if (fileInfo.control === FwControl.Possible) {
+                                node = new TextFileNode(tmpId);
+                            } else {
+                                node = new OtherFileNode(tmpId);
+                            }
+                            node.item.name += node.item.ext;
                             node.item.ext = fileInfo.ext;
                             node.item.name = fileInfo.name;
                         }
-                        const {state, snapshots} = this._stateManager.getWithSnapshots(fileInfo.fsPath);
-                        // TODO: refactor
-                        // if (state?.metadata) {
-                        //     if (this._options.fileDescriptionMetadataKey.value) {
-                        //         node.item.description = state.metadata[this._options.fileDescriptionMetadataKey.value]?.toString();
-                        //     }
-                        //     node.item.icon = state.metadata['icon'];
-                        //     node.item.color = state.metadata['color'];
-                        // }
+                        const state = this._stateManager.get(fileInfo.fsPath);
 
-                        // if (state?.metadata?.value?.compile === 'exclude'){
-                        //     node.item.checked = false;
-                        // } else {
-                        //     node.item.checked = true;
-                        // }
                         if (state?.decoration && (!this._showDecoration || this._showDecoration === 'decoration1' || this._showDecoration === 'decoration2')) {
-                            node.item.icon = state.decoration.icon;
-                            node.item.color = state.decoration.color;
+                            node.item.icon = state.decoration.icon ?? node.item.icon;
+                            node.item.color = state.decoration.color ?? node.item.color;
                             node.item.description = state.decoration.description ?? node.item.description;
                         }
                         if (state?.metadata?.value && this._options.fileDescriptionMetadataKey.value) {
@@ -169,13 +158,13 @@ export class ProjectExplorerTreeDataProvider
                             }
                             const decoration = state?.writeTargetsDecorations;
                             if (decoration) {
-                                node.item.icon = decoration.icon;
-                                node.item.color = decoration.color;
+                                node.item.icon = decoration.icon ?? node.item.icon;
+                                node.item.color = decoration.color ?? node.item.color;
                                 node.item.description = decoration.description ?? node.item.description;
                             }
                         }
-
                     }
+
                     node.parent = current;
                     node.item.order = fileInfo.order;
                     node.item.fsName = segment;
@@ -196,7 +185,7 @@ export class ProjectExplorerTreeDataProvider
                     if (!node) {
                         const parentOrders = fileInfo.parentOrder.slice(0, index + 1).map(a => FwFile.toOrderString(a));
                         const name = path.posix.join(fileInfo.location, parentOrders.join('') + ` new${fileInfo.ext}`);
-                        node = new FileNode(name);
+                        node = new ProjectFileNode(name);
                         node.parent = cursor;
                         node.item.name = " ";
                         node.item.description = "[missing file]";
@@ -230,70 +219,14 @@ export class ProjectExplorerTreeDataProvider
     }
 
     public getTreeItem(element: ProjectNode): vscode.TreeItem {
-        const tooltip = new vscode.MarkdownString(`$(zap) ${element.id}`, true);
         const expanded = this._contextManager.get("tree_expanded_" + element.id, false);
-
-        const color = element.item.color ? new ThemeColor(`fictionWriter.${element.item.color}`) : new ThemeColor('foreground');
-        const icon = element.item.icon ? new ThemeIcon(element.item.icon, color) : undefined;
-        const item: vscode.TreeItem = {
-            label: <any>{
-                label: element.item.name,
-                highlights: []
-            },
-            description: `${this._isBatchOrderingEnabled ? `(${element.item.order}) ` : ''}${element.item.description ?? ''}`,
-            tooltip,
-            iconPath: icon,
-            collapsibleState: element?.type === NodeType.File
-                ? vscode.TreeItemCollapsibleState.None
-                : expanded ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed,
-            resourceUri: vscode.Uri.parse(element.id).with({scheme: FictionWriter.views.projectExplorer.id}),
-            contextValue: element.type,
-            command: element.type == NodeType.File || element.type == NodeType.VirtualFolder ? {
-                title: 'Open',
-                command: 'vscode.open',
-                arguments: [vscode.Uri.parse(element.id)]
-            } : undefined
-        };
-
-        switch (element.type) {
-            case NodeType.File:
-                item.iconPath = icon ?? new ThemeIcon(FaIcons.fileLines, color);
-                break;
-            case NodeType.VirtualFolder:
-                item.iconPath = icon ?? new ThemeIcon(
-                    element.item.fsName
-                        ? FaIcons.fileLinesSolid
-                        : FaIcons.fileExcel,
-                    new ThemeColor(element.item.fsName
-                        ? 'foreground'
-                        : 'disabledForeground'));
-
-                break;
-            case NodeType.Folder:
-                item.iconPath = new ThemeIcon(element.item.name === '.trash'
-                    ? FaIcons.trashCan : FaIcons.folder);
-
-                break;
-            case NodeType.WorkspaceFolder:
-                item.iconPath = new ThemeIcon(FaIcons.inbox);
-                item.label = `[${element.item.name}]`;
-                item.description = "";
-
-                break;
-            case NodeType.Filter:
-                item.iconPath = new ThemeIcon(FaIcons.link);
-                item.label = '...';//`${element.name}`;
-                break;
-            case NodeType.FilterRoot:
-                item.iconPath = new ThemeIcon(FaIcons.magnifyingGlass);
-                item.label = '...';//`${element.name}`;
-                break;
-            case NodeType.Root:
-                item.iconPath = new ThemeIcon("root-folder");
-                item.label = "/";
-                item.description = "";
-                break;
-        }
+        const item = element.asTreeItem();
+        item.description =`${this._isBatchOrderingEnabled ? `(${element.item.order}) ` : ''}${element.item.description ?? ''}`,
+        item.collapsibleState = item.collapsibleState === vscode.TreeItemCollapsibleState.None
+            ? vscode.TreeItemCollapsibleState.None
+            : expanded
+                ? vscode.TreeItemCollapsibleState.Expanded
+                : vscode.TreeItemCollapsibleState.Collapsed;
 
         if (element.item.checked === true) {
             item.checkboxState = vscode.TreeItemCheckboxState.Checked;
@@ -302,7 +235,6 @@ export class ProjectExplorerTreeDataProvider
         } else {
             item.checkboxState = undefined;
         }
-
         return item;
     }
 
@@ -491,7 +423,14 @@ export class ProjectExplorerTreeDataProvider
         this.commit();
     }
 
-    public async redistribute() {
+    public async redistribute(node: ProjectNode) {
+        if (node?.children?.size) {
+            let idx = 1;
+            for (let child of node.children.values()) {
+                if (child.item) child.item.order = idx++;
+            }
+            this._onDidChangeTreeData.fire();
+        }
     }
 
     public showNextFor(decoration: string) {
@@ -548,7 +487,7 @@ export class ProjectExplorerTreeDataProvider
             if (!f.isDraggable) return;
             if (!f.item.fsName) return;
             const oldPath = f.id;
-            const newPath = f.buildFsPath();
+            const newPath = f.buildFsPath(1);
             if (oldPath !== newPath) {
                 renameMap.push({oldPath, newPath});
             }
@@ -586,8 +525,9 @@ export class ProjectExplorerTreeDataProvider
                     FictionWriter.views.projectExplorer.is, action.compiling)
                 .then(() => {
                     this._tree.toList().forEach(f => {
-                        if (f.item.checked === undefined)
-                        f.item.checked = false;
+                        if (f.item.checked === undefined) {
+                            f.item.checked = false;
+                        }
                     });
                     this._treeView.description = "Compile";
 
@@ -623,3 +563,17 @@ export class ProjectExplorerTreeDataProvider
     }
 }
 
+interface IFileOrderFormat {
+    format(order: number): string;
+}
+
+class NumberDotFileOrderFormat implements IFileOrderFormat {
+    public static regex: RegExp = /^(\d+\.)* (.*)/i;
+
+    constructor(private _pad: number) {
+    }
+
+    format(order: number): string {
+        return order.toString().padStart(this._pad, '0') + '.';
+    }
+}

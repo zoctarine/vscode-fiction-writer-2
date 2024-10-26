@@ -75,8 +75,8 @@ export class ProjectsModule extends DisposeManager {
             addCommand(FictionWriter.views.projectExplorer.reorder.commit, () => {
                this.projectExplorerDataProvider?.commitOrdering();
             }),
-            addCommand(FictionWriter.views.projectExplorer.reorder.redistribute, () => {
-                this.projectExplorerDataProvider?.redistribute();
+            addCommand(FictionWriter.views.projectExplorer.reorder.redistribute, (node: ProjectNode) => {
+                this.projectExplorerDataProvider?.redistribute(node);
             })
         );
     };

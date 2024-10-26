@@ -1,0 +1,50 @@
+{
+  "scopeName": "text.fwmarkdown",
+  "patterns": [
+    {
+      "name": "punctuation.definition.list.begin.markdown",
+      "match": "^\\s*(-|--|–|—)\\s"
+    },
+    {
+      "name": "fictionWriter.html.todo",
+      "begin": "<!--",
+      "beginCaptures": {
+        "0": {
+          "name": "comment"
+        }
+      },
+      "end": "-->",
+      "endCaptures": {
+        "0": {
+          "name": "comment"
+        }
+      },
+      "patterns": [
+        {
+          "begin": "\\bTODO(:)?\\b",
+          "beginCaptures": {
+            "0": {
+              "name": "keyword.other.todo"
+            }
+          },
+          "end": "(?=-->)",
+          "name": "comment",
+          "patterns": [
+            {
+              "match": "^[\\s\\S]*$",
+              "name": "comment"
+            }
+          ]
+        }
+        ]
+    },
+    {
+      "name": "comment",
+      "match": "^//\\s(.*)$"
+    },
+    {
+      "include": "text.html.markdown"
+    }
+  ],
+  "repository": {}
+}

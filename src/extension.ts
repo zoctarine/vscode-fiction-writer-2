@@ -8,6 +8,7 @@ import {textAnalysisModule} from './modules/textAnalysis';
 import {metadataModule} from './modules/metadata';
 import {securityModule} from './modules/security';
 import {compileModule} from './modules/compile';
+import {formattingModule} from './modules/formatting';
 import {
     ComputeTextStatistics,
     ComputeWriteTarget, EraseMetaFromContent,
@@ -16,11 +17,17 @@ import {
     UpdateMeta,
     AlterState,
     ComputeContentHash,
-    SetMetaDecorations, ChainedTextProcessor, SetTextStatisticsDecorations
+    SetMetaDecorations, ChainedTextProcessor, SetTextStatisticsDecorations, SetFileInfoDecorations
 } from './core/processors';
 
 
 export function activate(context: vscode.ExtensionContext) {
+    log.enabled = true;
+
+    vscode.workspace.onDidOpenTextDocument(e => {
+        console.log(e.languageId);
+    });
+
     const core = new CoreModule(context, {
         createTextProcessor: () => new ChainedTextProcessor()
             .add(new ExtractMeta())
@@ -29,6 +36,7 @@ export function activate(context: vscode.ExtensionContext) {
             .add(new SetTextStatisticsDecorations())
             .add(new ComputeWriteTarget())
             .add(new SetWriteTargetDecorations)
+            .add(new SetFileInfoDecorations)
             .add(new ComputeContentHash()),
         createUpdateMetaProcessor: (updateMeta) => new ChainedTextProcessor()
             .add(new ExtractMeta())
@@ -44,10 +52,10 @@ export function activate(context: vscode.ExtensionContext) {
         richTextEditorModule.register(context, core),
         securityModule.register(),
         compileModule.register(projectsModule),
+        formattingModule.register(),
         log
     );
 
-    log.enabled = true;
 
     log
         .text("FICTION WRITER is now active!")

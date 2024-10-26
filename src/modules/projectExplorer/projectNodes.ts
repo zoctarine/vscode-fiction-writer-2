@@ -1,8 +1,10 @@
 import {NodeType, RootFolderType} from './nodeType';
 import {FwFile} from '../../core/fwFiles/fwFile';
 import path from 'path';
-import {Node, NodePermission} from '../../core/tree';
-import {ProjectItem} from './projectItem';
+import {Node, NodePermission, ProjectItem} from '../../core/tree';
+import vscode, {ThemeColor, ThemeIcon, TreeItem, TreeItemCollapsibleState} from 'vscode';
+import {FictionWriter, log} from '../../core';
+import {FaIcons} from '../../core/decorations';
 
 export class ProjectNode extends Node<ProjectItem> {
     constructor(id: string, item: ProjectItem) {
@@ -33,13 +35,13 @@ export class ProjectNode extends Node<ProjectItem> {
             || this.type === NodeType.VirtualFolder;
     }
 
-    public buildFsPath(): string {
+    public buildFsPath(pad: number = FwFile.pad): string {
         const segments = [this.item.buildFsName()];
         let cursor = this?.parent;
         while (cursor && cursor?.type !== NodeType.WorkspaceFolder) {
             if (cursor.type === NodeType.VirtualFolder) {
                 const prev = segments[segments.length - 1];
-                segments[segments.length - 1] = FwFile.toOrderString(cursor.item.order) + prev;
+                segments[segments.length - 1] = FwFile.toOrderString(cursor.item.order, pad) + prev;
             } else {
                 if (cursor) segments.push(cursor.item.buildFsName());
             }
@@ -51,6 +53,26 @@ export class ProjectNode extends Node<ProjectItem> {
         return path.posix.join(...segments.reverse());
     }
 
+    public asTreeItem(): TreeItem {
+
+        return {
+            label: <any>{
+                label: this.item.name,
+                highlights: []
+            },
+            description: this.item.description ?? '',
+            tooltip: new vscode.MarkdownString(`$(zap) ${this.id}`, true),
+            iconPath: new ThemeIcon(this.item.icon ?? 'file', new ThemeColor(this.item.color ?? 'foreground')),
+            collapsibleState: this.canHaveChildren ? vscode.TreeItemCollapsibleState.Collapsed : TreeItemCollapsibleState.None,
+            resourceUri: vscode.Uri.parse(this.id).with({scheme: FictionWriter.views.projectExplorer.id}),
+            contextValue: this.type,
+            command: this.can(NodePermission.Read) ? {
+                title: 'Open',
+                command: 'vscode.open',
+                arguments: [vscode.Uri.parse(this.id)]
+            } : undefined
+        };
+    }
 }
 
 export class WorkspaceFolderNode extends ProjectNode {
@@ -58,6 +80,10 @@ export class WorkspaceFolderNode extends ProjectNode {
         super(id, new ProjectItem());
         this.type = NodeType.WorkspaceFolder;
         this.permissions = NodePermission.Read | NodePermission.Write;
+
+        this.item.icon = FaIcons.inbox;
+        this.item.name = `[${this.item.name}]`;
+        this.item.description = "";
     }
 }
 
@@ -66,14 +92,67 @@ export class FolderNode extends ProjectNode {
         super(id, new ProjectItem());
         this.type = NodeType.Folder;
         this.permissions = NodePermission.Read | NodePermission.Write | NodePermission.Delete | NodePermission.Rename | NodePermission.Move;
+
+        this.item.icon = FaIcons.folder;
+    }
+
+    asTreeItem(): TreeItem {
+        return {
+            ...super.asTreeItem(),
+            collapsibleState: TreeItemCollapsibleState.Collapsed
+        };
     }
 }
 
-export class FileNode extends ProjectNode {
+export class ProjectFileNode extends ProjectNode {
     constructor(id: string) {
         super(id, new ProjectItem());
         this.type = NodeType.File;
-        this.permissions = NodePermission.Read | NodePermission.Write | NodePermission.Delete | NodePermission.Rename | NodePermission.Move;
+        this.permissions = NodePermission.All;
+        this.canHaveChildren = false;
+
+        this.item.icon = FaIcons.fileLines;
+    }
+}
+
+export class TextFileNode extends ProjectNode {
+    constructor(id: string) {
+        super(id, new ProjectItem());
+        this.type = NodeType.TextFile;
+        this.permissions = NodePermission.Read | NodePermission.Rename;
+        this.canHaveChildren = false;
+
+        this.item.icon = 'file';
+        this.item.color = 'disabledForeground';
+    }
+
+
+    asTreeItem(): TreeItem {
+        return {
+            ...super.asTreeItem(),
+            label: this.item.name + this.item.ext,
+            description: ''
+        };
+    }
+}
+
+export class OtherFileNode extends ProjectNode {
+    constructor(id: string) {
+        super(id, new ProjectItem());
+        this.type = NodeType.OtherFile;
+        this.permissions = NodePermission.Read | NodePermission.Rename;
+        this.canHaveChildren = false;
+
+        this.item.color = 'disabledForeground';
+        this.item.icon = 'file';
+    }
+
+    asTreeItem(): TreeItem {
+        return {
+            ...super.asTreeItem(),
+            label: this.item.name + this.item.ext,
+            description: ''
+        };
     }
 }
 
@@ -81,7 +160,16 @@ export class VirtualFolderNode extends ProjectNode {
     constructor(id: string) {
         super(id, new ProjectItem());
         this.type = NodeType.VirtualFolder;
-        this.permissions = NodePermission.Read | NodePermission.Write | NodePermission.Delete | NodePermission.Rename | NodePermission.Move;
+        this.permissions = NodePermission.All;
+        this.canHaveChildren = true;
+
+        this.item.icon = this.item.fsName
+            ? FaIcons.fileLinesSolid
+            : FaIcons.fileExcel;
+
+        this.item.color = this.item.fsName
+            ? 'foreground'
+            : 'disabledForeground';
     }
 }
 
@@ -90,6 +178,10 @@ export class RootNode extends ProjectNode {
         super('root', new ProjectItem());
         this.type = NodeType.Root;
         this.permissions = NodePermission.Read | NodePermission.Write;
+
+        this.item.icon = "root-folder";
+        this.item.name = "/";
+        this.item.description = "";
     }
 }
 

@@ -5,9 +5,10 @@ export class Node<T> {
     id: string;
     item: T;
     parent?: Node<T> = undefined;
-    type: string = NodeType.Root;
+    type: NodeType = NodeType.Root;
     permissions: NodePermission = NodePermission.None;
     children?: Map<string, Node<T>> = new Map<string, Node<T>>();
+    canHaveChildren: boolean = true;
 
     constructor(id: string, value: T) {
         this.id = id;

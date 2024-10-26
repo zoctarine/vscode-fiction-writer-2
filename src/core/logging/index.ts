@@ -35,6 +35,10 @@ class Logger extends DisposeManager {
         this._log("Error", text, obj);
     }
 
+    tmp(text?: string, ...obj: any[]) {
+        return this._log("-> TEMP", text, obj);
+    }
+
     text(text?: string): Logger {
         if (!this.enabled) return this;
         this._outputChannel.appendLine(text ?? '');
@@ -50,7 +54,7 @@ class Logger extends DisposeManager {
         this._outputChannel.appendLine("");
         this._outputChannel.append(this._format(type, text ?? ''));
         if (obj !== undefined) {
-            obj.forEach((o => this._outputChannel.append(" " + JSON.stringify(o))));
+            obj.forEach((o => this._outputChannel.append(" " + JSON.stringify(o, null, 2))));
         }
         return this;
     }

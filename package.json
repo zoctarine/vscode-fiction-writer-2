@@ -5,7 +5,7 @@
   "version": "0.0.1",
   "publisher": "vsc-zoctarine",
   "engines": {
-    "vscode": "^1.90.0"
+    "vscode": "^1.94.0"
   },
   "categories": [
     "Other"
@@ -376,9 +376,12 @@
       }
     ],
     "configurationDefaults": {
-      "[markdown]": {
+      "[fwmarkdown]": {
         "editor.wordWrap": "on",
-        "editor.quickSuggestions": false
+        "editor.quickSuggestions": false,
+        "editor.indentSize": "tabSize",
+        "editor.wrappingIndent": "none",
+        "editor.guides.indentation": false
       }
     },
     "icons": {
@@ -594,6 +597,13 @@
       }
     },
     "menus": {
+      "explorer/context": [
+        {
+          "command": "fictionWriter.explorer.addToProject",
+          "when": "resourceFilename =~ /^(?!.*\\.fw(\\.i|\\.p|\\.l)*\\.md$).*\\.(md|txt)$/i",
+          "group": "1_fictionWriter_project@1"
+        }
+      ],
       "commandPalette": [
         {
           "command": "fictionWriter.views.projectExplorer.makeVirtualFolder",
@@ -815,6 +825,12 @@
     },
     "commands": [
       {
+        "command": "fictionWriter.explorer.addToProject",
+        "title": "Add to FictionWriter project",
+        "category": "FictionWriter",
+        "icon": "$(edit)"
+      },
+      {
         "command": "fictionWriter.editors.proseMirror.openInProseMirror",
         "title": "Switch to RichText editor",
         "category": "FictionWriter",
@@ -945,7 +961,6 @@
         "title": "Combile: Discard",
         "category": "Markdown Fiction Writer",
         "icon": "$(remove-close)"
-
       },
       {
         "command": "fictionWriter.views.wordFrequency.refresh",
@@ -1055,6 +1070,18 @@
         "title": "Export encryption keys",
         "enablement": "editorLangId == markdown",
         "category": "Markdown Fiction Writer"
+      },
+      {
+        "command": "fictionWriter.formatter.convertToCustom",
+        "title": "Convert to idented",
+        "enablement": "editorLangId == fwmarkdown",
+        "category": "Markdown Fiction Writer"
+      },
+      {
+        "command": "fictionWriter.formatter.convertToStandard",
+        "title": "Convert to standard",
+        "enablement": "editorLangId == fwmarkdown",
+        "category": "Markdown Fiction Writer"
       }
     ],
     "customEditors": [
@@ -1143,7 +1170,38 @@
         }
       ]
     },
+    "languages": [
+      {
+        "id": "fwmarkdown",
+        "aliases": [
+          "FwMarkdown",
+          "FwMd"
+        ],
+        "extensions": [
+          ".fw.md",
+          ".fw.h.md",
+          ".fw.i.md",
+          ".fw.l.md",
+          ".fw.txt",
+          ".fw.h.txt",
+          ".fw.i.txt",
+          ".fw.l.txt"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
     "grammars": [
+      {
+        "language": "fwmarkdown",
+        "scopeName": "text.fwmarkdown",
+        "path": "./grammars/fw.markdown.tmGrammar.json",
+        "injectTo": [
+          "text.html.markdown"
+        ],
+        "embeddedLanguages": {
+          "meta.embedded.block.markdown": "markdown"
+        }
+      },
       {
         "scopeName": "markdown-fictionWriter.injection",
         "path": "./grammars/fiction.markdown.tmGrammar.json",
@@ -1175,6 +1233,7 @@
     "@types/jest": "^29.5.12",
     "@types/js-yaml": "^4.0.9",
     "@types/markdown-it": "^14.1.1",
+    "@types/mdast": "^4.0.4",
     "@types/mocha": "^10.0.7",
     "@types/node": "20.x",
     "@types/sinon": "^17.0.3",
@@ -1203,6 +1262,7 @@
     "@codemirror/basic-setup": "^0.20.0",
     "@codemirror/lang-markdown": "^6.2.5",
     "@codemirror/language-data": "^6.5.1",
+    "@types/unist": "^3.0.3",
     "@vscode/webview-ui-toolkit": "^1.4.0",
     "codemirror": "^6.0.1",
     "deep-equal": "^2.2.3",
@@ -1218,6 +1278,12 @@
     "prosemirror-schema-list": "^1.4.1",
     "prosemirror-state": "^1.4.3",
     "prosemirror-view": "^1.33.9",
-    "rfdc": "^1.4.1"
+    "remark": "^15.0.1",
+    "remark-frontmatter": "^5.0.0",
+    "remark-parse": "^11.0.0",
+    "remark-stringify": "^11.0.0",
+    "rfdc": "^1.4.1",
+    "unified": "^11.0.5",
+    "unist-util-visit": "^5.0.0"
   }
 }

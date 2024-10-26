@@ -5,7 +5,6 @@ export class ProjectsOptions extends Options {
 
     public enabled = this.valueOf('enabled', true, true);
 
-
     public fileTypes = this.valueOf('fileTypes', ['md']);
     public trackingTag = this.valueOf('fileAndFolderTrackingTag', '');
     public sorting = this.valueOf('sorting', 'order');

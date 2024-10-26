@@ -3,8 +3,9 @@ import {
     EventEmitter, FileDecoration, FileDecorationProvider, ThemeColor
 } from 'vscode';
 import vscode from 'vscode';
-import {FictionWriter} from '../../core';
+import {FictionWriter, log} from '../../core';
 import {StateManager} from '../../core/state';
+import {FwControl, FwType} from '../../core/fwFiles';
 
 export class ProjectExplorerDecorationProvider implements FileDecorationProvider {
 
@@ -44,6 +45,9 @@ export class ProjectExplorerDecorationProvider implements FileDecorationProvider
             decoration.badge = item.decoration.badge;
         }
 
+        if (item.fileInfo?.control !== FwControl.Active){
+            decoration.color = new ThemeColor('disabledForeground');
+        }
         return decoration;
     }
 
