@@ -46,6 +46,9 @@ export const FictionWriter = {
                 startHere: `${ViewsProjectExplorer}.compile.startHere`,
                 commit: `${ViewsProjectExplorer}.compile.commit`,
                 discard: `${ViewsProjectExplorer}.compile.discard`,
+            },
+            debug: {
+                stateDump: `${ViewsProjectExplorer}.debug.stateDump`,
             }
         },
         metadata: {

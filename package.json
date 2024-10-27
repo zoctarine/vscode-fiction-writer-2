@@ -757,6 +757,11 @@
       ],
       "view/item/context": [
         {
+          "command": "fictionWriter.views.projectExplorer.debug.stateDump",
+          "when": "view == fictionWriter.views.projectExplorer && !fictionWriter.views.projectExplorer.is",
+          "group": "99_fictionWriter_debug@1"
+        },
+        {
           "command": "fictionWriter.views.projectExplorer.addToProject",
           "when": "view == fictionWriter.views.projectExplorer && viewItem == textFile && !fictionWriter.views.projectExplorer.is",
           "group": "1_fictionWriter_project@1"
@@ -769,52 +774,52 @@
         {
           "command": "fictionWriter.views.projectExplorer.changeFormatting",
           "when": "view == fictionWriter.views.projectExplorer && (viewItem == file || viewItem == virtualFolder) && !fictionWriter.views.projectExplorer.is",
-          "group": "1_fictionWriter_formatting@1"
+          "group": "8_fictionWriter_formatting@1"
         },
         {
           "command": "fictionWriter.views.projectExplorer.makeVirtualFolder",
           "when": "view == fictionWriter.views.projectExplorer && viewItem == file && !fictionWriter.views.projectExplorer.is",
-          "group": "1_fictionWriter_virtual@1"
+          "group": "3_fictionWriter_virtual@1"
         },
         {
           "command": "fictionWriter.views.projectExplorer.breakVirtualFolder",
           "when": "view == fictionWriter.views.projectExplorer && viewItem == virtualFolder && fictionWriter.views.projectExplorer.is",
-          "group": "1_fictionWriter@2"
+          "group": "3_fictionWriter@2"
         },
         {
           "command": "fictionWriter.views.projectExplorer.newFile",
           "when": "view == fictionWriter.views.projectExplorer && !fictionWriter.views.projectExplorer.is",
-          "group": "2_fictionWriter@3"
+          "group": "4_fictionWriter@3"
         },
         {
           "command": "fictionWriter.views.projectExplorer.newFolder",
           "when": "view == fictionWriter.views.projectExplorer && !fictionWriter.views.projectExplorer.is",
-          "group": "2_fictionWriter@4"
+          "group": "4_fictionWriter@4"
         },
         {
           "command": "fictionWriter.views.projectExplorer.rename",
           "when": "view == fictionWriter.views.projectExplorer && !fictionWriter.views.projectExplorer.is",
-          "group": "3_fictionWriter@4"
+          "group": "4_fictionWriter@4"
         },
         {
           "command": "fictionWriter.views.projectExplorer.trash",
           "when": "view == fictionWriter.views.projectExplorer && !fictionWriter.views.projectExplorer.is",
-          "group": "3_fictionWriter@5"
+          "group": "4_fictionWriter@5"
         },
         {
           "command": "fictionWriter.views.projectExplorer.reorder.redistribute",
           "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.is == ordering",
-          "group": "3_fictionWriter@5"
+          "group": "5_fictionWriter@5"
         },
         {
           "command": "fictionWriter.views.projectExplorer.compile.startHere",
           "when": "view == fictionWriter.views.projectExplorer && (!fictionWriter.views.projectExplorer.is || fictionWriter.views.projectExplorer.is == compiling)",
-          "group": "4_fictionWriter@1"
+          "group": "6_fictionWriter@1"
         },
         {
           "command": "fictionWriter.views.projectExplorer.compile.discard",
           "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.is == compiling",
-          "group": "4_fictionWriter@2"
+          "group": "6_fictionWriter@2"
         },
         {
           "command": "fictionWriter.views.wordFrequency.next.down",
@@ -882,6 +887,12 @@
       {
         "command": "fictionWriter.views.projectExplorer.addToProject",
         "title": "Add to FictionWriter Project",
+        "icon": "$(sync)",
+        "category": "Markdown Fiction Writer"
+      },
+      {
+        "command": "fictionWriter.views.projectExplorer.debug.stateDump",
+        "title": "Debug...",
         "icon": "$(sync)",
         "category": "Markdown Fiction Writer"
       },

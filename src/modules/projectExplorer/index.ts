@@ -5,7 +5,7 @@ import {ProjectExplorerTreeDataProvider} from "./projectExplorerTreeDataProvider
 import {FwFileManager} from "../../core/fwFiles/fwFileManager";
 import {ProjectsOptions} from "./projectsOptions";
 import {DisposeManager} from "../../core/disposable";
-import {addCommand, CoreModule, FictionWriter} from '../../core';
+import {addCommand, CoreModule, FictionWriter, log} from '../../core';
 import {ContextManager} from '../../core/contextManager';
 import {ProjectNode} from './projectNodes';
 import {ProjectExplorerDecorationProvider} from './projectExplorerDecorationProvider';
@@ -98,6 +98,13 @@ export class ProjectsModule extends DisposeManager {
 
             addCommand(FictionWriter.views.projectExplorer.addToProject, (node: ProjectNode) => {
                 return commands.addToProject(node);
+            }),
+
+            addCommand(FictionWriter.views.projectExplorer.debug.stateDump, (node: ProjectNode) => {
+                log.debug("ProjectExplorer", {
+                    node,
+                    state:this.core.stateManager.get(node.id)
+                });
             })
         );
     };

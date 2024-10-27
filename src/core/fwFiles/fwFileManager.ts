@@ -47,7 +47,7 @@ export class FwFileManager extends DisposeManager {
         this._projectTag = this._options.trackingTag.value;
         if (!this._projectTag) this._projectTag = 'fw';
 
-        this._projectFileRegex = new RegExp(`\.(${this._fileExtensions.map(e => this._projectTag + "." + e).map(RegEx.escape).join('|')})$`, 'i');
+        this._projectFileRegex = new RegExp(`\.${RegEx.escape(this._projectTag)}(\.(?<data1>[a-z]))?(\.(?<data2>[a-z]))?(\.(?<data3>[a-z]))?\.(${this._fileExtensions.join('|')})$`, 'i');
         this._textFileRegex = new RegExp(`\.(${this._fileExtensions.map(RegEx.escape).join('|')})$`, 'i');
     }
 
@@ -174,6 +174,7 @@ export class FwFileManager extends DisposeManager {
         const projectMatches = fsPath.match(this._projectFileRegex);
         const textMatches = fsPath.match(this._textFileRegex);
 
+        result.data = projectMatches?.groups ? Object.values(projectMatches?.groups).filter(v => v) : [];
         result.order = 0;
         result.name = parsed.name;
 

@@ -25,5 +25,5 @@ export class FwFileInfo {
     public parentOrder: number[] = [];
     public type: FwType = FwType.Unknown;
     public control: FwControl = FwControl.Unknown;
-
+    public data: string[] = [];
 }

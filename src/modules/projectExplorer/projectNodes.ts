@@ -3,7 +3,7 @@ import {FwFile} from '../../core/fwFiles/fwFile';
 import path from 'path';
 import {Node, NodePermission, ProjectItem} from '../../core/tree';
 import vscode, {ThemeColor, ThemeIcon, TreeItem, TreeItemCollapsibleState} from 'vscode';
-import {FictionWriter} from '../../core';
+import {FictionWriter, log} from '../../core';
 import {FaIcons} from '../../core/decorations';
 
 export class ProjectNode extends Node<ProjectItem> {
@@ -36,7 +36,7 @@ export class ProjectNode extends Node<ProjectItem> {
     }
 
     public buildFsPath(pad: number = FwFile.pad): string {
-        const segments:string[] = [];
+        const segments: string[] = [];
         segments.push(this.item.buildFsName());
 
         let cursor = this?.parent;
@@ -56,11 +56,12 @@ export class ProjectNode extends Node<ProjectItem> {
     }
 
     public asTreeItem(): TreeItem {
+        let label = this.item.name;
 
         return {
             label: <any>{
-                label: this.item.name,
-                highlights: []
+                label: label,
+                highlights: this.item.highlight ? [[0, label.length]] : []
             },
             description: this.item.description ?? '',
             tooltip: new vscode.MarkdownString(`$(zap) ${this.id}`, true),
@@ -130,9 +131,13 @@ export class TextFileNode extends ProjectNode {
 
 
     asTreeItem(): TreeItem {
+        const label = this.item.name + this.item.ext;
         return {
             ...super.asTreeItem(),
-            label: this.item.name + this.item.ext,
+            label: {
+                label,
+                highlights: this.item.highlight ? [[0, label.length]] : []
+            },
             description: ''
         };
     }
@@ -164,7 +169,6 @@ export class VirtualFolderNode extends ProjectNode {
         this.type = NodeType.VirtualFolder;
         this.permissions = NodePermission.All;
         this.canHaveChildren = true;
-
         this.item.icon = this.item.fsName
             ? FaIcons.fileLinesSolid
             : FaIcons.fileExcel;
@@ -172,6 +176,16 @@ export class VirtualFolderNode extends ProjectNode {
         this.item.color = this.item.fsName
             ? 'foreground'
             : 'disabledForeground';
+    }
+
+    public static applyTo(node: ProjectNode) {
+        const n = new VirtualFolderNode(node.id);
+        node.type = n.type;
+        node.permissions = n.permissions;
+        node.canHaveChildren = n.canHaveChildren;
+        if (!node.item) node.item = new ProjectItem();
+        node.item.icon = n.item.icon;
+        node.item.color = n.item.color;
     }
 }
 

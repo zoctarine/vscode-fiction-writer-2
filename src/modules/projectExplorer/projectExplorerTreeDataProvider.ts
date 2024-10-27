@@ -4,7 +4,7 @@ import * as path from 'path';
 import {OrderHandler} from "./orderHandler";
 import {DisposeManager, FictionWriter, log} from "../../core";
 import {NodeType} from './nodeType';
-import {NodeTree} from '../../core/tree';
+import {NodeTree, VirtualFolderNode} from '../../core/tree';
 import {asPosix, FwControl, FwFile, FwFileInfo, FwFileManager, FwType} from '../../core/fwFiles';
 import {ContextManager} from '../../core/contextManager';
 import {
@@ -205,8 +205,9 @@ export class ProjectExplorerTreeDataProvider
 
                     cursor = node;
                     if (cursor) {
-                        //   cursor.convertTo(VirtualFolderNode);
-                        cursor.type = NodeType.VirtualFolder;
+                        ////cursor.convertTo(VirtualFolderNode);
+                        VirtualFolderNode.applyTo(cursor as ProjectNode);
+                        //cursor.type = NodeType.VirtualFolder;
                     }
                 });
 
@@ -255,7 +256,7 @@ export class ProjectExplorerTreeDataProvider
 
     public makeVirtualFolder(node: ProjectNode): void {
         if (node.type === NodeType.File) {
-            node.type = NodeType.VirtualFolder;
+            VirtualFolderNode.applyTo(node);
             this._onDidChangeTreeData.fire();
         } else if (node.type === NodeType.VirtualFolder) {
             if (node.children?.size === 0) {
@@ -548,14 +549,24 @@ export class ProjectExplorerTreeDataProvider
             }
 
             if (element.isVisible) {
-               return this._treeView.reveal(element, revealOptions);
+               await this._treeView.reveal(element, revealOptions);
             } else {
                 await this.filter(AllFilesFilter);
-                revealOptions.focus = true;
+                // revealOptions.focus = true;
                 await this._treeView.reveal(element, revealOptions);
-
             }
 
+            // TODO: decide if need to highlight
+            // if (force) {
+            //     setTimeout(() => {
+            //         element.item.highlight = true;
+            //         this._onDidChangeTreeData.fire(element);
+            //         setTimeout(() => {
+            //             element.item.highlight = false;
+            //             this._onDidChangeTreeData.fire(element);
+            //         }, 1000);
+            //     }, 100);
+            // }
         }
     }
 
