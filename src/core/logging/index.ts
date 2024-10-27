@@ -1,5 +1,6 @@
 import {DisposeManager} from '../disposable';
 import vscode from 'vscode';
+import {MessageOptions} from 'node:child_process';
 
 class Logger extends DisposeManager {
     private _outputChannel: vscode.OutputChannel;
@@ -60,5 +61,15 @@ class Logger extends DisposeManager {
     }
 }
 
-
 export const log = new Logger();
+
+class UserNotifier {
+    info(text: string) {
+        vscode.window.showInformationMessage(text);
+    }
+
+    warn(text: string) {
+        vscode.window.showWarningMessage(text);
+    }
+}
+export const notifier = new UserNotifier();

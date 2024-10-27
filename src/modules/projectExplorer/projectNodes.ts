@@ -3,7 +3,7 @@ import {FwFile} from '../../core/fwFiles/fwFile';
 import path from 'path';
 import {Node, NodePermission, ProjectItem} from '../../core/tree';
 import vscode, {ThemeColor, ThemeIcon, TreeItem, TreeItemCollapsibleState} from 'vscode';
-import {FictionWriter, log} from '../../core';
+import {FictionWriter} from '../../core';
 import {FaIcons} from '../../core/decorations';
 
 export class ProjectNode extends Node<ProjectItem> {
@@ -36,7 +36,9 @@ export class ProjectNode extends Node<ProjectItem> {
     }
 
     public buildFsPath(pad: number = FwFile.pad): string {
-        const segments = [this.item.buildFsName()];
+        const segments:string[] = [];
+        segments.push(this.item.buildFsName());
+
         let cursor = this?.parent;
         while (cursor && cursor?.type !== NodeType.WorkspaceFolder) {
             if (cursor.type === NodeType.VirtualFolder) {

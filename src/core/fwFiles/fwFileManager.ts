@@ -171,7 +171,13 @@ export class FwFileManager extends DisposeManager {
             parsed.ext = '';
         }
         const groups = FwFile.orderNameRegExp.exec(parsed.name);
-        if (groups) {
+        const projectMatches = fsPath.match(this._projectFileRegex);
+        const textMatches = fsPath.match(this._textFileRegex);
+
+        result.order = 0;
+        result.name = parsed.name;
+
+        if (groups ) {
             const tmpOrders = groups[1].matchAll(FwFile.orderRegExp);
             if (tmpOrders) {
                 const orders = Array.from(tmpOrders).map(a => parseInt(a[1], FwFile.radix));
@@ -183,11 +189,12 @@ export class FwFileManager extends DisposeManager {
                 result.parentOrder = [];
             }
 
-            result.name = groups[2];
-
-        } else {
-            result.order = 0;
-            result.name = parsed.name;
+            // Only if is a project file, we extract order from project name
+            // otherwise, we keep the order, but we keep full name (don't want to change
+            // order part of the filename if is not managed by FW when renaming or moving)
+            if (projectMatches) {
+                result.name = groups[2];
+            }
         }
 
         result.ext = parsed.ext;
@@ -195,8 +202,7 @@ export class FwFileManager extends DisposeManager {
         let fullName = result.name + result.ext;
         // sort descending by length so we can match the longest extension first
         this._fileExtensions.sort((a, b) => b.length - a.length);
-        const projectMatches = fsPath.match(this._projectFileRegex);
-        const textMatches = fsPath.match(this._textFileRegex);
+
         if (projectMatches) {
             result.control = FwControl.Active;
             result.ext = projectMatches[0];

@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import {TreeItemCheckboxState} from 'vscode';
 import * as path from 'path';
 import {OrderHandler} from "./orderHandler";
-import {DisposeManager, FictionWriter} from "../../core";
+import {DisposeManager, FictionWriter, log} from "../../core";
 import {NodeType} from './nodeType';
 import {NodeTree} from '../../core/tree';
 import {asPosix, FwControl, FwFile, FwFileInfo, FwFileManager, FwType} from '../../core/fwFiles';
@@ -19,6 +19,7 @@ import {
 import {ProjectItem} from './projectItem';
 import {ProjectsOptions} from './projectsOptions';
 import {StateManager} from '../../core/state';
+import {AllFilesFilter, IFileFilter, OnlyProjectFilesFilter} from './fileInfoFilters';
 
 const action = {
     none: undefined,
@@ -102,7 +103,7 @@ export class ProjectExplorerTreeDataProvider
         fileInfos.forEach((fileInfo) => {
             if (workspaceFolders.includes(fileInfo.fsPath)) return;
 
-            if (!this._fileFilter.check(fileInfo)) return;
+            const isVisible = this._fileFilter.check(fileInfo);
 
             const relativePath = vscode.workspace.asRelativePath(fileInfo.fsPath, true);
 
@@ -172,7 +173,7 @@ export class ProjectExplorerTreeDataProvider
                             }
                         }
                     }
-
+                    node.isVisible = isVisible;
                     node.parent = current;
                     node.item.order = fileInfo.order;
                     node.item.fsName = segment;
@@ -213,6 +214,9 @@ export class ProjectExplorerTreeDataProvider
                 current.parent = cursor;
                 cursor?.children?.set(current.id, current);
             }
+
+
+
         });
         return this._tree.root;
     }
@@ -223,10 +227,13 @@ export class ProjectExplorerTreeDataProvider
 
     // Tree data provider
     public getChildren(element: ProjectNode): ProjectNode[] {
-        return this._tree.getChildren(element ? element.id : undefined);
+        return this._tree
+            .getChildren(element ? element.id : undefined)
+            .filter(e => e.isVisible);
     }
 
     public getTreeItem(element: ProjectNode): vscode.TreeItem {
+
         const expanded = this._contextManager.get("tree_expanded_" + element.id, false);
         const item = element.asTreeItem();
         item.description = `${this._isBatchOrderingEnabled ? `(${element.item.order}) ` : ''}${element.item.description ?? ''}`,
@@ -519,10 +526,36 @@ export class ProjectExplorerTreeDataProvider
 
     private _handleActiveTextEditorChanged(e: vscode.TextEditor | undefined) {
         if (!this._syncWithActiveEditorEnabled || !e) return;
+        this.reveal(e.document.uri.fsPath);
+    }
 
-        const element = this._tree.getNode(e.document.uri.fsPath);
+    public async reveal(fsPath: string, force = false) {
+        const element = this._tree.getNode(fsPath);
+
         if (element) {
-            this._treeView.reveal(element);
+            const revealOptions = {
+                select: true,
+                expand: true,
+                focus: false
+            };
+
+            if (force) {
+                try {
+                    await vscode.commands.executeCommand(`${FictionWriter.views.projectExplorer.id}.focus`);
+                } catch (err) {
+                    log.error("Err", err);
+                }
+            }
+
+            if (element.isVisible) {
+               return this._treeView.reveal(element, revealOptions);
+            } else {
+                await this.filter(AllFilesFilter);
+                revealOptions.focus = true;
+                await this._treeView.reveal(element, revealOptions);
+
+            }
+
         }
     }
 
@@ -565,16 +598,29 @@ export class ProjectExplorerTreeDataProvider
             });
     }
 
-    public async filter(filterName: string) {
+    public async filter(filter: string | IFileFilter) {
+
+        if (typeof filter === 'string') {
+            switch (filter) {
+                case OnlyProjectFilesFilter.key:
+                    this._fileFilter = OnlyProjectFilesFilter;
+                    break;
+                case AllFilesFilter.key:
+                    this._fileFilter = AllFilesFilter;
+                    break;
+            }
+        } else {
+            this._fileFilter = filter;
+        }
+
         await this._contextManager.set(
             FictionWriter.views.projectExplorer.filters.is,
-            filterName);
+            this._fileFilter.key);
 
         await vscode.commands.executeCommand('setContext',
             FictionWriter.views.projectExplorer.filters.is,
-            filterName);
+            this._fileFilter.key);
 
-        this._fileFilter = filterName === 'projectFiles' ? OnlyProjectFilesFilter : AllFilesFilter;
         return this.reload();
     }
 
@@ -584,23 +630,6 @@ export class ProjectExplorerTreeDataProvider
     }
 
 }
-
-interface IFileFilter {
-    check(fileInfo: FwFileInfo): boolean;
-}
-
-const OnlyProjectFilesFilter: IFileFilter = {
-    check(fileInfo: FwFileInfo): boolean {
-        return fileInfo.control === FwControl.Active ||
-            fileInfo.type === FwType.Folder;
-    }
-};
-
-const AllFilesFilter: IFileFilter = {
-    check(fileInfo: FwFileInfo): boolean {
-        return true;
-    }
-};
 
 interface IFileOrderFormat {
     format(order: number): string;

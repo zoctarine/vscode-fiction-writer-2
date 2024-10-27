@@ -58,6 +58,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 
     log
+        .text('')
         .text("FICTION WRITER is now active!")
         .text('')
         .text("Warning: this extension is in early preview. Use it ONLY for testing purposes.")

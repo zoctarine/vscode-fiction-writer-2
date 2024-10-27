@@ -4,6 +4,9 @@ const Security = 'fictionWriter.security';
 const Compile = 'fictionWriter.compile';
 
 export const FictionWriter = {
+    explorer: {
+        revealInProjectsView: 'explorer.revealInProjectsView',
+    },
     views: {
         projectExplorer: {
             id: `${ViewsProjectExplorer}`,
@@ -12,8 +15,10 @@ export const FictionWriter = {
             newFolder: `${ViewsProjectExplorer}.newFolder`,
             rename: `${ViewsProjectExplorer}.rename`,
             trash: `${ViewsProjectExplorer}.trash`,
+            addToProject: `${ViewsProjectExplorer}.addToProject`,
             makeVirtualFolder: `${ViewsProjectExplorer}.makeVirtualFolder`,
             breakVirtualFolder: `${ViewsProjectExplorer}.breakVirtualFolder`,
+            revealInExplorer: `${ViewsProjectExplorer}.revealInExplorer`,
             filters: {
                 is: `${ViewsProjectExplorer}.filters.is`,
                 allFiles: `${ViewsProjectExplorer}.filters.allFiles`,

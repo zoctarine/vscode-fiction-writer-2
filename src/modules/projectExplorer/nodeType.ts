@@ -7,7 +7,7 @@ export enum NodeType {
     WorkspaceFolder = "workspaceFolder",
     Filter = "filter",
     FilterRoot = "filterRoot",
-    TextFile = "systemFile",
+    TextFile = "textFile",
     OtherFile = "otherFile",
 }
 

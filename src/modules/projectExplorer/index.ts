@@ -10,6 +10,7 @@ import {ContextManager} from '../../core/contextManager';
 import {ProjectNode} from './projectNodes';
 import {ProjectExplorerDecorationProvider} from './projectExplorerDecorationProvider';
 import {StateManager} from '../../core/state';
+import * as commands from './commands';
 
 export class ProjectsModule extends DisposeManager {
     active = false;
@@ -85,6 +86,18 @@ export class ProjectsModule extends DisposeManager {
 
             addCommand(FictionWriter.views.projectExplorer.filters.projectFiles, () => {
                 this.projectExplorerDataProvider?.filter("projectFiles");
+            }),
+
+            addCommand(FictionWriter.explorer.revealInProjectsView, (uri: vscode.Uri) => {
+                return this.projectExplorerDataProvider?.reveal(uri.fsPath, true);
+            }),
+
+            addCommand(FictionWriter.views.projectExplorer.revealInExplorer, (node: ProjectNode) => {
+                return commands.revealInExplorer(node);
+            }),
+
+            addCommand(FictionWriter.views.projectExplorer.addToProject, (node: ProjectNode) => {
+                return commands.addToProject(node);
             })
         );
     };

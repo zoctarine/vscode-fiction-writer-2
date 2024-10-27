@@ -599,8 +599,8 @@
     "menus": {
       "explorer/context": [
         {
-          "command": "fictionWriter.explorer.addToProject",
-          "when": "resourceFilename =~ /^(?!.*\\.fw(\\.i|\\.p|\\.l)*\\.md$).*\\.(md|txt)$/i",
+          "command": "fictionWriter.explorer.revealInProjectsView",
+          "when": "fictionWriter.projects.enabled == true",
           "group": "1_fictionWriter_project@1"
         }
       ],
@@ -757,6 +757,21 @@
       ],
       "view/item/context": [
         {
+          "command": "fictionWriter.views.projectExplorer.addToProject",
+          "when": "view == fictionWriter.views.projectExplorer && viewItem == textFile && !fictionWriter.views.projectExplorer.is",
+          "group": "1_fictionWriter_project@1"
+        },
+        {
+          "command": "fictionWriter.views.projectExplorer.revealInExplorer",
+          "when": "view == fictionWriter.views.projectExplorer && !fictionWriter.views.projectExplorer.is",
+          "group": "1_fictionWriter_project@2"
+        },
+        {
+          "command": "fictionWriter.views.projectExplorer.changeFormatting",
+          "when": "view == fictionWriter.views.projectExplorer && (viewItem == file || viewItem == virtualFolder) && !fictionWriter.views.projectExplorer.is",
+          "group": "1_fictionWriter_formatting@1"
+        },
+        {
           "command": "fictionWriter.views.projectExplorer.makeVirtualFolder",
           "when": "view == fictionWriter.views.projectExplorer && viewItem == file && !fictionWriter.views.projectExplorer.is",
           "group": "1_fictionWriter_virtual@1"
@@ -835,8 +850,8 @@
     },
     "commands": [
       {
-        "command": "fictionWriter.explorer.addToProject",
-        "title": "Add to FictionWriter project",
+        "command": "fictionWriter.explorer.revealInProjectsView",
+        "title": "Reveal in FictionWriter Project",
         "category": "FictionWriter",
         "icon": "$(edit)"
       },
@@ -857,6 +872,24 @@
         "title": "Edit with CodeMirror Editor",
         "category": "FictionWriter",
         "icon": "$(fa-pen)"
+      },
+      {
+        "command": "fictionWriter.views.projectExplorer.changeFormatting",
+        "title": "Change Formatting...",
+        "icon": "$(format)",
+        "category": "Markdown Fiction Writer"
+      },
+      {
+        "command": "fictionWriter.views.projectExplorer.addToProject",
+        "title": "Add to FictionWriter Project",
+        "icon": "$(sync)",
+        "category": "Markdown Fiction Writer"
+      },
+      {
+        "command": "fictionWriter.views.projectExplorer.revealInExplorer",
+        "title": "Reveal in Explorer",
+        "category": "FictionWriter",
+        "icon": "$(eye)"
       },
       {
         "command": "fictionWriter.views.projectExplorer.sync.on",
