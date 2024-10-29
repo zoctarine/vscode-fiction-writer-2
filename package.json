@@ -767,6 +767,11 @@
           "group": "1_fictionWriter_project@1"
         },
         {
+          "command": "fictionWriter.views.projectExplorer.excludeFromProject",
+          "when": "view == fictionWriter.views.projectExplorer && (viewItem == file || viewItem == virtualFolder) && !fictionWriter.views.projectExplorer.is",
+          "group": "9_fictionWriter_last@1"
+        },
+        {
           "command": "fictionWriter.views.projectExplorer.revealInExplorer",
           "when": "view == fictionWriter.views.projectExplorer && !fictionWriter.views.projectExplorer.is",
           "group": "1_fictionWriter_project@2"
@@ -887,6 +892,12 @@
       {
         "command": "fictionWriter.views.projectExplorer.addToProject",
         "title": "Add to FictionWriter Project",
+        "icon": "$(sync)",
+        "category": "Markdown Fiction Writer"
+      },
+      {
+        "command": "fictionWriter.views.projectExplorer.excludeFromProject",
+        "title": "Exclude From FictionWriter Project...",
         "icon": "$(sync)",
         "category": "Markdown Fiction Writer"
       },

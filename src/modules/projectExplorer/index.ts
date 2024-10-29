@@ -97,7 +97,13 @@ export class ProjectsModule extends DisposeManager {
             }),
 
             addCommand(FictionWriter.views.projectExplorer.addToProject, (node: ProjectNode) => {
-                return commands.addToProject(node);
+                const state = this.core.stateManager.get(node.id);
+                return commands.addToProject(state?.fwItem);
+            }),
+
+            addCommand(FictionWriter.views.projectExplorer.excludeFromProject, (node: ProjectNode) => {
+                const state = this.core.stateManager.get(node.id);
+                return commands.excludeFromProject(state?.fwItem);
             }),
 
             addCommand(FictionWriter.views.projectExplorer.debug.stateDump, (node: ProjectNode) => {

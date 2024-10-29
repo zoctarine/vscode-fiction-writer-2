@@ -3,6 +3,7 @@ const ViewsMetadata = 'fictionWriter.views.metadata';
 const Security = 'fictionWriter.security';
 const Compile = 'fictionWriter.compile';
 
+
 export const FictionWriter = {
     explorer: {
         revealInProjectsView: 'explorer.revealInProjectsView',
@@ -16,6 +17,7 @@ export const FictionWriter = {
             rename: `${ViewsProjectExplorer}.rename`,
             trash: `${ViewsProjectExplorer}.trash`,
             addToProject: `${ViewsProjectExplorer}.addToProject`,
+            excludeFromProject: `${ViewsProjectExplorer}.excludeFromProject`,
             makeVirtualFolder: `${ViewsProjectExplorer}.makeVirtualFolder`,
             breakVirtualFolder: `${ViewsProjectExplorer}.breakVirtualFolder`,
             revealInExplorer: `${ViewsProjectExplorer}.revealInExplorer`,

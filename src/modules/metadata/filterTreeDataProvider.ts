@@ -202,12 +202,12 @@ export class FilterTreeDataProvider extends DisposeManager
                             noArrayIndent: true, indent: 0
                         }).replace(/\n/g, " ");
                         const entry = crtValues.find(val => val.value === vStr);
-                        const fileInfo = state.fileInfo;
-                        if (!fileInfo) continue;
+                        const item = state?.fwItem;
+                        if (!item) continue;
                         if (entry) {
-                            entry.files.push({fsPath: fileInfo.fsPath, name: fileInfo.name});
+                            entry.files.push({fsPath: item.ref.fsPath, name: item.ref.name});
                         } else {
-                            crtValues.push({value: vStr, files: [{fsPath: fileInfo.fsPath, name: fileInfo.name}]});
+                            crtValues.push({value: vStr, files: [{fsPath: item.ref.fsPath, name: item.ref.name}]});
                         }
                     }
                     metadata.set(key, crtValues);

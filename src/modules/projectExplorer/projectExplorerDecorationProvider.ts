@@ -21,8 +21,8 @@ export class ProjectExplorerDecorationProvider implements FileDecorationProvider
             this._stateManager.onFilesStateChanged((f) => {
                 this._onDidChangeFileDecorations.fire(
                     f.files
-                        .filter(p => p.state.fileInfo?.fsPath)
-                        .map(p => vscode.Uri.parse(p.state.fileInfo!.fsPath).with({scheme: FictionWriter.views.projectExplorer.id}))
+                        .filter(p => p.state.fwItem?.ref.fsPath)
+                        .map(p => vscode.Uri.parse(p.state.fwItem!.ref.fsPath).with({scheme: FictionWriter.views.projectExplorer.id}))
                 );
             })
         );
@@ -32,10 +32,11 @@ export class ProjectExplorerDecorationProvider implements FileDecorationProvider
         if (uri.scheme !== FictionWriter.views.projectExplorer.id) {
             return;
         }
+        const decoration: FileDecoration = {};
 
         const item = this._stateManager.get(uri.fsPath);
-        if (!item?.decoration) return undefined;
-        const decoration: FileDecoration = {};
+
+        if (!item?.decoration) return decoration;
 
         if (item.decoration.highlightColor) {
             decoration.color = new ThemeColor(item.decoration.highlightColor);
@@ -45,7 +46,7 @@ export class ProjectExplorerDecorationProvider implements FileDecorationProvider
             decoration.badge = item.decoration.badge;
         }
 
-        if (item.fileInfo?.control !== FwControl.Active){
+        if (item.fwItem?.control !== FwControl.Active){
             decoration.color = new ThemeColor('disabledForeground');
         }
         return decoration;

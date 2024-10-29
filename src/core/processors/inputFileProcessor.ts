@@ -6,8 +6,8 @@ import {RegEx} from '../regEx';
 
 export class LoadContent implements ITextProcessor<IFileState> {
     async process(content: string, data: IFileState): Promise<string> {
-        if (data.fileInfo) {
-            const doc = await vscode.workspace.openTextDocument(vscode.Uri.parse(data.fileInfo.fsPath));
+        if (data.fwItem) {
+            const doc = await vscode.workspace.openTextDocument(vscode.Uri.parse(data.fwItem.ref.fsPath));
             if (doc) {
                 content = doc.getText();
             }

@@ -1,5 +1,5 @@
 import {ITextStatistics} from '../../modules/textAnalysis/textAnalyzer';
-import {FwFileInfo} from '../fwFiles';
+import {FwItem} from '../fwFiles';
 
 export interface IMetaState {
     value: any,
@@ -28,7 +28,7 @@ export interface IWriteTargetsState {
 
 
 export interface IFileState {
-    fileInfo?: FwFileInfo,
+    fwItem?: FwItem,
     metadata?: IMetaState,
     decoration?: IDecorationState,
     analysis?: ITextAnalyzerState,

@@ -10,6 +10,7 @@ export class Node<T> {
     children?: Map<string, Node<T>> = new Map<string, Node<T>>();
     canHaveChildren: boolean = true;
     isVisible: boolean = true;
+    sortBy: string = '';
 
     constructor(id: string, value: T) {
         this.id = id;

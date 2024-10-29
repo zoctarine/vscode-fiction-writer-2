@@ -1,5 +1,7 @@
-
-
+import {FwItem} from './fwItem';
+import {IProcessor} from '../processors';
+import path from 'path';
+import {IFwFile} from './IFwFile';
 
 export class FwFile {
     public static fixedGap = 10000;
@@ -10,9 +12,137 @@ export class FwFile {
 
     public static orderNameRegExp = /^((?:\[[a-zA-Z0-9]+\])+)(?: )(.*)$/i;
     public static orderRegExp = /\[([a-zA-Z0-9]+)\]/gi;
+    public static cleanExtRegExp = /(\.[^.]+)$/i;
 
     public static toOrderString(order: number, pad: number = FwFile.pad) {
         return `[${order.toString(FwFile.radix).toLowerCase().padStart(pad, '0')}]`;
+    }
+
+    public static cleanOrderString(name: string) {
+        const match = name.match(FwFile.orderNameRegExp);
+        return match ? match[1] : name;
+    }
+
+    public static toOriginalExtension(ext: string) {
+        if (!ext) return ext;
+        const match = ext.match(FwFile.cleanExtRegExp);
+        return match ? match[0] : ext;
+    }
+
+}
+
+export interface IFileOrder {
+   namePart: string;
+   orderPart: string;
+   values: number[]
+}
+
+export interface IFileNameOrderParser extends IProcessor<string, IOrderOptions, IFileOrder> {
+
+}
+
+export interface IOrderOptions {
+    radix: number;
+    pad: number;
+    separator: string;
+}
+
+const defaultOrderOptions: IOrderOptions = {
+    radix: 10,
+    pad: 5,
+    separator: '.'
+};
+
+export class DefaultOrderParser implements IFileNameOrderParser {
+    orderRegex = /^(\d+\.)*(\d*) /i;
+
+    process(source: string, options: Partial<IOrderOptions> = {}): IFileOrder {
+        const opt = {...defaultOrderOptions, ...options};
+        let namePart = source;
+        let orderPart = '';
+        let orderList:number[] = [];
+
+        const matches = source.match(this.orderRegex);
+        if (matches) {
+            orderPart = matches[0];
+            orderList = orderPart.trim().split(opt.separator).map(o=>{
+                const order = parseInt(o.trim(), 10);
+                return Number.isNaN(order) ? 0 : order;
+            });
+            namePart = source.substring(matches.length-1);
+        }
+
+        return {
+            namePart,
+            orderPart,
+            values: orderList
+        };
+    }
+}
+
+export interface IFileNameParser extends IProcessor<string, IFileNameOptions, IFwFile> {
+
+}
+
+export interface IFileNameOptions {
+    projectTag: string;
+}
+
+const defaultFileNameOptions: IFileNameOptions = {
+    projectTag: 'fw',
+};
+
+
+export class FwFileProcessor implements IFileNameParser {
+    constructor(private _orderProcessor: IFileNameOrderParser) {
+
+    }
+
+    process(fsPath: string, options: Partial<IFileNameOptions> = {}): IFwFile {
+        options = {...defaultFileNameOptions, ...options};
+
+        const parsed = path.posix.parse(fsPath);
+
+        const parsedName= this._parse(parsed.base);
+        const parsedOrder = this._orderProcessor.process(parsedName.name);
+
+        return {
+            order: parsedOrder.values,
+            orderedName: parsedName.name ?? '',
+            name: parsedOrder.namePart ?? '',
+            projectTag: parsedName?.projectTag,
+            data: parsedName?.data ?? [],
+            ext: parsedName?.ext,
+
+            fsExt: parsed.ext,
+            fsName: parsed.base,
+            fsDir: parsed.dir,
+            fsPath: fsPath
+        };
+    }
+
+    private _parse(base: string) {
+        const fileNameRegex = /(\.(?<projectTag>fw)?(\.(?<data1>[a-z]))?(\.(?<data2>[a-z]))?(\.(?<data3>[a-z]))?)?\.(?<ext>\w*)$/i;
+        const matches = base.match(fileNameRegex);
+        if (matches) {
+            const groups = matches.groups as any;
+            const { projectTag, data1, data2, data3, ext } = groups;
+
+            return {
+                name: base.substring(0, base.length-matches[0].length),
+                ext: matches[0],
+                projectTag: projectTag ?? '',
+                data: [data1, data2, data3].filter(v => v)
+            };
+        } else {
+            return {
+                name:base,
+                fwExt: '',
+                ext: '',
+                projectTag: '',
+                data: []
+            };
+        }
     }
 }
 

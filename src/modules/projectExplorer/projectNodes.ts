@@ -5,6 +5,40 @@ import {Node, NodePermission, ProjectItem} from '../../core/tree';
 import vscode, {ThemeColor, ThemeIcon, TreeItem, TreeItemCollapsibleState} from 'vscode';
 import {FictionWriter, log} from '../../core';
 import {FaIcons} from '../../core/decorations';
+import {FwType} from '../../core/fwFiles';
+
+export interface IList<T> {
+    sort(): IList<T>;
+
+    filter(): IList<T>;
+
+    items: T[];
+}
+
+export class ProjectNodeList implements IList<ProjectNode> {
+    public items: ProjectNode[] = [];
+
+    constructor(items: ProjectNode[]) {
+        this.items = items;
+    }
+
+    sort(): IList<ProjectNode> {
+        this.items.forEach(a => {
+            a.sortBy = `${a.item?.order > 0 ? a.item.order : ''}_${a.item.name}_${a.item.ext}`;
+            return a;
+        });
+        this.items.sort((a, b) => a.sortBy > b.sortBy ? 1 : -1);
+
+        return this;
+    }
+
+    filter(): IList<ProjectNode> {
+        this.items = this.items.filter(e => e.isVisible);
+
+        return this;
+    }
+
+}
 
 export class ProjectNode extends Node<ProjectItem> {
     constructor(id: string, item: ProjectItem) {
@@ -64,7 +98,13 @@ export class ProjectNode extends Node<ProjectItem> {
                 highlights: this.item.highlight ? [[0, label.length]] : []
             },
             description: this.item.description ?? '',
-            tooltip: new vscode.MarkdownString(`$(zap) ${this.id}`, true),
+            tooltip: new vscode.MarkdownString([
+                `$(${this.item?.icon}) **${this.item.name}** ${this.item?.ext}\n\n`,
+                `- **Type:** ${typeToProjectType(this.type)}`,
+                `- **Order:** *${this.item?.order}*`,
+                `- ***Full Name:*** ${this.item?.fsName}`,
+                `- ***Full Path:*** *${this.id}*`
+            ].join('\n\n'), true),
             iconPath: new ThemeIcon(this.item.icon ?? 'file', new ThemeColor(this.item.color ?? 'foreground')),
             collapsibleState: this.canHaveChildren ? vscode.TreeItemCollapsibleState.Collapsed : TreeItemCollapsibleState.None,
             resourceUri: vscode.Uri.parse(this.id).with({scheme: FictionWriter.views.projectExplorer.id}),
@@ -75,6 +115,30 @@ export class ProjectNode extends Node<ProjectItem> {
                 arguments: [vscode.Uri.parse(this.id)]
             } : undefined
         };
+    }
+}
+function typeToProjectType(type: NodeType) {
+    switch (type) {
+        case NodeType.Root:
+            return 'Root Folder';
+        case NodeType.RootFolder:
+            return 'Root Folder';
+        case NodeType.File:
+            return 'Project File';
+        case NodeType.Folder:
+            return 'Folder';
+        case NodeType.VirtualFolder:
+            return 'Virtual Folder';
+        case NodeType.WorkspaceFolder:
+            return 'Workspace Folder';
+        case NodeType.Filter:
+            return '';
+        case NodeType.FilterRoot:
+            return '';
+        case NodeType.TextFile:
+            return 'Text File (can be managed by FictionWriter)';
+        case NodeType.OtherFile:
+            return 'Unknown File (**cannot** be managed by FictionWriter';
     }
 }
 
@@ -184,8 +248,9 @@ export class VirtualFolderNode extends ProjectNode {
         node.permissions = n.permissions;
         node.canHaveChildren = n.canHaveChildren;
         if (!node.item) node.item = new ProjectItem();
-        node.item.icon = n.item.icon;
-        node.item.color = n.item.color;
+        node.item.icon = node.item.fsName
+            ? FaIcons.fileLinesSolid
+            : FaIcons.fileExcel;
     }
 }
 

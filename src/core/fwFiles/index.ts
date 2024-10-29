@@ -1,3 +1,4 @@
 export * from './fwFile';
 export * from './fwFileManager';
-export * from './fwFileInfo';
+export * from './fwItem';
+export {IFwFile} from './IFwFile';

@@ -1,5 +1,6 @@
 import path from 'path';
 import {FwFile} from './fwFile';
+import {IFwFile} from './IFwFile';
 
 
 export enum FwType {
@@ -16,14 +17,14 @@ export enum FwControl {
 }
 
 
-export class FwFileInfo {
-    public fsPath: string = "";
-    public location: string = "";
-    public name: string = "";
-    public ext: string = "";
+export class FwItem {
     public order: number = 0;
     public parentOrder: number[] = [];
     public type: FwType = FwType.Unknown;
     public control: FwControl = FwControl.Unknown;
     public data: string[] = [];
+    public orderBy: string = '';
+
+    constructor(public ref: IFwFile) {
+    }
 }

@@ -1,11 +1,11 @@
 import * as vscode from "vscode";
-import {FwFile} from "./fwFile";
+import {DefaultOrderParser, FwFile, FwFileProcessor} from "./fwFile";
 import * as path from "path";
 import {ProjectsOptions} from '../../modules/projectExplorer/projectsOptions';
 import {DisposeManager} from '../disposable';
 import {glob} from 'glob';
 import fs from 'node:fs';
-import {FwControl, FwFileInfo, FwType} from './fwFileInfo';
+import {FwControl, FwItem, FwType} from './fwItem';
 import {RegEx} from '../regEx';
 import {log} from '../logging';
 
@@ -13,10 +13,8 @@ import {log} from '../logging';
 export const asPosix = (mixedPath: string) => path.posix.normalize(mixedPath.split(path.sep).join(path.posix.sep));
 
 export class FwFileManager extends DisposeManager {
-    private _textFileRegex!: RegExp;
-    private _projectFileRegex!: RegExp;
     private _fileExtensions!: string[];
-    private _onFilesChanged = new vscode.EventEmitter<FwFileInfo[]>();
+    private _onFilesChanged = new vscode.EventEmitter<FwItem[]>();
     private _silentUpdates = false;
     private _projectTag: string = '';
 
@@ -43,12 +41,9 @@ export class FwFileManager extends DisposeManager {
 
     private _loadOptions() {
         // make sure extensions don't start with '.'
-        this._fileExtensions = this._options.fileTypes.value.map(e => e.startsWith('.') ? e.substring(1) : e);
+        this._fileExtensions = this._options.fileTypes.value.map(e => !e.startsWith('.') ? `.${e}` : e);
         this._projectTag = this._options.trackingTag.value;
         if (!this._projectTag) this._projectTag = 'fw';
-
-        this._projectFileRegex = new RegExp(`\.${RegEx.escape(this._projectTag)}(\.(?<data1>[a-z]))?(\.(?<data2>[a-z]))?(\.(?<data3>[a-z]))?\.(${this._fileExtensions.join('|')})$`, 'i');
-        this._textFileRegex = new RegExp(`\.(${this._fileExtensions.map(RegEx.escape).join('|')})$`, 'i');
     }
 
     private _fileChangeHandler(e: vscode.Uri): void {
@@ -63,13 +58,13 @@ export class FwFileManager extends DisposeManager {
         return this._onFilesChanged.event;
     }
 
-    public async loadFiles(): Promise<FwFileInfo[]> {
+    public async loadFiles(): Promise<FwItem[]> {
         const workspaceFolders = vscode.workspace.workspaceFolders;
 
         if (!workspaceFolders) {
             return [];
         }
-        const files: FwFileInfo[] = [];
+        const files: FwItem[] = [];
 
         for (const folder of workspaceFolders) {
             const dirs = await glob("**",
@@ -157,64 +152,35 @@ export class FwFileManager extends DisposeManager {
         }
     }
 
-    public _parse(fsPath: string, isDirectory?: boolean): FwFileInfo {
-        const result = new FwFileInfo();
-        const parsed = path.parse(fsPath);
+    public _parse(fsPath: string, isDirectory?: boolean): FwItem {
+        const fileNameParser = new FwFileProcessor(new DefaultOrderParser());
+        const file = fileNameParser.process(fsPath);
+        const result = new FwItem(file);
 
-        result.fsPath = fsPath;
-        result.location = parsed.dir;
         result.type = isDirectory ? FwType.Folder : FwType.File;
-        result.control = FwControl.Never;
-        // we do not support extensions on folders/directories
-        if (result.type === FwType.Folder) {
-            parsed.name = parsed.name + parsed.ext;
-            parsed.ext = '';
-        }
-        const groups = FwFile.orderNameRegExp.exec(parsed.name);
-        const projectMatches = fsPath.match(this._projectFileRegex);
-        const textMatches = fsPath.match(this._textFileRegex);
-
-        result.data = projectMatches?.groups ? Object.values(projectMatches?.groups).filter(v => v) : [];
+        result.data = file.data;
         result.order = 0;
-        result.name = parsed.name;
+        result.control = FwControl.Never;
 
-        if (groups ) {
-            const tmpOrders = groups[1].matchAll(FwFile.orderRegExp);
-            if (tmpOrders) {
-                const orders = Array.from(tmpOrders).map(a => parseInt(a[1], FwFile.radix));
-                result.order = orders[orders.length - 1];
-                orders.splice(-1, 1);
-                result.parentOrder = [...orders];
-            } else {
-                result.order = 0;
-                result.parentOrder = [];
-            }
-
-            // Only if is a project file, we extract order from project name
-            // otherwise, we keep the order, but we keep full name (don't want to change
-            // order part of the filename if is not managed by FW when renaming or moving)
-            if (projectMatches) {
-                result.name = groups[2];
-            }
+        const order = file.order ?? [];
+        if (order.length > 0) {
+            result.order = order[order.length - 1];
+            result.parentOrder = order.slice(0, -1);
         }
+        const isTextFile = !isDirectory && this._fileExtensions.includes(file.fsExt);
+        const isProjectFile = !isDirectory && file.projectTag && isTextFile;
 
-        result.ext = parsed.ext;
-
-        let fullName = result.name + result.ext;
-        // sort descending by length so we can match the longest extension first
-        this._fileExtensions.sort((a, b) => b.length - a.length);
-
-        if (projectMatches) {
+        if (isProjectFile) {
             result.control = FwControl.Active;
-            result.ext = projectMatches[0];
-            result.name = fullName.substring(0, fullName.length - result.ext.length);
-        } else if (textMatches) {
+        } else if (isTextFile) {
             result.control = FwControl.Possible;
-            result.ext = textMatches[0];
-            result.name = fullName.substring(0, fullName.length - result.ext.length);
         } else {
             result.control = FwControl.Never;
         }
+
+        // const orderPrefix = result.order > 0 ? result.order.toString() : '';
+        // result.orderString = `${orderPrefix}_${result.name}_${result.ext}`;
+        result.orderBy = file.orderedName;
         return result;
     }
 }

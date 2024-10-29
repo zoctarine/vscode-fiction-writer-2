@@ -17,7 +17,7 @@ import {
     UpdateMeta,
     AlterState,
     ComputeContentHash,
-    SetMetaDecorations, ChainedTextProcessor, SetTextStatisticsDecorations, SetFileInfoDecorations
+    SetMetaDecorations, ChainedTextProcessor, SetTextStatisticsDecorations, SetFwItemDecorations
 } from './core/processors';
 
 
@@ -36,7 +36,7 @@ export function activate(context: vscode.ExtensionContext) {
             .add(new SetTextStatisticsDecorations())
             .add(new ComputeWriteTarget())
             .add(new SetWriteTargetDecorations)
-            .add(new SetFileInfoDecorations)
+            .add(new SetFwItemDecorations)
             .add(new ComputeContentHash()),
         createUpdateMetaProcessor: (updateMeta) => new ChainedTextProcessor()
             .add(new ExtractMeta())

@@ -66,10 +66,12 @@ export const log = new Logger();
 class UserNotifier {
     info(text: string) {
         vscode.window.showInformationMessage(text);
+        log.info("UserMessage", text);
     }
 
     warn(text: string) {
         vscode.window.showWarningMessage(text);
+        log.info("UserMessage", text);
     }
 }
 export const notifier = new UserNotifier();

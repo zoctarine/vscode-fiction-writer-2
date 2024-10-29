@@ -1,7 +1,7 @@
 import {DisposeManager} from '../disposable';
 import vscode, {WorkspaceEdit} from 'vscode';
 import {ITextProcessor} from '../processors';
-import {FwFileInfo} from '../fwFiles/fwFileInfo';
+import {FwItem} from '../fwFiles/fwItem';
 
 import {FwFileState, FwFileStateChangedEvent} from './fwFileState';
 import {IFileState, IFileStateSnapshot} from './states';
@@ -16,7 +16,7 @@ export class FwStateChangedEvent {
 
 export class ProjectFileState {
     public state!: FwFileState;
-    public fileInfo!: FwFileInfo;
+    public fwItem!: FwItem;
 
     dispose() {
         this.state.delete();
@@ -36,7 +36,7 @@ export class StateManager extends DisposeManager {
         this._textProcessor = _processorFactory.createTextProcessor();
     }
 
-    initialize(files: FwFileInfo[]) {
+    initialize(files: FwItem[]) {
         this._unTrackAll();
 
         for (const info of files) {
@@ -44,18 +44,18 @@ export class StateManager extends DisposeManager {
         }
     }
 
-    public track(fileInfo: FwFileInfo): ProjectFileState {
+    public track(fwItem: FwItem): ProjectFileState {
         // if we previously tracked this item, dispose of it first
-        this.unTrack(fileInfo.fsPath);
+        this.unTrack(fwItem.ref.fsPath);
 
-        const file = new ProjectFileState();
-        file.state = new FwFileState({fileInfo}, this._processorFactory);
-        this.manageDisposable(file.state.onDidChange((event) => {
+        const projState = new ProjectFileState();
+        projState.state = new FwFileState({fwItem: fwItem}, this._processorFactory);
+        this.manageDisposable(projState.state.onDidChange((event) => {
             this._handleOnFileChanged(event);
         }));
-        file.fileInfo = fileInfo;
-        this._fileStates.set(fileInfo.fsPath, file);
-        return file;
+        projState.fwItem = fwItem;
+        this._fileStates.set(fwItem.ref.fsPath, projState);
+        return projState;
     }
 
     private unTrack(key: string) {
@@ -71,16 +71,16 @@ export class StateManager extends DisposeManager {
     }
 
     refresh() {
-        return this.reload([...this._fileStates.values()].map(s => s.fileInfo));
+        return this.reload([...this._fileStates.values()].map(s => s.fwItem));
     }
 
 
-    async reload(files: FwFileInfo[]) {
+    async reload(fileInfos: FwItem[]) {
         this._enqueueOn();
-        for (const file of files) {
+        for (const fileInfo of fileInfos) {
             try {
-                let item = this._fileStates.get(file.fsPath);
-                const path = vscode.Uri.parse(file.fsPath);
+                let item = this._fileStates.get(fileInfo.ref.fsPath);
+                const path = vscode.Uri.parse(fileInfo.ref.fsPath);
                 let stat: vscode.FileStat | undefined;
 
                 try {
@@ -96,19 +96,19 @@ export class StateManager extends DisposeManager {
                         const content = rawBytes ? new TextDecoder().decode(rawBytes) : "";
                         // If we did not track item
                         if (!item) {
-                            item = this.track(file);
+                            item = this.track(fileInfo);
                         }
-                        await item.state.loadState(content, {fileInfo: item.fileInfo});
+                        await item.state.loadState(content, {fwItem: item.fwItem});
                     }
                     // If the file does not exist
                 } else {
                     // If we tracked it, we delete it
                     if (item) {
-                        this.unTrack(file.fsPath);
+                        this.unTrack(fileInfo.ref.fsPath);
                     }
                 }
             } catch (error) {
-                console.warn("Cannot load file: " + file.fsPath, error);
+                console.warn("Cannot load file: " + fileInfo.ref.fsPath, error);
             }
         }
         this._enqueueOff();

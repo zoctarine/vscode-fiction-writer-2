@@ -5,13 +5,13 @@ import {OrderHandler} from "./orderHandler";
 import {DisposeManager, FictionWriter, log} from "../../core";
 import {NodeType} from './nodeType';
 import {NodeTree, VirtualFolderNode} from '../../core/tree';
-import {asPosix, FwControl, FwFile, FwFileInfo, FwFileManager, FwType} from '../../core/fwFiles';
+import {asPosix, FwControl, FwFile, FwItem, FwFileManager, FwType} from '../../core/fwFiles';
 import {ContextManager} from '../../core/contextManager';
 import {
     FolderNode,
     OtherFileNode,
     ProjectFileNode,
-    ProjectNode,
+    ProjectNode, ProjectNodeList,
     RootNode,
     TextFileNode,
     WorkspaceFolderNode
@@ -20,6 +20,7 @@ import {ProjectItem} from './projectItem';
 import {ProjectsOptions} from './projectsOptions';
 import {StateManager} from '../../core/state';
 import {AllFilesFilter, IFileFilter, OnlyProjectFilesFilter} from './fileInfoFilters';
+import {FaIcons} from '../../core/decorations';
 
 const action = {
     none: undefined,
@@ -95,19 +96,19 @@ export class ProjectExplorerTreeDataProvider
             });
     }
 
-    private buildHierarchy(fileInfos: FwFileInfo[]): ProjectNode {
+    private buildHierarchy(fileInfos: FwItem[]): ProjectNode {
         // sort results in order by id
-        fileInfos.sort((a, b) => a.fsPath > b.fsPath ? 1 : a.fsPath === b.fsPath ? 0 : -1);
+        fileInfos.sort((a, b) => a.ref.fsPath > b.ref.fsPath ? 1 : a.ref.fsPath === b.ref.fsPath ? 0 : -1);
 
         const workspaceFolders = vscode.workspace.workspaceFolders?.map(f => asPosix(f.uri.fsPath)) ?? [];
         fileInfos.forEach((fileInfo) => {
-            if (workspaceFolders.includes(fileInfo.fsPath)) return;
+            if (workspaceFolders.includes(fileInfo.ref.fsPath)) return;
 
             const isVisible = this._fileFilter.check(fileInfo);
 
-            const relativePath = vscode.workspace.asRelativePath(fileInfo.fsPath, true);
+            const relativePath = vscode.workspace.asRelativePath(fileInfo.ref.fsPath, true);
 
-            let basePath = fileInfo.fsPath.replace(relativePath, "");
+            let basePath = fileInfo.ref.fsPath.replace(relativePath, "");
 
             const segments = relativePath.split(path.posix.sep).filter(Boolean); // Split path into segments and remove any empty segments
             let current = this._tree.root;
@@ -134,8 +135,8 @@ export class ProjectExplorerTreeDataProvider
                     } else if (isLeaf) {
                         if (fileInfo.type === FwType.Folder) {
                             node = new FolderNode(tmpId);
-                            node.item.name = fileInfo.name;
-                            node.item.ext = fileInfo.ext;
+                            node.item.name = fileInfo.ref.name;
+                            node.item.ext = fileInfo.ref.ext;
                         } else {
                             if (fileInfo.control === FwControl.Active) {
                                 node = new ProjectFileNode(tmpId);
@@ -145,10 +146,10 @@ export class ProjectExplorerTreeDataProvider
                                 node = new OtherFileNode(tmpId);
                             }
                             node.item.name += node.item.ext;
-                            node.item.ext = fileInfo.ext;
-                            node.item.name = fileInfo.name;
+                            node.item.ext = fileInfo.ref.ext;
+                            node.item.name = fileInfo.ref.name;
                         }
-                        const state = this._stateManager.get(fileInfo.fsPath);
+                        const state = this._stateManager.get(fileInfo.ref.fsPath);
 
                         if (state?.decoration && (!this._showDecoration || this._showDecoration === 'decoration1' || this._showDecoration === 'decoration2')) {
                             node.item.icon = state.decoration.icon ?? node.item.icon;
@@ -190,14 +191,14 @@ export class ProjectExplorerTreeDataProvider
                 fileInfo.parentOrder.forEach((order, index) => {
                     if (!cursor) return;
 
-                    let node = [...cursor.children?.values() ?? []].find(a => a.item.order === order);
+                    let node = [...cursor.children?.values() ?? []].find(a => a.item.order === order && a.type === NodeType.File);
                     if (!node) {
                         const parentOrders = fileInfo.parentOrder.slice(0, index + 1).map(a => FwFile.toOrderString(a));
-                        const name = path.posix.join(fileInfo.location, parentOrders.join('') + ` new${fileInfo.ext}`);
+                        const name = path.posix.join(fileInfo.ref.fsDir, parentOrders.join('') + ` new${fileInfo.ref.ext}`);
                         node = new ProjectFileNode(name);
                         node.parent = cursor;
-                        node.item.name = " ";
-                        node.item.description = "[missing file]";
+                        node.item.name = "[missing file]";
+                        node.item.description = "";
                         node.item.order = order;
                         node.item.fsName = "";
                         cursor?.children?.set(node.id, node);
@@ -205,9 +206,7 @@ export class ProjectExplorerTreeDataProvider
 
                     cursor = node;
                     if (cursor) {
-                        ////cursor.convertTo(VirtualFolderNode);
                         VirtualFolderNode.applyTo(cursor as ProjectNode);
-                        //cursor.type = NodeType.VirtualFolder;
                     }
                 });
 
@@ -215,8 +214,6 @@ export class ProjectExplorerTreeDataProvider
                 current.parent = cursor;
                 cursor?.children?.set(current.id, current);
             }
-
-
 
         });
         return this._tree.root;
@@ -228,10 +225,16 @@ export class ProjectExplorerTreeDataProvider
 
     // Tree data provider
     public getChildren(element: ProjectNode): ProjectNode[] {
-        return this._tree
-            .getChildren(element ? element.id : undefined)
-            .filter(e => e.isVisible);
+        let children = [...this._tree
+            .getChildren(element ? element.id : undefined)];
+
+        let nodes = new ProjectNodeList(children);
+
+        return nodes.filter()
+            .sort()
+            .items;
     }
+
 
     public getTreeItem(element: ProjectNode): vscode.TreeItem {
 
@@ -487,9 +490,9 @@ export class ProjectExplorerTreeDataProvider
         return this._refreshTree(f);
     }
 
-    public _refreshTree(files?: FwFileInfo[]) {
+    public _refreshTree(files?: FwItem[]) {
         console.log("refrehsing tree...");
-        files ??= this._stateManager.trackedFiles.map(f => f?.fileInfo).filter(a => a !== undefined);
+        files ??= this._stateManager.trackedFiles.map(f => f?.fwItem).filter(a => a !== undefined);
         this._tree.clear();
         this._tree.root = this.buildHierarchy(files);
         this._onDidChangeTreeData.fire();
@@ -549,7 +552,7 @@ export class ProjectExplorerTreeDataProvider
             }
 
             if (element.isVisible) {
-               await this._treeView.reveal(element, revealOptions);
+                await this._treeView.reveal(element, revealOptions);
             } else {
                 await this.filter(AllFilesFilter);
                 // revealOptions.focus = true;
