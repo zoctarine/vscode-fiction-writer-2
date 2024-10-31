@@ -13,13 +13,14 @@ import {
 import * as path from 'path';
 import {DisposeManager} from "../../core/disposable";
 import {ContextManager} from '../../core/contextManager';
-import {TreeNode, TreeStructure} from '../../core/tree/treeStructure';
+import {TreeStructure} from '../../core/tree/treeStructure';
 import {ColorResolver, IconResolver} from './index';
 import * as yaml from 'js-yaml';
 import {MetadataOptions} from './metadataOptions';
 import {MetadataTreeDataProvider, MetaItem} from './metadataTreeDataProvider';
 import {StateManager} from '../../core/state';
 import {log} from '../../core';
+import {TreeNode} from '../../core/tree/treeNode';
 
 enum FilterItemType {
     Key,

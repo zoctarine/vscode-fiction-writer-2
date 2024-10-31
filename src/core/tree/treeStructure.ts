@@ -1,32 +1,12 @@
-import {ProjectsOptions} from '../../modules/projectExplorer/projectsOptions';
-import {ProjectItem} from '../../modules/projectExplorer/projectItem';
-import {FwFile} from '../fwFiles/fwFile';
-
-export class TreeNode<T> {
-    public id: string;
-    public data: T;
-    public parent?: TreeNode<T> = undefined;
-    public children: TreeNode<T>[] = [];
-    public visible  = true;
-    constructor(id: string, data: T) {
-        this.id = id;
-        this.data = data;
-    }
-
-    public isLeaf(): boolean {
-        return this.children.length === 0;
-    }
-
-    public isUnparented() {
-        return this.parent === undefined;
-    }
-}
+import {TreeNode} from './treeNode';
+import {FwEmpty, FwItem, FwRootItem} from '../fwFiles';
+import path from 'path';
 
 export class TreeStructure<T> {
     public root: TreeNode<T>;
     private _nodes: Map<string, TreeNode<T>> = new Map<string, TreeNode<T>>();
 
-    constructor(root: TreeNode<T>) {
+        constructor(root: TreeNode<T>) {
         this.root = root;
         this._nodes.set(root.id, root);
     }
@@ -96,7 +76,7 @@ export class TreeStructure<T> {
         this._nodes.set(child.id, child);
     }
 
-    public toList(): TreeNode<T>[] {
+public toList(): TreeNode<T>[] {
         return [...this._nodes.values()];
     }
 

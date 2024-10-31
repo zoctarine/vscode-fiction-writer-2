@@ -4,10 +4,11 @@ import {ITextProcessor} from '../processors';
 import {FwItem} from '../fwFiles/fwItem';
 
 import {FwFileState, FwFileStateChangedEvent} from './fwFileState';
-import {IFileState, IFileStateSnapshot} from './states';
+import {IFileState} from './states';
 
 import {IStateProcessorFactory} from '../processors/IStateProcessorFactory';
 import {log} from '../logging';
+import {FwPermission, Permissions} from '../fwFiles/fwPermission';
 
 export class FwStateChangedEvent {
     files: FwFileStateChangedEvent[] = [];
@@ -77,38 +78,31 @@ export class StateManager extends DisposeManager {
 
     async reload(fileInfos: FwItem[]) {
         this._enqueueOn();
-        for (const fileInfo of fileInfos) {
+        for (const item of fileInfos) {
             try {
-                let item = this._fileStates.get(fileInfo.ref.fsPath);
-                const path = vscode.Uri.parse(fileInfo.ref.fsPath);
-                let stat: vscode.FileStat | undefined;
-
-                try {
-                    stat = await vscode.workspace.fs.stat(path);
-                } catch {
-                    stat = undefined;
-                }
-
-                // If file exists
-                if (stat) {
-                    if (stat.type === vscode.FileType.File) {
-                        const rawBytes = await vscode.workspace.fs.readFile(path);
-                        const content = rawBytes ? new TextDecoder().decode(rawBytes) : "";
-                        // If we did not track item
-                        if (!item) {
-                            item = this.track(fileInfo);
-                        }
-                        await item.state.loadState(content, {fwItem: item.fwItem});
+                if (item.ref.fsExists) {
+                    let content ='';
+                    if (Permissions.check(item, FwPermission.Read)) {
+                        const rawBytes = await vscode.workspace.fs.readFile(vscode.Uri.parse(item.ref.fsPath));
+                        content = rawBytes ? new TextDecoder().decode(rawBytes) : "";
                     }
+                    let fileState = this._fileStates.get(item.ref.fsPath);
+                    // If we did not track item
+                    if (!fileState) {
+                        fileState = this.track(item);
+                    }
+                    // we do refresh
+                    await fileState.state.loadState(content, {fwItem: item});
+
                     // If the file does not exist
                 } else {
                     // If we tracked it, we delete it
                     if (item) {
-                        this.unTrack(fileInfo.ref.fsPath);
+                        this.unTrack(item.ref.fsPath);
                     }
                 }
             } catch (error) {
-                console.warn("Cannot load file: " + fileInfo.ref.fsPath, error);
+                console.warn("Cannot load file: " + item.ref.fsPath, error);
             }
         }
         this._enqueueOff();
@@ -209,17 +203,16 @@ export class StateManager extends DisposeManager {
         return undefined;
     }
 
-    getWithSnapshots(fsPath: string): { state?: IFileState, snapshots?: Map<string, IFileStateSnapshot> } {
-        const item = this._fileStates.get(fsPath);
-        return {
-            state: item?.state.getState(),
-            snapshots: item?.state.getSnapshots()
-        };
-    }
-
-
     dispose() {
         super.dispose();
         this._unTrackAll();
+    }
+
+    /**
+     * Processes states that are not managed by this state manager.
+     * This method handles independent states that are outside the regular tracking scope.
+     */
+    processUnmanaged(content: string, data:IFileState):Promise<string> {
+        return this._textProcessor.process(content, data);
     }
 }

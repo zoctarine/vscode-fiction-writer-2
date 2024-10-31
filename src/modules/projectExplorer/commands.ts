@@ -1,11 +1,13 @@
 import vscode from 'vscode';
-import {ProjectNode} from './projectNodes';
-import {log, notifier} from '../../core';
-import {FwControl, FwFile, FwItem} from '../../core/fwFiles';
 import path from 'path';
+import {FwControl, FwFile, FwItem, log, notifier} from '../../core';
+import {ProjectNode} from './projectExplorerTreeItem';
 
-export const revealInExplorer = async (node: ProjectNode) => {
-    const uri = vscode.Uri.file(node.id);
+
+export const revealInExplorer = async ({data: {fwItem}}: ProjectNode) => {
+    if (!fwItem?.ref.fsPath) return;
+
+    const uri = vscode.Uri.file(fwItem.ref.fsPath);
     const options = {reveal: true};
 
     return vscode.commands.executeCommand('revealInExplorer', uri, options);
@@ -22,8 +24,7 @@ export const addToProject = async (item: FwItem | undefined) => {
         notifier.warn(`Cannot add ${item.ref.name} to project`);
         return;
     }
-    const projectTag = '.fw';
-    const newName = item.ref.name + projectTag + item.ref.ext;
+    const newName = item.ref.name + item.ref.projectTag + item.ref.ext;
     const newPath = path.posix.join(item.ref.fsDir, newName);
     const oldUri = vscode.Uri.file(item.ref.fsPath);
     const newUri = vscode.Uri.file(newPath);
@@ -34,7 +35,7 @@ export const addToProject = async (item: FwItem | undefined) => {
         }, (err) => {
             if (err) {
                 notifier.warn("Could not add file to project");
-                log.error(`Cannot add file ${item.ref.fsPath} ToProject`, err, {fwItem: item, oldUri, newUri});
+                log.error(`Cannot add file ${item.ref.fsPath} ToProject`, err, {item, oldUri, newUri});
             }
         });
 };

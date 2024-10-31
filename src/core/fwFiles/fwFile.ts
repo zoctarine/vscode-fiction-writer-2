@@ -2,6 +2,7 @@ import {FwItem} from './fwItem';
 import {IProcessor} from '../processors';
 import path from 'path';
 import {IFwFile} from './IFwFile';
+import vscode from 'vscode';
 
 export class FwFile {
     public static fixedGap = 10000;
@@ -93,7 +94,7 @@ const defaultFileNameOptions: IFileNameOptions = {
 };
 
 
-export class FwFileProcessor implements IFileNameParser {
+export class FwFileNameProcessor implements IFileNameParser {
     constructor(private _orderProcessor: IFileNameOrderParser) {
 
     }
@@ -108,16 +109,17 @@ export class FwFileProcessor implements IFileNameParser {
 
         return {
             order: parsedOrder.values,
+            orderString: parsedOrder.orderPart,
             orderedName: parsedName.name ?? '',
             name: parsedOrder.namePart ?? '',
             projectTag: parsedName?.projectTag,
             data: parsedName?.data ?? [],
             ext: parsedName?.ext,
-
             fsExt: parsed.ext,
             fsName: parsed.base,
             fsDir: parsed.dir,
-            fsPath: fsPath
+            fsPath: fsPath,
+            fsExists: true
         };
     }
 

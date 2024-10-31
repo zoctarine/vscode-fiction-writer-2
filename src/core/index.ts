@@ -17,6 +17,8 @@ export * as mapExtensions from './mapExtensions';
 export * from './types';
 export * from './regEx';
 export * from './nonce';
+export * from './fwFiles';
+export * from './tree';
 
 export class CoreModule extends DisposeManager {
     stateManager: StateManager;

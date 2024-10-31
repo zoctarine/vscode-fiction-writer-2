@@ -2,14 +2,11 @@ import * as vscode from "vscode";
 import {Disposable} from "vscode";
 
 import {ProjectExplorerTreeDataProvider} from "./projectExplorerTreeDataProvider";
-import {FwFileManager} from "../../core/fwFiles/fwFileManager";
 import {ProjectsOptions} from "./projectsOptions";
-import {DisposeManager} from "../../core/disposable";
+import {DisposeManager} from "../../core";
 import {addCommand, CoreModule, FictionWriter, log} from '../../core';
-import {ContextManager} from '../../core/contextManager';
-import {ProjectNode} from './projectNodes';
+import {ProjectNode} from './projectExplorerTreeItem';
 import {ProjectExplorerDecorationProvider} from './projectExplorerDecorationProvider';
-import {StateManager} from '../../core/state';
 import * as commands from './commands';
 
 export class ProjectsModule extends DisposeManager {
@@ -93,6 +90,7 @@ export class ProjectsModule extends DisposeManager {
             }),
 
             addCommand(FictionWriter.views.projectExplorer.revealInExplorer, (node: ProjectNode) => {
+
                 return commands.revealInExplorer(node);
             }),
 

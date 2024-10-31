@@ -11,13 +11,19 @@ import {compileModule} from './modules/compile';
 import {formattingModule} from './modules/formatting';
 import {
     ComputeTextStatistics,
-    ComputeWriteTarget, EraseMetaFromContent,
-    ExtractMeta, InjectMetaIntoContent,
+    ComputeWriteTarget,
+    EraseMetaFromContent,
+    ExtractMeta,
+    InjectMetaIntoContent,
     SetWriteTargetDecorations,
     UpdateMeta,
     AlterState,
     ComputeContentHash,
-    SetMetaDecorations, ChainedTextProcessor, SetTextStatisticsDecorations, SetFwItemDecorations
+    SetMetaDecorations,
+    ChainedTextProcessor,
+    SetTextStatisticsDecorations,
+    SetFwItemDecorations,
+    SetFwItemTypeDecorations
 } from './core/processors';
 
 
@@ -31,6 +37,7 @@ export function activate(context: vscode.ExtensionContext) {
     const core = new CoreModule(context, {
         createTextProcessor: () => new ChainedTextProcessor()
             .add(new ExtractMeta())
+            .add(new SetFwItemTypeDecorations())
             .add(new SetMetaDecorations())
             .add(new ComputeTextStatistics())
             .add(new SetTextStatisticsDecorations())

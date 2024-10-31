@@ -1,12 +1,15 @@
-import {NodeType} from '../../modules/projectExplorer/nodeType';
-import {NodePermission} from './nodePermission';
+import {FwSubType} from '../fwFiles/fwSubType';
+import {FwPermission} from '../fwFiles/fwPermission';
 
+/**
+ * @deprecated TODO: to be moved
+ */
 export class Node<T> {
     id: string;
     item: T;
     parent?: Node<T> = undefined;
-    type: NodeType = NodeType.Root;
-    permissions: NodePermission = NodePermission.None;
+    type: FwSubType = FwSubType.Root;
+    permissions: FwPermission = FwPermission.None;
     children?: Map<string, Node<T>> = new Map<string, Node<T>>();
     canHaveChildren: boolean = true;
     isVisible: boolean = true;
@@ -23,13 +26,13 @@ export class Node<T> {
 
     get isDraggable(): boolean {return true;}
 
-    get hasTextContent(): boolean {return this.type === NodeType.File || this.type === NodeType.VirtualFolder;}
+    get hasTextContent(): boolean {return this.type === FwSubType.ProjectFile || this.type === FwSubType.VirtualFolder;}
 
-    public can(permission:NodePermission): boolean {
+    public can(permission:FwPermission): boolean {
         return (this.permissions & permission) === permission;
     }
 
-    public getClosestParent(type: NodeType): Node<T> | undefined {
+    public getClosestParent(type: FwSubType): Node<T> | undefined {
         let cursor = this?.parent;
         while (cursor && cursor?.type !== type) {
             cursor = cursor?.parent;
@@ -51,17 +54,6 @@ export class Node<T> {
         traverse(this);
         return result;
     }
-
-    // /**
-    //  * Temporary convert solution, until we have a better way to handle this
-    //  * @param newTypek
-    //  */
-    // public convertTo<T1 extends T>(newType:T1): void {
-    //     const newObj = new newType(this.id);
-    //     Object.setPrototypeOf(this, newObj);
-    //     this.type = newObj.type;
-    //     this.permissions = newObj.permissions;
-    // }
 }
 
 

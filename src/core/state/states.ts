@@ -13,7 +13,6 @@ export interface IDecorationState {
     color?: string;
     description?: string;
     badge?:string;
-    named?:Map<string, IDecorationState>;
 }
 
 export interface ITextAnalyzerState {
@@ -29,12 +28,13 @@ export interface IWriteTargetsState {
 
 export interface IFileState {
     fwItem?: FwItem,
+    decorations?: IDecorationState,
     metadata?: IMetaState,
-    decoration?: IDecorationState,
+    metadataDecorations?: IDecorationState,
     analysis?: ITextAnalyzerState,
+    textStatisticsDecorations?: IDecorationState
     writeTargets?: IWriteTargetsState
     writeTargetsDecorations?: IDecorationState
-    textStatisticsDecorations?: IDecorationState
     contentHash?: string;
 }
 

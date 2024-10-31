@@ -9,7 +9,7 @@ class Logger extends DisposeManager {
     constructor() {
         super();
 
-        this._outputChannel = vscode.window.createOutputChannel("Fiction Writer Logs", 'log');
+        this._outputChannel = vscode.window.createOutputChannel("FictionWriter", 'log');
 
         this.manageDisposable(
             this._outputChannel
@@ -36,8 +36,8 @@ class Logger extends DisposeManager {
         this._log("Error", text, obj);
     }
 
-    tmp(text?: string, ...obj: any[]) {
-        return this._log("-> TEMP", text, obj);
+    tmp(...obj: any[]) {
+        return this._log("-> TEMP", "", obj);
     }
 
     text(text?: string): Logger {

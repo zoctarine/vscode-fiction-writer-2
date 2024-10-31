@@ -9,14 +9,14 @@ export class SetWriteTargetDecorations implements ITextProcessor<IFileState> {
         }
 
         const steps = new Map<number, { icon: string, color: string }>([
-            [0, {icon: MdiIcons.hourglassEmpty, color: 'red'}],
-            [10, {icon: MdiIcons.clockLoader10, color: 'lightred'}],
-            [20, {icon: MdiIcons.clockLoader20, color: 'orange'}],
-            [40, {icon: MdiIcons.clockLoader40, color: 'amber'}],
-            [60, {icon: MdiIcons.clockLoader60, color: 'yellow'}],
-            [80, {icon: MdiIcons.clockLoader80, color: 'lime'}],
-            [90, {icon: MdiIcons.clockLoader90, color: 'lime'}],
-            [100, {icon: MdiIcons.taskAlt, color: 'green'}],
+            [0, {icon: MdiIcons.hourglassEmpty, color: 'fictionWriter.red'}],
+            [10, {icon: MdiIcons.clockLoader10, color: 'fictionWriter.lightred'}],
+            [20, {icon: MdiIcons.clockLoader20, color: 'fictionWriter.orange'}],
+            [40, {icon: MdiIcons.clockLoader40, color: 'fictionWriter.amber'}],
+            [60, {icon: MdiIcons.clockLoader60, color: 'fictionWriter.yellow'}],
+            [80, {icon: MdiIcons.clockLoader80, color: 'fictionWriter.lime'}],
+            [90, {icon: MdiIcons.clockLoader90, color: 'fictionWriter.lime'}],
+            [100, {icon: MdiIcons.taskAlt, color: 'fictionWriter.green'}],
         ]);
 
 

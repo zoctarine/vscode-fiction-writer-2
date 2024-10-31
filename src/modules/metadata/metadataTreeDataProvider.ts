@@ -15,9 +15,10 @@ import {ColorResolver, IconResolver} from './iconsAndColors';
 import {selectMetadataColor, selectMetadataIcon, selectMetadataTarget} from './inputBoxes';
 import {DisposeManager, log} from '../../core';
 import {Metadata, MetaNodeType} from '../../core/metadata';
-import {TreeNode, TreeStructure} from '../../core/tree/treeStructure';
+import {TreeStructure} from '../../core/tree/treeStructure';
 import {ProseMirrorEditorProvider} from '../richTextEditor/proseMirrorEditorProvider';
 import {ActiveDocumentMonitor} from '../../core/fwFiles/activeDocumentMonitor';
+import {TreeNode} from '../../core/tree/treeNode';
 
 export class MetaItem {
     name: string = "";

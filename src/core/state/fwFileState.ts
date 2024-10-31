@@ -3,8 +3,10 @@ import deepEqual from 'deep-equal';
 import rfdc from 'rfdc';
 import {DisposeManager, IDisposable} from '../disposable';
 import {ChainedTextProcessor, ITextProcessor} from '../processors';
-import {IFileState, IFileStateSnapshot} from './states';
+import {IFileState} from './states';
 import {IStateProcessorFactory} from '../processors/IStateProcessorFactory';
+import {FwSubType} from '../fwFiles/fwSubType';
+import {log} from '../logging';
 
 const clone = rfdc();
 
@@ -15,7 +17,6 @@ export enum StateChangeAction {
 }
 
 export class FwFileStateChangedEvent {
-    snapshots = new Map<string, IFileStateSnapshot>();
     state: IFileState = {};
     prevState: IFileState = {};
     changed: (keyof IFileState)[] = [];
@@ -25,17 +26,16 @@ export class FwFileStateChangedEvent {
 export class FwFileState extends DisposeManager {
     private _onDidChange = new vscode.EventEmitter<FwFileStateChangedEvent>();
     private _state: IFileState = {};
-    private _snapshots = new Map<string, IFileStateSnapshot>();
     private _processor: ITextProcessor<IFileState>;
 
     constructor(
         initialState: any,
-        private _processorFactory: IStateProcessorFactory<IFileState>,
+        processorFactory: IStateProcessorFactory<IFileState>,
         disposables?: IDisposable[]) {
 
         super();
         this._state = {...initialState};
-        this._processor = _processorFactory.createTextProcessor();
+        this._processor = processorFactory.createTextProcessor();
         this.manageDisposable(
             this._onDidChange,
             ...(disposables ?? []));
@@ -48,6 +48,7 @@ export class FwFileState extends DisposeManager {
     async loadState(content: string, initialState: IFileState) {
         this._state = initialState;
         await this._process(async stateProxy => {
+
             return this._processor.process(content, stateProxy);
         });
     }
@@ -60,20 +61,15 @@ export class FwFileState extends DisposeManager {
                 state: {},
                 action: StateChangeAction.Deleted,
                 changed: Object.keys(this._state) as (keyof IFileState)[],
-                snapshots: new Map<string, IFileStateSnapshot>(),
             }
         );
         this._state = {};
-        this._snapshots = new Map<string, IFileStateSnapshot>();
     }
 
     getState(): IFileState {
         return clone(this._state);
     }
 
-    getSnapshots(): Map<string, { prevState: IFileState, state: IFileState }> {
-        return clone(this._snapshots);
-    }
 
     async _process(actionCallback: (stateProxy: any) => Promise<any>) {
         const dirtyProperties = new Set<string | symbol>();
@@ -98,12 +94,10 @@ export class FwFileState extends DisposeManager {
         stateProxy = undefined;
 
         if (this._onDidChange && dirtyProperties.size > 0) {
-            this._snapshots = (this._processor as ChainedTextProcessor).snapshots;
             this._onDidChange.fire({
                 prevState: prevState,
                 state: clone(this._state),
                 changed: [...dirtyProperties.values()] as (keyof IFileState)[],
-                snapshots: clone(this._snapshots),
                 action: StateChangeAction.Changed
             });
         }

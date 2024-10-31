@@ -18,6 +18,7 @@ export {ComputeContentHash} from './textProcessors/computeContentHash';
 export {SetMetaDecorations} from './textProcessors/setMetaDecorations';
 export {SetFwItemDecorations} from './textProcessors/setFwItemDecorations';
 export {SetTextStatisticsDecorations} from './textProcessors/setTextStatisticsDecorations';
+export {SetFwItemTypeDecorations} from './textProcessors/setFwItemTypeDecorations';
 export {IDecorationState} from '../state/states';
 export {IMetaState} from '../state/states';
 

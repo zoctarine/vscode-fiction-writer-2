@@ -1,5 +1,8 @@
 import {Node} from './node';
 
+/**
+ * @deprecated TODO: to be moved
+ */
 export class NodeTree<T extends Node<any>>{
     public root: T;
 

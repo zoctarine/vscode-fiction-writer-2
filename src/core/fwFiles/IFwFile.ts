@@ -1,5 +1,6 @@
 /**
- * Represents an interface for file metadata within a project.
+ * Represents an interface for file name metadata within a project.
+ * It should not be modified.
  * A full name could look like:
  * {@link order} {@link name}.{@link projectTag}.{@link data}.{@link ext}
  *
@@ -8,51 +9,59 @@ export interface IFwFile {
     /**
      * The file order extracted from filename. Multiple order numbers indicate a hierarchy
      */
-    order?: number[]
+    readonly order?: number[];
+
+    readonly orderString?: string;
 
     /**
      * the file name before extracting order tokens
      */
-    orderedName: string;
+    readonly orderedName: string;
 
     /**
      * The file name (without order, projectTag or data)
+     * Trimmed {@link orderedName} after removing the {@link orderString}
      */
-    name: string;
+    readonly name: string;
 
     /**
      * If the filename contains the projectTag, then it is returned here.
      * If it is missing, the file does not belong to the project
      */
-    projectTag?: string;
+    readonly projectTag: string;
 
     /**
      * Optional data, extracted from filename
      */
-    data: string[];
+    readonly data: string[];
 
     /**
      * The full extension, including projectTag and additional data (e.g. i for indented)
      */
-    ext: string;
+    readonly ext: string;
 
     /**
      * The file extension as it appears in the file system. Including the '.'
      */
-    fsExt: string;
+    readonly fsExt: string;
 
     /**
      * The file name as it appears in the file system. It can include order, project tag and data
      */
-    fsName: string;
+    readonly fsName: string;
 
     /**
      * The location (directory) from the fileSystem
      */
-    fsDir: string;
+    readonly fsDir: string;
 
     /**
      * The full fsPath
      */
-    fsPath: string;
+    readonly fsPath: string;
+
+    /**
+     * If the file exists on the fileSystem
+     */
+    readonly fsExists: boolean;
 }

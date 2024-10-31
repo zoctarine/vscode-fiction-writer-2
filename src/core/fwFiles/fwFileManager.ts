@@ -1,15 +1,23 @@
 import * as vscode from "vscode";
-import {DefaultOrderParser, FwFile, FwFileProcessor} from "./fwFile";
+import {DefaultOrderParser, FwFile, FwFileNameProcessor} from "./fwFile";
 import * as path from "path";
 import {ProjectsOptions} from '../../modules/projectExplorer/projectsOptions';
 import {DisposeManager} from '../disposable';
 import {glob} from 'glob';
 import fs from 'node:fs';
-import {FwControl, FwItem, FwType} from './fwItem';
+import {
+    FwFolderItem,
+    FwItem,
+    FwOtherFileItem,
+    FwProjectFileItem, FwTextFileItem,
+    FwWorkspaceFolderItem
+} from './fwItem';
 import {RegEx} from '../regEx';
 import {log} from '../logging';
+import {FwType} from './fwType';
+import {FwControl} from './fwControl';
 
-
+let loadFilesCalledCounter = 0;
 export const asPosix = (mixedPath: string) => path.posix.normalize(mixedPath.split(path.sep).join(path.posix.sep));
 
 export class FwFileManager extends DisposeManager {
@@ -46,12 +54,11 @@ export class FwFileManager extends DisposeManager {
         if (!this._projectTag) this._projectTag = 'fw';
     }
 
-    private _fileChangeHandler(e: vscode.Uri): void {
+    private async _fileChangeHandler(e: vscode.Uri) {
         if (this._silentUpdates) return;
-        fs.promises.stat(e.fsPath).then((stat) => {
-            const fwInfo = this._parse(asPosix(e.fsPath), stat.isDirectory());
-            this._onFilesChanged.fire([fwInfo]);
-        });
+
+        const fwItem = await this._parse(e.fsPath);
+        this._onFilesChanged.fire([fwItem]);
     }
 
     public get onFilesChanged() {
@@ -59,6 +66,7 @@ export class FwFileManager extends DisposeManager {
     }
 
     public async loadFiles(): Promise<FwItem[]> {
+        loadFilesCalledCounter++;
         const workspaceFolders = vscode.workspace.workspaceFolders;
 
         if (!workspaceFolders) {
@@ -76,15 +84,15 @@ export class FwFileManager extends DisposeManager {
                 });
             await Promise.all(dirs.map(async (file) => {
                 try {
-                    const stat = await fs.promises.stat(file);
-                    const item = this._parse(asPosix(file), stat.isDirectory());
+
+                    const item = await this._parse(file);
                     files.push(item);
                 } catch (err) {
                     console.error(err);
                 }
             }));
         }
-        return [...files.map(f => ({...f}))];
+        return files;
     }
 
     public renameFile(oldPath: string, newPath: string): Promise<void> {
@@ -152,35 +160,65 @@ export class FwFileManager extends DisposeManager {
         }
     }
 
-    public _parse(fsPath: string, isDirectory?: boolean): FwItem {
-        const fileNameParser = new FwFileProcessor(new DefaultOrderParser());
-        const file = fileNameParser.process(fsPath);
-        const result = new FwItem(file);
+    public async _parse(fsPath: string): Promise<FwItem> {
+        fsPath = asPosix(fsPath);
+        const workspaceFolders = vscode.workspace.workspaceFolders?.map(f => asPosix(f.uri.fsPath)) ?? [];
+        const stat = await fs.promises.stat(fsPath);
 
-        result.type = isDirectory ? FwType.Folder : FwType.File;
-        result.data = file.data;
-        result.order = 0;
-        result.control = FwControl.Never;
+        const file = new FwFileNameProcessor(new DefaultOrderParser()).process(fsPath);
 
-        const order = file.order ?? [];
-        if (order.length > 0) {
-            result.order = order[order.length - 1];
-            result.parentOrder = order.slice(0, -1);
-        }
-        const isTextFile = !isDirectory && this._fileExtensions.includes(file.fsExt);
-        const isProjectFile = !isDirectory && file.projectTag && isTextFile;
+        const isFolder = stat.isDirectory();
+        const isFile = stat.isFile();
+        const isWorkspaceFolder = isFolder && workspaceFolders.includes(fsPath);
+        const isTextFile = isFile && this._fileExtensions.includes(file.fsExt);
+        const isProjectFile = isFile && file.projectTag.length > 0 && isTextFile;
 
-        if (isProjectFile) {
-            result.control = FwControl.Active;
-        } else if (isTextFile) {
-            result.control = FwControl.Possible;
-        } else {
-            result.control = FwControl.Never;
-        }
+        const result = new FactorySwitch<FwItem>()
+            .case(isWorkspaceFolder, () => new FwWorkspaceFolderItem(file))
+            .case(isFolder, () => new FwFolderItem(file))
+            .case(isProjectFile, () => new FwProjectFileItem(file))
+            .case(isTextFile, () => new FwTextFileItem(file))
+            .default(() => new FwOtherFileItem(file))
+            .create();
 
-        // const orderPrefix = result.order > 0 ? result.order.toString() : '';
-        // result.orderString = `${orderPrefix}_${result.name}_${result.ext}`;
+        const {order = []} = file;
+        result.order = order.length ? order[order.length - 1] : 0;
+        result.parentOrder = order.slice(0, -1);
         result.orderBy = file.orderedName;
+
         return result;
     }
+}
+
+/**
+ * Factory for creating objects based on condition.
+ * The {@link case} {@link when} expressions are evaluated in the order they are added
+ * The first match will be chosen to create the object.
+ */
+export class FactorySwitch<T> {
+    _builders: { create: () => T, when: boolean | (() => boolean) }[] = [];
+
+
+    default(create: () => T): FactorySwitch<T> {
+        this._builders.push({create, when: true});
+        return this;
+    }
+
+    case(when: boolean | (() => boolean),
+         create: () => T): FactorySwitch<T> {
+        this._builders.push({create, when});
+        return this;
+    }
+
+    create(): T {
+        for (let builder of this._builders) {
+            if (builder.when === true || (typeof builder.when === 'function' && builder.when())) {
+                return builder.create();
+            }
+        }
+
+        throw new Error(`No suitable builder found`);
+    }
+
+
 }

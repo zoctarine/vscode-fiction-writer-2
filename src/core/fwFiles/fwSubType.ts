@@ -1,7 +1,8 @@
-export enum NodeType {
+export enum FwSubType {
+    Unknown = "unknown",
     Root = "root",
     RootFolder = "rootFolder",
-    File = "file",
+    ProjectFile = "projectFile",
     Folder = "folder",
     VirtualFolder = "virtualFolder",
     WorkspaceFolder = "workspaceFolder",
@@ -10,6 +11,7 @@ export enum NodeType {
     TextFile = "textFile",
     OtherFile = "otherFile",
 }
+
 
 export enum RootFolderType {
     Other = "other",
