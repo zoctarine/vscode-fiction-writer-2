@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import {DisposeManager, FictionWriter, log} from "../../core";
+import {DisposeManager, FictionWriter, FwSubType, log} from "../../core";
 import {
     FactorySwitch,
     FwEmpty,
@@ -12,13 +12,14 @@ import {
     IFwFile
 } from '../../core/fwFiles';
 import {ContextManager} from '../../core/contextManager';
-import {ProjectExplorerTreeItem, ProjectNode, ProjectNodeList} from './projectExplorerTreeItem';
+import {ProjectExplorerTreeItem} from './projectExplorerTreeItem';
 import {ProjectsOptions} from './projectsOptions';
 import {IDecorationState, IFileState, StateManager} from '../../core/state';
 import {AllFilesFilter, IFileFilter, OnlyProjectFilesFilter} from './fileInfoFilters';
 import {FaIcons} from '../../core/decorations';
 import {TreeStructure} from '../../core/tree/treeStructure';
 import rfdc from 'rfdc';
+import {ProjectNode, ProjectNodeList} from './projectNode';
 
 const clone = rfdc();
 
@@ -146,8 +147,32 @@ export class ProjectExplorerTreeDataProvider
         item.control = instance.control;
         item.subType = instance.subType;
         Object.setPrototypeOf(item, Object.getPrototypeOf(instance));
-
     }
+
+    private arrangeWorkspaces(){
+        const workspaces:ProjectNode[] = [];
+        const collectWorkspaces = (node: ProjectNode, workspaces: ProjectNode[]) =>{
+            if (node.data.fwItem?.subType === FwSubType.WorkspaceFolder){
+                workspaces.push(node);
+            } else if(node.children?.length > 0) {
+                for (const child of node.children) {
+                    collectWorkspaces(child, workspaces);
+                }
+            }
+
+        };
+
+        const root = this._treeStructure.root;
+        collectWorkspaces(root, workspaces);
+
+        root.children.forEach((child) => {this._treeStructure.detach(child);});
+        for (const child of workspaces) {
+            this._treeStructure.addChild(child, root);
+        }
+
+        this.printTree(this._treeStructure.root, '  ');
+    }
+
 
     private printTree(node: ProjectNode, indent: string) {
         log.tmp(indent + node.id);
@@ -158,17 +183,13 @@ export class ProjectExplorerTreeDataProvider
 
     private async buildHierarchy(states: IFileState[]) {
         const tree = new TreeStructure<IFileState>(new ProjectNode('root', {fwItem: new FwRootItem()}));
-        const workspaceFolders = vscode.workspace.workspaceFolders?.map(f => f.uri.fsPath);
+        const workspaces: ProjectNode[] = [];
         for (const state of states) {
             if (!state?.fwItem?.ref) continue;
             const {fsPath} = state.fwItem.ref;
-            let relativePath = vscode.workspace.asRelativePath(fsPath, true);
-            if (workspaceFolders?.includes(relativePath)) continue;
-
-            const segments = relativePath.split(path.posix.sep);
-            const basePath = fsPath.substring(0, fsPath.length - relativePath.length);
+            const segments = fsPath.split(path.posix.sep);
             let currentLevel = tree.root;
-            let currentPath = basePath;
+            let currentPath = '';
             for (const segment of segments) {
                 currentPath = path.posix.join(currentPath, segment);
 
@@ -189,132 +210,17 @@ export class ProjectExplorerTreeDataProvider
 
             currentLevel.data = state;
             currentLevel.visible = this._fileFilter.check(state.fwItem);
+            if (currentLevel.data.fwItem?.subType === FwSubType.WorkspaceFolder) {
+                workspaces.push(currentLevel);
+            }
         }
 
         this._treeStructure = tree;
 
+        // TODO: optimize workspace folder filtering) and virtual folder building
+        //       should be more efficient for larger implementation. (current draft)
+        this.arrangeWorkspaces();
         await this.buildVirtualFolders(tree.root);
-
-        //  this.printTree(tree.root, "");
-        // // sort results in order by id
-        // fwItems.sort((a, b) => a.ref.fsPath > b.ref.fsPath ? 1 : a.ref.fsPath === b.ref.fsPath ? 0 : -1);
-        //
-        // const workspaceFolders = vscode.workspace.workspaceFolders?.map(f => asPosix(f.uri.fsPath)) ?? [];
-        // fwItems.forEach((item) => {
-        //     if (workspaceFolders.includes(item.ref.fsPath)) return;
-        //
-        //     const isVisible = this._fileFilter.check(item);
-        //     const relativePath = vscode.workspace.asRelativePath(item.ref.fsPath, false);
-        //
-        //     let basePath = item.ref.fsPath.replace(relativePath, "");
-        //
-        //     log.tmp("LOG", { isVisible, relativePath, basePath, workspaceFolders });
-        //
-        //     const segments = relativePath.split(path.posix.sep).filter(Boolean); // Split path into segments and remove any empty segments
-        //     let current = this._tree.root;
-        //     current.item.fsName = basePath;
-        //     current.id = basePath;
-        //
-        //     segments.forEach((segment, index) => {
-        //         let childAdded = false;
-        //         const tmpId = path.posix.join(current.id, segment);
-        //
-        //         if (!current.children?.has(tmpId)) {
-        //             const isLeaf = index === segments.length - 1;
-        //             if (!isLeaf) basePath = path.posix.join(basePath, segment);
-        //             let node: ProjectNode = new ProjectFileNode(tmpId);
-        //             if (!isLeaf && workspaceFolders.includes(basePath)) {
-        //                 node = new WorkspaceFolderNode(tmpId);
-        //                 node.item.description = '/';
-        //                 node.item.name = segment;
-        //             } else if (!isLeaf) {
-        //                 node = new FolderNode(tmpId);
-        //                 node.item.description = 'folder';
-        //                 node.item.name = segment;
-        //             } else if (isLeaf) {
-        //                 if (item.type === FwType.Folder) {
-        //                     node = new FolderNode(tmpId);
-        //                     node.item.name = item.ref.name;
-        //                     node.item.ext = item.ref.ext;
-        //                 } else {
-        //                     if (item.control === FwControl.Active) {
-        //                         node = new ProjectFileNode(tmpId);
-        //                     } else if (item.control === FwControl.Possible) {
-        //                         node = new TextFileNode(tmpId);
-        //                     } else {
-        //                         node = new OtherFileNode(tmpId);
-        //                     }
-        //                     node.item.name += node.item.ext;
-        //                     node.item.ext = item.ref.ext;
-        //                     node.item.name = item.ref.name;
-        //                 }
-        //                 const state = this._stateManager.get(item.ref.fsPath);
-        //
-        //                 if (state?.decoration && (!this._showDecoration || this._showDecoration === 'decoration1' || this._showDecoration === 'decoration2')) {
-        //                     node.item.icon = state.decoration.icon ?? node.item.icon;
-        //                     node.item.color = state.decoration.color ?? node.item.color;
-        //                     node.item.description = state.decoration.description ?? node.item.description;
-        //                 }
-        //                 if (state?.metadata?.value && this._options.fileDescriptionMetadataKey.value) {
-        //                     node.item.description = state.metadata.value[this._options.fileDescriptionMetadataKey.value]?.toString();
-        //                 }
-        //                 if (!this._showDecoration || this._showDecoration === 'decoration1' || this._showDecoration === 'decoration3') {
-        //                     if (this._showDecoration && this._showDecoration === 'decoration3') {
-        //                         const decoration = state?.textStatisticsDecorations;
-        //                         if (decoration) {
-        //                             node.item.description = decoration.description ?? node.item.description;
-        //                         }
-        //                     }
-        //                     const decoration = state?.writeTargetsDecorations;
-        //                     if (decoration) {
-        //                         node.item.icon = decoration.icon ?? node.item.icon;
-        //                         node.item.color = decoration.color ?? node.item.color;
-        //                         node.item.description = decoration.description ?? node.item.description;
-        //                     }
-        //                 }
-        //             }
-        //             node.isVisible = isVisible;
-        //             node.parent = current;
-        //             node.item.order = item.order;
-        //             node.item.fsName = segment;
-        //             if (!childAdded) {
-        //                 current.children?.set(node.id, node);
-        //             }
-        //         }
-        //         current = current.children?.get(tmpId) as ProjectNode;
-        //     });
-        //
-        //     if (item.parentOrder.length > 0 && current.type === NodeType.File) {
-        //         let cursor = current.parent;
-        //
-        //         item.parentOrder.forEach((order, index) => {
-        //             if (!cursor) return;
-        //
-        //             let node = [...cursor.children?.values() ?? []].find(a => a.item.order === order && a.type === NodeType.File);
-        //             if (!node) {
-        //                 const parentOrders = item.parentOrder.slice(0, index + 1).map(a => FwFile.toOrderString(a));
-        //                 const name = path.posix.join(item.ref.fsDir, parentOrders.join('') + ` new${item.ref.ext}`);
-        //                 node = new ProjectFileNode(name);
-        //                 node.parent = cursor;
-        //                 node.item.name = "[missing file]";
-        //                 node.item.description = "";
-        //                 node.item.order = order;
-        //                 node.item.fsName = "";
-        //                 cursor?.children?.set(node.id, node);
-        //             }
-        //
-        //             cursor = node;
-        //             if (cursor) {
-        //                 VirtualFolderNode.applyTo(cursor as ProjectNode);
-        //             }
-        //         });
-        //
-        //         current?.parent?.children?.delete(current.id);
-        //         current.parent = cursor;
-        //         cursor?.children?.set(current.id, current);
-        //     }
-        //
-        // });
     }
 
     public getParent(element: ProjectNode): ProjectNode | undefined {

@@ -172,7 +172,6 @@ export class FwFileManager extends DisposeManager {
         const isWorkspaceFolder = isFolder && workspaceFolders.includes(fsPath);
         const isTextFile = isFile && this._fileExtensions.includes(file.fsExt);
         const isProjectFile = isFile && file.projectTag.length > 0 && isTextFile;
-
         const result = new FactorySwitch<FwItem>()
             .case(isWorkspaceFolder, () => new FwWorkspaceFolderItem(file))
             .case(isFolder, () => new FwFolderItem(file))

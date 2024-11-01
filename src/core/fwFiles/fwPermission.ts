@@ -12,9 +12,6 @@ export enum FwPermission {
     Rename = 1 << 5, // 32
     Sort = 1 << 6, // 64
     OpenEditor = 1 << 7, // 128
-
-    Handle = Move | Rename | Delete | OpenEditor,
-
 }
 
 const key = (control: FwControl, subType: FwSubType) => `${control}_${subType}`;
@@ -28,6 +25,11 @@ export class Permissions {
     }
 
     static {
+        Permissions._add(
+            FwControl.Never, FwSubType.WorkspaceFolder,
+            FwPermission.None
+        );
+
         Permissions._add(
             FwControl.Never, FwSubType.Folder,
             FwPermission.Rename |
@@ -71,14 +73,38 @@ export class Permissions {
             FwPermission.OpenEditor);
     }
 
-    static check(item?: FwItem, permission?: FwPermission): boolean {
-        if (!item || !permission) return false;
+    static get(item?: FwItem): FwPermission {
+        if (!item) return FwPermission.None;
 
-        const allowed = Permissions._permissions.get(key(item?.control, item?.subType));
+        return Permissions._permissions.get(key(item?.control, item?.subType))
+            ?? FwPermission.None;
+    }
+
+    static check(item?: FwItem, permission?: FwPermission): boolean {
+        if (!permission) return false;
+
+        const allowed = Permissions.get(item);
 
         if (!allowed) return false;
 
         return (allowed & permission) === permission;
+    }
+
+    static serialize(permission: FwPermission): string {
+        const permissionNames = [];
+
+        for (const [name, value] of Object.entries(FwPermission)) {
+            if (typeof value === 'number' &&
+                value !== FwPermission.None &&
+                (permission & value) === value) {
+                permissionNames.push(name.toLowerCase());
+            }
+        }
+        return permissionNames.join(' ');
+    }
+
+    static getSerialized(item?: FwItem): string {
+        return Permissions.serialize(Permissions.get(item));
     }
 }
 

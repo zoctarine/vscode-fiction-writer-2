@@ -1,3 +1,5 @@
+import {FwSubType} from '../fwFiles';
+
 export class TreeNode<T> {
     public id: string;
     public data: T;
@@ -18,5 +20,25 @@ export class TreeNode<T> {
 
     public isUnparented() {
         return this.parent === undefined;
+    }
+
+    public acceptsChild(child: TreeNode<T>): boolean{
+        return true;
+    }
+
+    public get acceptsChildren(): boolean {
+        return true;
+    }
+
+    public get canMove(): boolean {
+        return true;
+    }
+
+    public get canEdit(): boolean {
+        return true;
+    }
+
+    public get canDelete(): boolean {
+        return true;
     }
 }

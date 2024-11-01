@@ -12,6 +12,7 @@ export class SetFwItemTypeDecorations implements ITextProcessor<IFileState> {
             [FwSubType.Unknown, FaIcons.folder],
             [FwSubType.Root, FaIcons.inbox],
             [FwSubType.RootFolder, FaIcons.inbox],
+            [FwSubType.WorkspaceFolder, FaIcons.inbox],
             [FwSubType.Folder, FaIcons.folder],
             [FwSubType.VirtualFolder,
                 data.fwItem.ref.fsExists

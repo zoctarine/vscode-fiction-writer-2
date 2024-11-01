@@ -803,12 +803,12 @@
         },
         {
           "command": "fictionWriter.views.projectExplorer.rename",
-          "when": "view == fictionWriter.views.projectExplorer && !fictionWriter.views.projectExplorer.is",
+          "when": "view == fictionWriter.views.projectExplorer && !fictionWriter.views.projectExplorer.is && viewItem =~ /\\brename\\b/",
           "group": "4_fictionWriter@4"
         },
         {
           "command": "fictionWriter.views.projectExplorer.trash",
-          "when": "view == fictionWriter.views.projectExplorer && !fictionWriter.views.projectExplorer.is",
+          "when": "view == fictionWriter.views.projectExplorer && !fictionWriter.views.projectExplorer.is && viewItem =~ /\\bdelete\\b/",
           "group": "4_fictionWriter@5"
         },
         {

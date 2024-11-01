@@ -5,8 +5,8 @@ import {ProjectExplorerTreeDataProvider} from "./projectExplorerTreeDataProvider
 import {ProjectsOptions} from "./projectsOptions";
 import {DisposeManager} from "../../core";
 import {addCommand, CoreModule, FictionWriter, log} from '../../core';
-import {ProjectNode} from './projectExplorerTreeItem';
 import {ProjectExplorerDecorationProvider} from './projectExplorerDecorationProvider';
+import {ProjectNode} from './projectNode';
 import * as commands from './commands';
 
 export class ProjectsModule extends DisposeManager {

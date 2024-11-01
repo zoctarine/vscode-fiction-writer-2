@@ -1,9 +1,14 @@
 import vscode from 'vscode';
 import path from 'path';
 import {FwControl, FwFile, FwItem, log, notifier} from '../../core';
-import {ProjectNode} from './projectExplorerTreeItem';
+
+import {ProjectNode} from './projectNode';
 
 
+/**
+ * Reveals a file item in the VSCode Explorer view
+ *
+ */
 export const revealInExplorer = async ({data: {fwItem}}: ProjectNode) => {
     if (!fwItem?.ref.fsPath) return;
 
@@ -16,7 +21,6 @@ export const revealInExplorer = async ({data: {fwItem}}: ProjectNode) => {
 
 /**
  * Adding a file to project, means adding the project tracking tag to the file name.
- * @param item
  */
 export const addToProject = async (item: FwItem | undefined) => {
     if (!item) return;
