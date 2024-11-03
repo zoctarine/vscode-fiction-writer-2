@@ -1,8 +1,8 @@
-import {FwItem} from './fwItem';
 import {IProcessor} from '../processors';
 import path from 'path';
 import {IFwFile} from './IFwFile';
-import vscode from 'vscode';
+import {log} from '../logging';
+import {IBuilder} from '../lib/IBuilder';
 
 export class FwFile {
     public static fixedGap = 10000;
@@ -33,13 +33,14 @@ export class FwFile {
 }
 
 export interface IFileOrder {
-   namePart: string;
-   orderPart: string;
-   values: number[]
+    namePart: string | undefined;
+    orderPart: string | undefined;
+    mainOrder: number | undefined;
+    otherOrders: number[] | undefined;
 }
 
-export interface IFileNameOrderParser extends IProcessor<string, IOrderOptions, IFileOrder> {
-
+export interface IFileNameOrderParser extends IProcessor<string, IOrderOptions, IFileOrder>,
+    IBuilder<IFileOrder, string> {
 }
 
 export interface IOrderOptions {
@@ -61,23 +62,60 @@ export class DefaultOrderParser implements IFileNameOrderParser {
         const opt = {...defaultOrderOptions, ...options};
         let namePart = source;
         let orderPart = '';
-        let orderList:number[] = [];
-
+        let orderList: number[] = [];
+        let order: number | undefined;
         const matches = source.match(this.orderRegex);
         if (matches) {
             orderPart = matches[0];
-            orderList = orderPart.trim().split(opt.separator).map(o=>{
+            orderList = orderPart.trim().split(opt.separator).map(o => {
                 const order = parseInt(o.trim(), 10);
                 return Number.isNaN(order) ? 0 : order;
             });
-            namePart = source.substring(matches.length-1);
+            if (orderList.length > 0) {
+                order = orderList.pop()!;
+            }
+            namePart = source.substring(matches.length - 1);
         }
 
         return {
             namePart,
             orderPart,
-            values: orderList
+            mainOrder: order,
+            otherOrders: orderList
         };
+    }
+
+    build(input: IFileOrder): string {
+        throw new Error('Method not implemented.');
+    }
+}
+
+
+export class SimpleSuffixOrderParser implements IFileNameOrderParser {
+    orderRegex = /(?<name>.*?)(?<number>[0-9]+)$/;
+
+    process(name: string, options: any = {}): IFileOrder {
+        const matches = name.match(this.orderRegex);
+        if (matches?.groups) {
+            return {
+                namePart: matches.groups.name,
+                orderPart: matches.groups.order,
+                mainOrder: parseInt(matches.groups.number),
+                otherOrders: undefined
+            };
+        } else {
+            return {
+                namePart: name,
+                orderPart: undefined,
+                mainOrder: undefined,
+                otherOrders: undefined,
+            };
+        }
+    }
+
+    build(input: IFileOrder): string {
+        log.tmp(input);
+        return `${input.namePart}${input.mainOrder ?? ''}`;
     }
 }
 
@@ -104,11 +142,10 @@ export class FwFileNameProcessor implements IFileNameParser {
 
         const parsed = path.posix.parse(fsPath);
 
-        const parsedName= this._parse(parsed.base);
+        const parsedName = this._parse(parsed.base);
         const parsedOrder = this._orderProcessor.process(parsedName.name);
-
         return {
-            order: parsedOrder.values,
+            order: [parsedOrder.mainOrder, ...parsedOrder.otherOrders ?? []].filter(f => f !== undefined),
             orderString: parsedOrder.orderPart,
             orderedName: parsedName.name ?? '',
             name: parsedOrder.namePart ?? '',
@@ -128,17 +165,17 @@ export class FwFileNameProcessor implements IFileNameParser {
         const matches = base.match(fileNameRegex);
         if (matches) {
             const groups = matches.groups as any;
-            const { projectTag, data1, data2, data3, ext } = groups;
+            const {projectTag, data1, data2, data3, ext} = groups;
 
             return {
-                name: base.substring(0, base.length-matches[0].length),
+                name: base.substring(0, base.length - matches[0].length),
                 ext: matches[0],
                 projectTag: projectTag ?? '',
                 data: [data1, data2, data3].filter(v => v)
             };
         } else {
             return {
-                name:base,
+                name: base,
                 fwExt: '',
                 ext: '',
                 projectTag: '',
@@ -147,4 +184,3 @@ export class FwFileNameProcessor implements IFileNameParser {
         }
     }
 }
-

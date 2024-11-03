@@ -60,7 +60,7 @@ export class FwEmptyVirtualFolder extends FwItem {
     constructor(ref: IFwFile) {
         super(ref);
         this.type = FwType.Folder;
-        this.subType = FwSubType.VirtualFolder;
+        this.subType = FwSubType.EmptyVirtualFolder;
         this.control = FwControl.Active;
     }
 

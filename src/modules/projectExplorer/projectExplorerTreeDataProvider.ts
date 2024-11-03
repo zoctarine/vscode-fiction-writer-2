@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import {DisposeManager, FictionWriter, FwSubType, log} from "../../core";
+import {DisposeManager, FictionWriter, FwProjectFileItem, FwSubType, log} from "../../core";
 import {
     FactorySwitch,
     FwEmpty,
@@ -121,15 +121,10 @@ export class ProjectExplorerTreeDataProvider
                     this._treeStructure.addChild(child, parent);
 
                     if (parent.data.fwItem) {
-                        this._morph(parent.data.fwItem, FwVirtualFolderItem);
-                        if (!parent.data.decorations) {
-                            parent.data.decorations = {};
-                        }
+                        this._morph(parent, parent.data.fwItem.ref.fsExists
+                            ? FwVirtualFolderItem
+                            : FwEmptyVirtualFolder);
 
-                        // TODO: refactor this
-                        const newstate = clone(parent.data);
-                        await this._stateManager.processUnmanaged('', newstate);
-                        parent.data.decorations = newstate.decorations;
                     }
                 }
             }
@@ -140,21 +135,32 @@ export class ProjectExplorerTreeDataProvider
         }
     }
 
-    private _morph(item: FwItem, ctor: new (ref: IFwFile) => FwItem) {
-        const instance = new ctor(item.ref);
+    private async _morph(node: ProjectNode, ctor: { new(ref: IFwFile): FwItem }) {
+        const {data:{fwItem}} = node;
+        if (!fwItem) return;
 
-        item.type = instance.type;
-        item.control = instance.control;
-        item.subType = instance.subType;
-        Object.setPrototypeOf(item, Object.getPrototypeOf(instance));
+        const instance = new ctor(fwItem.ref);
+        fwItem.type = instance.type;
+        fwItem.control = instance.control;
+        fwItem.subType = instance.subType;
+        Object.setPrototypeOf(fwItem, Object.getPrototypeOf(instance));
+
+        if (!node.data.decorations) {
+            node.data.decorations = {};
+        }
+
+        // TODO: refactor this
+        const newstate = clone(node.data);
+        await this._stateManager.processUnmanaged('', newstate);
+        node.data.decorations = newstate.decorations;
     }
 
-    private arrangeWorkspaces(){
-        const workspaces:ProjectNode[] = [];
-        const collectWorkspaces = (node: ProjectNode, workspaces: ProjectNode[]) =>{
-            if (node.data.fwItem?.subType === FwSubType.WorkspaceFolder){
+    private arrangeWorkspaces() {
+        const workspaces: ProjectNode[] = [];
+        const collectWorkspaces = (node: ProjectNode, workspaces: ProjectNode[]) => {
+            if (node.data.fwItem?.subType === FwSubType.WorkspaceFolder) {
                 workspaces.push(node);
-            } else if(node.children?.length > 0) {
+            } else if (node.children?.length > 0) {
                 for (const child of node.children) {
                     collectWorkspaces(child, workspaces);
                 }
@@ -165,14 +171,13 @@ export class ProjectExplorerTreeDataProvider
         const root = this._treeStructure.root;
         collectWorkspaces(root, workspaces);
 
-        root.children.forEach((child) => {this._treeStructure.detach(child);});
+        root.children.forEach((child) => {
+            this._treeStructure.detach(child);
+        });
         for (const child of workspaces) {
             this._treeStructure.addChild(child, root);
         }
-
-        this.printTree(this._treeStructure.root, '  ');
     }
-
 
     private printTree(node: ProjectNode, indent: string) {
         log.tmp(indent + node.id);
@@ -189,7 +194,7 @@ export class ProjectExplorerTreeDataProvider
             const {fsPath} = state.fwItem.ref;
             const segments = fsPath.split(path.posix.sep);
             let currentLevel = tree.root;
-            let currentPath = '';
+            let currentPath = '/';
             for (const segment of segments) {
                 currentPath = path.posix.join(currentPath, segment);
 
@@ -255,38 +260,22 @@ export class ProjectExplorerTreeDataProvider
                     .case(this._showDecoration === 'decoration4', () => [])
                     .create()
         });
-        // const item = element.asTreeItem();
-        // item.description = `${this._isBatchOrderingEnabled ? `(${element.item.order}) ` : ''}${element.item.description ?? ''}`,
-        //     item.collapsibleState = item.collapsibleState === vscode.TreeItemCollapsibleState.None
-        //         ? vscode.TreeItemCollapsibleState.None
-        //         : expanded
-        //             ? vscode.TreeItemCollapsibleState.Expanded
-        //             : vscode.TreeItemCollapsibleState.Collapsed;
-        //
-        // if (element.item.checked === true) {
-        //     item.checkboxState = vscode.TreeItemCheckboxState.Checked;
-        // } else if (element.item.checked === false) {
-        //     item.checkboxState = vscode.TreeItemCheckboxState.Unchecked;
-        // } else {
-        //     item.checkboxState = undefined;
-        // }
-        // return item;
     }
 
-    public makeVirtualFolder(node: ProjectNode): void {
-        // if (node.type === FwSubType.ProjectFile) {
-        //     VirtualFolderNode.applyTo(node);
-        //     this._onDidChangeTreeData.fire();
-        // } else if (node.type === FwSubType.VirtualFolder) {
-        //     if (node.children?.size === 0) {
-        //         node.type = FwSubType.ProjectFile;
-        //         this._onDidChangeTreeData.fire();
-        //     } else {
-        //         vscode.window.showInformationMessage("Cannot break a virtual folder with children", {
-        //             modal: true
-        //         });
-        //     }
-        // }
+    public async toggleVirtualFolder(node: ProjectNode): Promise<void> {
+        if (node.data.fwItem?.subType === FwSubType.ProjectFile) {
+           await  this._morph(node, FwVirtualFolderItem);
+            this._onDidChangeTreeData.fire();
+        } else if (node.data.fwItem?.subType === FwSubType.VirtualFolder) {
+            if (node.children?.length === 0) {
+                await this._morph(node, FwProjectFileItem);
+                this._onDidChangeTreeData.fire();
+            } else {
+                vscode.window.showInformationMessage("Cannot break a virtual folder with children", {
+                    modal: true
+                });
+            }
+        }
     }
 
     public addFile(node: ProjectNode): void {
@@ -297,17 +286,19 @@ export class ProjectExplorerTreeDataProvider
         //   this._addNewChild(node ?? this._treeView.selection[0], FwSubType.Folder);
     }
 
-    public rename(node: ProjectNode): void {
-        // node = node ?? this._treeView.selection[0];
-        // if (node) {
-        //     vscode.window.showInputBox({prompt: 'Enter new name', value: node.item.name}).then((value) => {
-        //         if (value) {
-        //             node.item.name = value;
-        //             this._fileManager.renameFile(node.id, node.buildFsPath()).then(() => {
-        //             }).catch(err => console.warn(err));
-        //         }
-        //     });
-        // }
+    public rename({data: {fwItem}}: ProjectNode): void {
+        if (fwItem) {
+            const {ref} = fwItem;
+            vscode.window.showInputBox({prompt: 'Enter new name', value: ref.name})
+                .then((value) => {
+                    if (value) {
+                        this._fileManager.renameFile(
+                            ref.fsPath,
+                            path.posix.join(ref.fsDir, value + ref.ext)).then(() => {
+                        }).catch(err => console.warn(err));
+                    }
+                });
+        }
     }
 
     public delete(node: ProjectNode): void {

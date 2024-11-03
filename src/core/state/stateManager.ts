@@ -3,12 +3,13 @@ import vscode, {WorkspaceEdit} from 'vscode';
 import {ITextProcessor} from '../processors';
 import {FwItem} from '../fwFiles/fwItem';
 
-import {FwFileState, FwFileStateChangedEvent} from './fwFileState';
+import {FwFileState, FwFileStateChangedEvent, StateChangeAction} from './fwFileState';
 import {IFileState} from './states';
 
 import {IStateProcessorFactory} from '../processors/IStateProcessorFactory';
 import {log} from '../logging';
 import {FwPermission, Permissions} from '../fwFiles/fwPermission';
+import {asPosix} from '../fwFiles';
 
 export class FwStateChangedEvent {
     files: FwFileStateChangedEvent[] = [];
@@ -75,13 +76,30 @@ export class StateManager extends DisposeManager {
         return this.reload([...this._fileStates.values()].map(s => s.fwItem));
     }
 
+    forget(fsPaths: string[]) {
+        fsPaths.map(f => asPosix(f))
+            .forEach((f, i) => {
+                this.unTrack(f);
+            });
+        this._onFilesStateChanged.fire({
+            changed: ['fwItem'],
+            files: fsPaths
+                .map(f => asPosix(f))
+                .map(f => ({
+                    state: {},
+                    prevState: {},
+                    changed: ['fwItem'],
+                    action: StateChangeAction.Deleted
+                }))
+        });
+    }
 
     async reload(fileInfos: FwItem[]) {
         this._enqueueOn();
         for (const item of fileInfos) {
             try {
                 if (item.ref.fsExists) {
-                    let content ='';
+                    let content = '';
                     if (Permissions.check(item, FwPermission.Read)) {
                         const rawBytes = await vscode.workspace.fs.readFile(vscode.Uri.parse(item.ref.fsPath));
                         content = rawBytes ? new TextDecoder().decode(rawBytes) : "";
@@ -212,7 +230,7 @@ export class StateManager extends DisposeManager {
      * Processes states that are not managed by this state manager.
      * This method handles independent states that are outside the regular tracking scope.
      */
-    processUnmanaged(content: string, data:IFileState):Promise<string> {
+    processUnmanaged(content: string, data: IFileState): Promise<string> {
         return this._textProcessor.process(content, data);
     }
 }

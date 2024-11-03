@@ -1,13 +1,6 @@
-import {FwPermission, FwSubType, FwType, Permissions, TreeNode} from '../../core';
+import {FwPermission, FwType, Permissions, TreeNode} from '../../core';
 import {IFileState} from '../../core/state';
-
-export interface IList<T> {
-    sort(): IList<T>;
-
-    filter(): IList<T>;
-
-    items: T[];
-}
+import {IList} from '../../core/lib/IList';
 
 export class ProjectNodeList implements IList<ProjectNode> {
     public items: ProjectNode[] = [];

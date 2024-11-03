@@ -6,3 +6,4 @@ export * from './fwPermission';
 export * from './fwSubType';
 export * from './fwType';
 export * from './IFwFile';
+export {IBuilder} from '../lib/IBuilder';

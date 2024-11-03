@@ -5,6 +5,7 @@ export enum FwSubType {
     ProjectFile = "projectFile",
     Folder = "folder",
     VirtualFolder = "virtualFolder",
+    EmptyVirtualFolder = "emptyVirtualFolder",
     WorkspaceFolder = "workspaceFolder",
     Filter = "filter",
     FilterRoot = "filterRoot",

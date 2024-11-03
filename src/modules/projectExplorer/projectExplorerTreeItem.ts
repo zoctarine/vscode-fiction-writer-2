@@ -36,10 +36,10 @@ export class ProjectExplorerTreeItem extends vscode.TreeItem {
             highlights: node.highlighted ? [[0, name.length]] : []
         };
 
-        const icon = decorations?.icon;
+        const icon = decorations?.icon ?? 'eye';
         this.description = decorations?.description;
 
-        this.iconPath = new vscode.ThemeIcon(icon ?? '', new vscode.ThemeColor(decorations?.color ?? 'foreground'));
+        this.iconPath = new vscode.ThemeIcon(icon, new vscode.ThemeColor(decorations?.color ?? 'foreground'));
         this.resourceUri = vscode.Uri.parse(node.data.fwItem?.ref.fsPath ?? node.id)
             .with({scheme: FictionWriter.views.projectExplorer.id});
         this.contextValue = Permissions.getSerialized(node.data.fwItem);
@@ -50,6 +50,7 @@ export class ProjectExplorerTreeItem extends vscode.TreeItem {
             `- **Order:** *${data.fwItem?.order}*`,
             `- ***Full Name:*** ${data.fwItem?.ref.fsName}`,
             `- ***Full Path:*** *${data.fwItem?.ref.fsPath}*`,
+            `- ***ViewItem:*** *${this.contextValue}*`,
             `- ***ID:*** *${node.id}*`
         ].join('\n\n'), true);
 
@@ -68,6 +69,7 @@ const fwSubTypeToProjectTypeMap: { [key in FwSubType]?: string } = {
     [FwSubType.ProjectFile]: 'Project File',
     [FwSubType.Folder]: 'Folder',
     [FwSubType.VirtualFolder]: 'Virtual Folder',
+    [FwSubType.EmptyVirtualFolder]: 'Empty Virtual Folder',
     [FwSubType.WorkspaceFolder]: 'Workspace Folder',
     [FwSubType.Filter]: '',
     [FwSubType.FilterRoot]: '',

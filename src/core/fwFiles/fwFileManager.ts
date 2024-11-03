@@ -12,10 +12,7 @@ import {
     FwProjectFileItem, FwTextFileItem,
     FwWorkspaceFolderItem
 } from './fwItem';
-import {RegEx} from '../regEx';
-import {log} from '../logging';
-import {FwType} from './fwType';
-import {FwControl} from './fwControl';
+import {log, notifier} from '../logging';
 
 let loadFilesCalledCounter = 0;
 export const asPosix = (mixedPath: string) => path.posix.normalize(mixedPath.split(path.sep).join(path.posix.sep));
@@ -23,6 +20,7 @@ export const asPosix = (mixedPath: string) => path.posix.normalize(mixedPath.spl
 export class FwFileManager extends DisposeManager {
     private _fileExtensions!: string[];
     private _onFilesChanged = new vscode.EventEmitter<FwItem[]>();
+    private _onFilesDeleted = new vscode.EventEmitter<string[]>();
     private _silentUpdates = false;
     private _projectTag: string = '';
 
@@ -40,9 +38,9 @@ export class FwFileManager extends DisposeManager {
                 this._loadOptions();
                 this.loadFiles().then((fi) => this._onFilesChanged.fire(fi));
             }),
-            watcher.onDidChange((f) => this._fileChangeHandler(f)),
-            watcher.onDidCreate((f) => this._fileChangeHandler(f)),
-            watcher.onDidDelete((f) => this._fileChangeHandler(f)),
+            watcher.onDidChange((f) => this._fileChangeHandler(f, 'change')),
+            watcher.onDidCreate((f) => this._fileChangeHandler(f, 'create')),
+            watcher.onDidDelete((f) => this._fileChangeHandler(f, 'delete')),
 
             watcher);
     }
@@ -54,11 +52,25 @@ export class FwFileManager extends DisposeManager {
         if (!this._projectTag) this._projectTag = 'fw';
     }
 
-    private async _fileChangeHandler(e: vscode.Uri) {
+    private async _fileChangeHandler(e: vscode.Uri, action: string) {
         if (this._silentUpdates) return;
 
-        const fwItem = await this._parse(e.fsPath);
-        this._onFilesChanged.fire([fwItem]);
+        switch (action) {
+            case "change":
+            case "create":
+                const fwItem = await this._parse(e.fsPath);
+                this._onFilesChanged.fire([fwItem]);
+                break;
+            case "delete":
+                this._onFilesDeleted.fire([e.fsPath]);
+
+                break;
+        }
+
+    }
+
+    public get onFilesDeleted() {
+        return this._onFilesDeleted.event;
     }
 
     public get onFilesChanged() {
@@ -98,7 +110,7 @@ export class FwFileManager extends DisposeManager {
     public renameFile(oldPath: string, newPath: string): Promise<void> {
         return new Promise((resolve, reject) => {
             if (!fs.existsSync(oldPath) || fs.existsSync(newPath)) {
-                // console.log(`Rename: File does not need moving: ${oldPath} -> ${newPath}`);
+                notifier.warn(`Could not rename file ${oldPath} to ${newPath}`);
                 resolve();
             } else {
                 vscode.workspace.fs.rename(vscode.Uri.parse(oldPath), vscode.Uri.parse(newPath), {
@@ -158,6 +170,41 @@ export class FwFileManager extends DisposeManager {
         if (await vscode.workspace.applyEdit(edit)) {
             if (save) doc.save();
         }
+    }
+
+    public async splitFile(fsPath: string, breakLine: number, breakCharacter: number, newName: string): Promise<string | undefined> {
+        const doc = await this._open(fsPath);
+        if (!doc) return undefined;
+        const parsed = path.posix.parse(fsPath);
+
+        const edit = new vscode.WorkspaceEdit();
+        const splitPoint = new vscode.Range(breakLine, breakCharacter, doc.lineCount, 0);
+        const splitContent = doc.getText(splitPoint);
+        let newPath = path.posix.join(parsed.dir, newName);
+        const newFile = await this.createFile(newPath, splitContent);
+        if (newFile) {
+            edit.delete(doc.uri, splitPoint);
+            if (await vscode.workspace.applyEdit(edit)) {
+                doc.save();
+            }
+            return newPath;
+        }
+
+        return undefined;
+    }
+
+
+    public async createFile(fsPath: string, content: string): Promise<boolean> {
+        const uri = vscode.Uri.parse(fsPath);
+        if (fs.existsSync(fsPath)) {
+            return false;
+        }
+        await vscode.workspace.fs.writeFile(uri, Buffer.from(content, 'utf8'));
+        return true;
+    }
+
+    private async _open(fsPath: string): Promise<vscode.TextDocument | undefined> {
+        return await vscode.workspace.openTextDocument(vscode.Uri.parse(fsPath));
     }
 
     public async _parse(fsPath: string): Promise<FwItem> {

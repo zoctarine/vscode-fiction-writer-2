@@ -14,10 +14,8 @@ export class SetFwItemTypeDecorations implements ITextProcessor<IFileState> {
             [FwSubType.RootFolder, FaIcons.inbox],
             [FwSubType.WorkspaceFolder, FaIcons.inbox],
             [FwSubType.Folder, FaIcons.folder],
-            [FwSubType.VirtualFolder,
-                data.fwItem.ref.fsExists
-                    ? FaIcons.fileLinesSolid
-                    : FaIcons.fileExcel],
+            [FwSubType.VirtualFolder, FaIcons.fileLinesSolid],
+            [FwSubType.EmptyVirtualFolder, FaIcons.fileExcel],
             [FwSubType.ProjectFile, FaIcons.fileLines],
             [FwSubType.TextFile, 'file'],
             [FwSubType.OtherFile, 'file']

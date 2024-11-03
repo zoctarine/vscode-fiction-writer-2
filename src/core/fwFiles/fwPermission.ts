@@ -12,6 +12,9 @@ export enum FwPermission {
     Rename = 1 << 5, // 32
     Sort = 1 << 6, // 64
     OpenEditor = 1 << 7, // 128
+    AddToProject = 1 << 8,
+    RemoveFromProject = 1 << 9,
+    Morph = 1 << 10,
 }
 
 const key = (control: FwControl, subType: FwSubType) => `${control}_${subType}`;
@@ -45,7 +48,10 @@ export class Permissions {
             FwPermission.Move |
             FwPermission.Delete |
             FwPermission.Sort |
-            FwPermission.OpenEditor);
+            FwPermission.OpenEditor |
+            FwPermission.RemoveFromProject |
+            FwPermission.Morph
+        );
 
         Permissions._add(
             FwControl.Active, FwSubType.VirtualFolder,
@@ -55,6 +61,13 @@ export class Permissions {
             FwPermission.Move |
             FwPermission.Delete |
             FwPermission.Sort |
+            FwPermission.OpenEditor |
+            FwPermission.RemoveFromProject);
+
+        Permissions._add(
+            FwControl.Active, FwSubType.EmptyVirtualFolder,
+            FwPermission.Write |
+            FwPermission.Sort |
             FwPermission.OpenEditor);
 
         Permissions._add(
@@ -63,7 +76,9 @@ export class Permissions {
             FwPermission.Rename |
             FwPermission.Move |
             FwPermission.Delete |
-            FwPermission.OpenEditor);
+            FwPermission.OpenEditor |
+            FwPermission.AddToProject
+        );
 
         Permissions._add(
             FwControl.Never, FwSubType.OtherFile,

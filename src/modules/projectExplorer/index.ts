@@ -58,11 +58,8 @@ export class ProjectsModule extends DisposeManager {
             addCommand(FictionWriter.views.projectExplorer.trash, (node: ProjectNode) => {
                 this.projectExplorerDataProvider?.delete(node);
             }),
-            addCommand(FictionWriter.views.projectExplorer.makeVirtualFolder, (node: ProjectNode) => {
-                this.projectExplorerDataProvider?.makeVirtualFolder(node);
-            }),
-            addCommand(FictionWriter.views.projectExplorer.breakVirtualFolder, (node: ProjectNode) => {
-                this.projectExplorerDataProvider?.makeVirtualFolder(node);
+            addCommand(FictionWriter.views.projectExplorer.toggleVirtualFolder, (node: ProjectNode) => {
+                this.projectExplorerDataProvider?.toggleVirtualFolder(node);
             }),
             addCommand(FictionWriter.views.projectExplorer.reorder.start, () => {
                 this.projectExplorerDataProvider?.enableOrdering();
@@ -96,6 +93,7 @@ export class ProjectsModule extends DisposeManager {
 
             addCommand(FictionWriter.views.projectExplorer.addToProject, (node: ProjectNode) => {
                 const state = this.core.stateManager.get(node.id);
+                log.tmp(node.id)
                 return commands.addToProject(state?.fwItem);
             }),
 

@@ -606,11 +606,7 @@
       ],
       "commandPalette": [
         {
-          "command": "fictionWriter.views.projectExplorer.makeVirtualFolder",
-          "when": "false"
-        },
-        {
-          "command": "fictionWriter.views.projectExplorer.breakVirtualFolder",
+          "command": "fictionWriter.views.projectExplorer.toggleVirtualFolder",
           "when": "false"
         },
         {
@@ -763,12 +759,12 @@
         },
         {
           "command": "fictionWriter.views.projectExplorer.addToProject",
-          "when": "view == fictionWriter.views.projectExplorer && viewItem == textFile && !fictionWriter.views.projectExplorer.is",
+          "when": "view == fictionWriter.views.projectExplorer && !fictionWriter.views.projectExplorer.is && viewItem =~ /\\baddtoproject\\b/",
           "group": "1_fictionWriter_project@1"
         },
         {
           "command": "fictionWriter.views.projectExplorer.excludeFromProject",
-          "when": "view == fictionWriter.views.projectExplorer && (viewItem == file || viewItem == virtualFolder) && !fictionWriter.views.projectExplorer.is",
+          "when": "view == fictionWriter.views.projectExplorer && !fictionWriter.views.projectExplorer.is && viewItem =~ /\\bremovefromproject\\b/",
           "group": "9_fictionWriter_last@1"
         },
         {
@@ -782,14 +778,9 @@
           "group": "8_fictionWriter_formatting@1"
         },
         {
-          "command": "fictionWriter.views.projectExplorer.makeVirtualFolder",
-          "when": "view == fictionWriter.views.projectExplorer && viewItem == file && !fictionWriter.views.projectExplorer.is",
+          "command": "fictionWriter.views.projectExplorer.toggleVirtualFolder",
+          "when": "view == fictionWriter.views.projectExplorer && viewItem =~ /\\brename\\b/ && !fictionWriter.views.projectExplorer.is",
           "group": "3_fictionWriter_virtual@1"
-        },
-        {
-          "command": "fictionWriter.views.projectExplorer.breakVirtualFolder",
-          "when": "view == fictionWriter.views.projectExplorer && viewItem == virtualFolder && fictionWriter.views.projectExplorer.is",
-          "group": "3_fictionWriter@2"
         },
         {
           "command": "fictionWriter.views.projectExplorer.newFile",
@@ -859,6 +850,12 @@
       ]
     },
     "commands": [
+      {
+        "command": "fictionWriter.files.split",
+        "title": "Split file",
+        "category": "FictionWriter",
+        "icon": "$(edit)"
+      },
       {
         "command": "fictionWriter.explorer.revealInProjectsView",
         "title": "Reveal in FictionWriter Project",
@@ -974,16 +971,9 @@
         "icon": "$(remove-close)"
       },
       {
-        "command": "fictionWriter.views.projectExplorer.makeVirtualFolder",
-        "title": "Make virtual folder",
+        "command": "fictionWriter.views.projectExplorer.toggleVirtualFolder",
+        "title": "Toggle Virtual Folder",
         "category": "FictionWriter",
-        "icon": "$(folder)"
-      },
-      {
-        "command": "fictionWriter.views.projectExplorer.breakVirtualFolder",
-        "title": "Break virtual folder",
-        "category": "FictionWriter",
-        "when": "false",
         "icon": "$(folder)"
       },
       {

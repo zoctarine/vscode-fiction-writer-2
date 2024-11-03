@@ -2,11 +2,15 @@ const ViewsProjectExplorer = 'fictionWriter.views.projectExplorer';
 const ViewsMetadata = 'fictionWriter.views.metadata';
 const Security = 'fictionWriter.security';
 const Compile = 'fictionWriter.compile';
+const Files = 'fictionWriter.files';
 
 
 export const FictionWriter = {
     explorer: {
         revealInProjectsView: 'explorer.revealInProjectsView',
+    },
+    files: {
+        split: `${Files}.split`
     },
     views: {
         projectExplorer: {
@@ -18,8 +22,7 @@ export const FictionWriter = {
             trash: `${ViewsProjectExplorer}.trash`,
             addToProject: `${ViewsProjectExplorer}.addToProject`,
             excludeFromProject: `${ViewsProjectExplorer}.excludeFromProject`,
-            makeVirtualFolder: `${ViewsProjectExplorer}.makeVirtualFolder`,
-            breakVirtualFolder: `${ViewsProjectExplorer}.breakVirtualFolder`,
+            toggleVirtualFolder: `${ViewsProjectExplorer}.toggleVirtualFolder`,
             revealInExplorer: `${ViewsProjectExplorer}.revealInExplorer`,
             filters: {
                 is: `${ViewsProjectExplorer}.filters.is`,

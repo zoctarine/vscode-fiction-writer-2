@@ -28,7 +28,7 @@ export const addToProject = async (item: FwItem | undefined) => {
         notifier.warn(`Cannot add ${item.ref.name} to project`);
         return;
     }
-    const newName = item.ref.name + item.ref.projectTag + item.ref.ext;
+    const newName = item.ref.name + ".fw" + item.ref.ext;
     const newPath = path.posix.join(item.ref.fsDir, newName);
     const oldUri = vscode.Uri.file(item.ref.fsPath);
     const newUri = vscode.Uri.file(newPath);
@@ -58,7 +58,7 @@ export const excludeFromProject = async (item: FwItem | undefined) => {
         return;
     }
 
-    let ext = FwFile.toOriginalExtension(item.ref.ext);
+    let ext = item.ref.fsExt;
     const options: string[] = [];
     if (item.order > 0) {
         options.push(`${item.ref.fsName.substring(0, item.ref.fsName.length - item.ref.ext.length)}${ext}`);
