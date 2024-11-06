@@ -50,8 +50,7 @@ export class Permissions {
             FwPermission.Sort |
             FwPermission.OpenEditor |
             FwPermission.RemoveFromProject |
-            FwPermission.Morph
-        );
+            FwPermission.Morph);
 
         Permissions._add(
             FwControl.Active, FwSubType.VirtualFolder,
@@ -62,13 +61,13 @@ export class Permissions {
             FwPermission.Delete |
             FwPermission.Sort |
             FwPermission.OpenEditor |
-            FwPermission.RemoveFromProject);
+            FwPermission.RemoveFromProject |
+            FwPermission.Morph);
 
         Permissions._add(
             FwControl.Active, FwSubType.EmptyVirtualFolder,
             FwPermission.Write |
-            FwPermission.Sort |
-            FwPermission.OpenEditor);
+            FwPermission.Sort );
 
         Permissions._add(
             FwControl.Possible, FwSubType.TextFile,

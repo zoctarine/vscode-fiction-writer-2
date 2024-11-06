@@ -1,0 +1,92 @@
+import {ProjectNode} from './projectNode';
+import {FwControl, FwPermission, FwSubType, IBuilder, Permissions} from '../../../core';
+import {IProjectContext} from './IProjectContext';
+
+export interface IProjectNodeContext {
+    rename: boolean;
+    delete: boolean;
+    move: boolean;
+
+    newFile: boolean;
+    newFolder: boolean;
+    toggleVirtual: boolean;
+
+    compile: boolean;
+    reorder: boolean;
+    reorderCommit: boolean;
+    reorderDiscard: boolean;
+    reorderUp: boolean;
+    reorderDown: boolean;
+    redistribute: boolean;
+
+    include: boolean;
+    exclude: boolean;
+
+    reveal: boolean;
+
+    combine: boolean;
+
+    debug: boolean;
+}
+
+
+export class ProjectNodeContextBuilder implements IBuilder<{
+    ctx: IProjectContext,
+    node: ProjectNode
+}, IProjectNodeContext> {
+    build({ctx, node}: { ctx: IProjectContext, node: ProjectNode }): IProjectNodeContext {
+        let none = {
+            compile: false,
+            delete: false,
+            exclude: false,
+            include: false,
+            move: false,
+            newFile: false,
+            newFolder: false,
+            rename: false,
+            reorder: false,
+            reorderCommit: false,
+            reorderDiscard: false,
+            reorderUp: false,
+            reorderDown: false,
+            redistribute: false,
+            reveal: false,
+            toggleVirtual: false,
+            combine: false,
+            debug: false
+        };
+
+        switch (ctx.is) {
+            case "ordering":
+                return {
+                    ...none,
+                    reorderCommit: true,
+                    reorderDiscard: true,
+                    reorderUp: true,
+                    reorderDown: true,
+                    redistribute: true
+                };
+            case "compiling":
+                return {
+                    ...none,
+                };
+            default:
+                return {
+                    ...none,
+                    compile: true,
+                    delete: node.canDelete,
+                    exclude: (node.data.fwItem?.ref.fsExists && node.data.fwItem?.control === FwControl.Active) ?? false,
+                    include: node.data.fwItem?.control === FwControl.Possible,
+                    move: node.canMove,
+                    newFile: true,
+                    newFolder: true,
+                    rename: node.canEdit,
+                    reorder: Permissions.check(node.data.fwItem, FwPermission.Sort),
+                    reveal: node.data.fwItem?.ref.fsExists ?? false,
+                    toggleVirtual: Permissions.check(node.data.fwItem, FwPermission.Morph) && node.children.length === 0,
+                    combine: node.data.fwItem?.subType === FwSubType.ProjectFile ?? false,
+                    debug: true
+                };
+        }
+    }
+}

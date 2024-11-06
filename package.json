@@ -604,6 +604,16 @@
           "group": "1_fictionWriter_project@1"
         }
       ],
+      "editor/context": [
+        {
+          "command": "fictionWriter.files.split",
+          "group": "FictionWriter@1",
+          "when": "editorLangId == fwmarkdown"
+        }
+      ],
+      "fictionWriter.editor": [
+
+      ],
       "commandPalette": [
         {
           "command": "fictionWriter.views.projectExplorer.toggleVirtualFolder",
@@ -637,77 +647,77 @@
       "view/title": [
         {
           "command": "fictionWriter.views.projectExplorer.filters.allFiles",
-          "when": "view == fictionWriter.views.projectExplorer && !fictionWriter.views.projectExplorer.is && fictionWriter.views.projectExplorer.filters.is == projectFiles",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.filter == projectFiles",
           "group": "navigation"
         },
         {
           "command": "fictionWriter.views.projectExplorer.filters.projectFiles",
-          "when": "view == fictionWriter.views.projectExplorer && !fictionWriter.views.projectExplorer.is && fictionWriter.views.projectExplorer.filters.is == allFiles",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.filter == allFiles",
           "group": "navigation"
         },
         {
           "command": "fictionWriter.views.projectExplorer.show.decoration1",
-          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.show.decorationIs == decoration1 && !fictionWriter.views.projectExplorer.is",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.decoration == decoration1",
           "group": "navigation"
         },
         {
           "command": "fictionWriter.views.projectExplorer.show.decoration2",
-          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.show.decorationIs == decoration2 && !fictionWriter.views.projectExplorer.is",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.decoration == decoration2",
           "group": "navigation"
         },
         {
           "command": "fictionWriter.views.projectExplorer.show.decoration3",
-          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.show.decorationIs == decoration3 && !fictionWriter.views.projectExplorer.is",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.decoration == decoration3",
           "group": "navigation"
         },
         {
           "command": "fictionWriter.views.projectExplorer.show.decoration4",
-          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.show.decorationIs == decoration4 && !fictionWriter.views.projectExplorer.is",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.decoration == decoration4",
           "group": "navigation"
         },
         {
           "command": "fictionWriter.views.projectExplorer.sync.on",
-          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.sync.isOn == false && !fictionWriter.views.projectExplorer.is",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.sync == off",
           "group": "navigation"
         },
         {
           "command": "fictionWriter.views.projectExplorer.sync.off",
-          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.sync.isOn == true && !fictionWriter.views.projectExplorer.is",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.sync == on",
           "group": "navigation"
         },
         {
           "command": "fictionWriter.views.projectExplorer.newFile",
-          "when": "view == fictionWriter.views.projectExplorer && !fictionWriter.views.projectExplorer.is",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.newFile",
           "group": "navigation"
         },
         {
           "command": "fictionWriter.views.projectExplorer.newFolder",
-          "when": "view == fictionWriter.views.projectExplorer && !fictionWriter.views.projectExplorer.is",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.newFolder",
           "group": "navigation"
         },
         {
           "command": "fictionWriter.views.projectExplorer.reorder.start",
-          "when": "view == fictionWriter.views.projectExplorer && !fictionWriter.views.projectExplorer.is",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.orderStart",
           "group": "navigation"
         },
         {
           "command": "fictionWriter.views.projectExplorer.reorder.discard",
-          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.is == ordering",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.orderDiscard",
           "group": "navigation"
         },
         {
           "command": "fictionWriter.views.projectExplorer.reorder.commit",
-          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.is == ordering",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.orderCommit",
           "group": "navigation"
         },
         {
           "command": "fictionWriter.views.projectExplorer.compile.discard",
-          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.is == compiling",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.ctx.projectExplorer.ctx.compileDiscard",
           "group": "navigation"
         },
         {
           "command": "fictionWriter.views.projectExplorer.compile.commit",
-          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.is == compiling",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.ctx.projectExplorer.ctx.compileCommit",
           "group": "navigation"
         },
         {
@@ -754,67 +764,87 @@
       "view/item/context": [
         {
           "command": "fictionWriter.views.projectExplorer.debug.stateDump",
-          "when": "view == fictionWriter.views.projectExplorer && !fictionWriter.views.projectExplorer.is",
+          "when": "view == fictionWriter.views.projectExplorer && viewItem =~ /\\bdebug\\b/ && !listMultiSelection",
           "group": "99_fictionWriter_debug@1"
         },
         {
           "command": "fictionWriter.views.projectExplorer.addToProject",
-          "when": "view == fictionWriter.views.projectExplorer && !fictionWriter.views.projectExplorer.is && viewItem =~ /\\baddtoproject\\b/",
+          "when": "view == fictionWriter.views.projectExplorer && viewItem =~ /\\binclude\\b/",
           "group": "1_fictionWriter_project@1"
         },
         {
           "command": "fictionWriter.views.projectExplorer.excludeFromProject",
-          "when": "view == fictionWriter.views.projectExplorer && !fictionWriter.views.projectExplorer.is && viewItem =~ /\\bremovefromproject\\b/",
+          "when": "view == fictionWriter.views.projectExplorer && viewItem =~ /\\bexclude\\b/",
           "group": "9_fictionWriter_last@1"
         },
         {
           "command": "fictionWriter.views.projectExplorer.revealInExplorer",
-          "when": "view == fictionWriter.views.projectExplorer && !fictionWriter.views.projectExplorer.is",
+          "when": "view == fictionWriter.views.projectExplorer && viewItem =~ /\\breveal\\b/ && !listMultiSelection",
           "group": "1_fictionWriter_project@2"
         },
         {
           "command": "fictionWriter.views.projectExplorer.changeFormatting",
-          "when": "view == fictionWriter.views.projectExplorer && (viewItem == file || viewItem == virtualFolder) && !fictionWriter.views.projectExplorer.is",
+          "when": "view == fictionWriter.views.projectExplorer && (viewItem == file || viewItem == virtualFolder) && !fictionWriter.ctx.projectExplorer",
           "group": "8_fictionWriter_formatting@1"
         },
         {
           "command": "fictionWriter.views.projectExplorer.toggleVirtualFolder",
-          "when": "view == fictionWriter.views.projectExplorer && viewItem =~ /\\brename\\b/ && !fictionWriter.views.projectExplorer.is",
+          "when": "view == fictionWriter.views.projectExplorer && viewItem =~ /\\btoggleVirtual\\b/ && !listMultiSelection",
           "group": "3_fictionWriter_virtual@1"
         },
         {
           "command": "fictionWriter.views.projectExplorer.newFile",
-          "when": "view == fictionWriter.views.projectExplorer && !fictionWriter.views.projectExplorer.is",
+          "when": "view == fictionWriter.views.projectExplorer  && viewItem =~ /\\bnewFile\\b/ && !listMultiSelection",
           "group": "4_fictionWriter@3"
         },
         {
           "command": "fictionWriter.views.projectExplorer.newFolder",
-          "when": "view == fictionWriter.views.projectExplorer && !fictionWriter.views.projectExplorer.is",
+          "when": "view == fictionWriter.views.projectExplorer  && viewItem =~ /\\bnewFolder\\b/ && !listMultiSelection",
           "group": "4_fictionWriter@4"
         },
         {
           "command": "fictionWriter.views.projectExplorer.rename",
-          "when": "view == fictionWriter.views.projectExplorer && !fictionWriter.views.projectExplorer.is && viewItem =~ /\\brename\\b/",
+          "when": "view == fictionWriter.views.projectExplorer && viewItem =~ /\\brename\\b/ && !listMultiSelection",
           "group": "4_fictionWriter@4"
         },
         {
           "command": "fictionWriter.views.projectExplorer.trash",
-          "when": "view == fictionWriter.views.projectExplorer && !fictionWriter.views.projectExplorer.is && viewItem =~ /\\bdelete\\b/",
+          "when": "view == fictionWriter.views.projectExplorer && viewItem =~ /\\bdelete\\b/",
           "group": "4_fictionWriter@5"
         },
         {
+          "command": "fictionWriter.views.projectExplorer.reorder.start",
+          "when": "view == fictionWriter.views.projectExplorer && viewItem =~ /\\breorder\\b/ && !listMultiSelection",
+          "group": "5_fictionWriter@1"
+        },
+        {
+          "command": "fictionWriter.views.projectExplorer.reorder.discard",
+          "when": "view == fictionWriter.views.projectExplorer && viewItem =~ /\\breorderDiscard\\b/",
+          "group": "5_fictionWriter@2"
+        },
+        {
+          "command": "fictionWriter.views.projectExplorer.reorder.commit",
+          "when": "view == fictionWriter.views.projectExplorer && viewItem =~ /\\breorderCommit\\b/",
+          "group": "5_fictionWriter@3"
+        },
+        {
           "command": "fictionWriter.views.projectExplorer.reorder.redistribute",
-          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.is == ordering",
-          "group": "5_fictionWriter@5"
+          "when": "view == fictionWriter.views.projectExplorer && viewItem =~ /\\bredistribute\\b/ && !listMultiSelection",
+          "group": "5_fictionWriter@4"
         },
         {
           "command": "fictionWriter.views.projectExplorer.compile.startHere",
-          "when": "view == fictionWriter.views.projectExplorer && (!fictionWriter.views.projectExplorer.is || fictionWriter.views.projectExplorer.is == compiling)",
+          "when": "view == fictionWriter.views.projectExplorer && viewItem =~ /\\bcompile\\b/",
           "group": "6_fictionWriter@1"
         },
         {
           "command": "fictionWriter.views.projectExplorer.compile.discard",
-          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.is == compiling",
+          "when": "view == fictionWriter.views.projectExplorer && viewItem =~ /\\bcompileDiscard\\b/",
+          "group": "6_fictionWriter@2"
+        },
+        {
+          "command": "fictionWriter.files.combine",
+          "when": "view == fictionWriter.views.projectExplorer && viewItem =~ /\\bcombine\\b/ && listMultiSelection",
           "group": "6_fictionWriter@2"
         },
         {
@@ -849,16 +879,23 @@
         }
       ]
     },
+
     "commands": [
       {
         "command": "fictionWriter.files.split",
-        "title": "Split file",
+        "title": "Split here",
+        "category": "FictionWriter",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "fictionWriter.files.combine",
+        "title": "Combine files",
         "category": "FictionWriter",
         "icon": "$(edit)"
       },
       {
         "command": "fictionWriter.explorer.revealInProjectsView",
-        "title": "Reveal in FictionWriter Project",
+        "title": "Reveal in FictionWriter",
         "category": "FictionWriter",
         "icon": "$(edit)"
       },
@@ -948,19 +985,19 @@
       },
       {
         "command": "fictionWriter.views.projectExplorer.reorder.start",
-        "title": "Reorder items",
+        "title": "Reorder files",
         "category": "FictionWriter",
         "icon": "$(mdi-swap-vert)"
       },
       {
         "command": "fictionWriter.views.projectExplorer.reorder.commit",
-        "title": "Reorder: Save new order",
+        "title": "Save Order",
         "category": "FictionWriter",
         "icon": "$(check)"
       },
       {
         "command": "fictionWriter.views.projectExplorer.reorder.discard",
-        "title": "Reorder: Discard order",
+        "title": "Discard",
         "category": "FictionWriter",
         "icon": "$(remove-close)"
       },
@@ -1151,6 +1188,13 @@
         "category": "Markdown Fiction Writer"
       }
     ],
+    "keybindings": [
+      {
+        "command": "fictionWriter.files.split",
+        "key": "alt+f alt+k",
+        "mac": "cmd+f cmd+k"
+      }
+    ],
     "customEditors": [
       {
         "viewType": "fictionWriter.editors.proseMirror",
@@ -1184,7 +1228,7 @@
       "activitybar": [
         {
           "id": "fictionWriterProjectExplorer",
-          "title": "Project",
+          "title": "FictionWriter",
           "icon": "$(book)"
         },
         {

@@ -1,32 +1,41 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import {DisposeManager, FictionWriter, FwProjectFileItem, FwSubType, log} from "../../core";
 import {
+    DisposeManager,
     FactorySwitch,
+    FictionWriter,
     FwEmpty,
     FwEmptyVirtualFolder,
     FwFileManager,
     FwItem,
+    FwProjectFileItem,
     FwRootItem,
+    FwSubType,
     FwVirtualFolderItem,
-    IFwFile
-} from '../../core/fwFiles';
+    IFwFile,
+    log,
+    TreeStructure
+} from "../../core";
 import {ContextManager} from '../../core/contextManager';
-import {ProjectExplorerTreeItem} from './projectExplorerTreeItem';
+import {ProjectExplorerTreeItem} from './models/projectExplorerTreeItem';
 import {ProjectsOptions} from './projectsOptions';
 import {IDecorationState, IFileState, StateManager} from '../../core/state';
-import {AllFilesFilter, IFileFilter, OnlyProjectFilesFilter} from './fileInfoFilters';
+import {AllFilesFilter, IFileFilter, OnlyProjectFilesFilter} from './models/filters';
 import {FaIcons} from '../../core/decorations';
-import {TreeStructure} from '../../core/tree/treeStructure';
 import rfdc from 'rfdc';
-import {ProjectNode, ProjectNodeList} from './projectNode';
+import {ProjectNode, ProjectNodeList} from './models/projectNode';
+import {ObjectProps} from '../../core/lib';
+import {IProjectContext} from './models/IProjectContext';
+import {IProjectTreeViewModel} from './models/IProjectTreeViewModel';
+import {ProjectNodeContextBuilder} from './models/IProjectNodeContext';
+import {Context} from '../../core/lib/context';
 
 const clone = rfdc();
-
 const action = {
     none: undefined,
     ordering: 'ordering',
     compiling: 'compiling',
+    refreshing: 'refreshing',
 };
 
 export class ProjectExplorerTreeDataProvider
@@ -40,11 +49,33 @@ export class ProjectExplorerTreeDataProvider
     // We want to use an array as the event type, but the API for this is currently being finalized. Until it's finalized, use any.
     public onDidChangeTreeData: vscode.Event<any> = this._onDidChangeTreeData.event;
     public _treeStructure: TreeStructure<IFileState>;
-    private _mixFoldersAndFiles = true;
-    private _syncWithActiveEditorEnabled = false;
-    private _isBatchOrderingEnabled = false;
-    private _showDecoration: string;
     private _fileFilter: IFileFilter = OnlyProjectFilesFilter;
+    private _ctx: IProjectContext = {
+        decoration: 'decoration1',
+        filter: 'projectFiles',
+        is: undefined,
+        multiselect: undefined,
+        syncEditor: false
+    };
+    public selectedItems: FwItem[] = [];
+
+
+    private _viewModel: IProjectTreeViewModel = {
+        compileCommit: false,
+        compileDiscard: false,
+        compileStart: false,
+        decoration: '',
+        filter: '',
+        newFile: false,
+        newFolder: false,
+        orderCommit: false,
+        orderDiscard: false,
+        orderDown: false,
+        orderStart: false,
+        orderUp: false,
+        refresh: false,
+        sync: ''
+    };
 
     constructor(
         private _options: ProjectsOptions,
@@ -54,11 +85,11 @@ export class ProjectExplorerTreeDataProvider
         this._treeView = vscode.window.createTreeView(FictionWriter.views.projectExplorer.id, {
             treeDataProvider: this,
             showCollapseAll: true,
-            canSelectMany: false,
+            canSelectMany: true,
             dragAndDropController: this,
             manageCheckboxStateManually: true,
-        });
 
+        });
         this.manageDisposable(
             this._treeView,
             this._onDidChangeTreeData,
@@ -72,6 +103,16 @@ export class ProjectExplorerTreeDataProvider
             this._treeView.onDidExpandElement((e) => {
                 this._contextManager.set("tree_expanded_" + e.element.id, true);
             }),
+            this._treeView.onDidChangeSelection((e)=>{
+                this.selectedItems = e.selection?.map(s => s.data.fwItem).filter(f => f !== undefined) ?? [];
+                if (e.selection?.length > 1){
+                    return this.setCtx({multiselect: true});
+                }  if (e.selection?.length === 1){
+                    return this.setCtx({multiselect: false});
+                } else {
+                    return this.setCtx({multiselect: undefined});
+                }
+            }),
             // TODO(A)
             // this._treeView.onDidChangeCheckboxState(e => {
             //     for (let [node, state] of e.items) {
@@ -83,16 +124,9 @@ export class ProjectExplorerTreeDataProvider
             })
         );
 
-        this._showDecoration = this._contextManager.get(FictionWriter.views.projectExplorer.show.decorationIs, 'decoration1');
-        vscode.commands.executeCommand('setContext', FictionWriter.views.projectExplorer.show.decorationIs, this._showDecoration)
-            .then(() => {
-                const fileFilter = this._contextManager.get(FictionWriter.views.projectExplorer.filters.is, 'projectFiles');
-                vscode.commands.executeCommand('setContext', FictionWriter.views.projectExplorer.filters.is, fileFilter)
-                    .then(() => {
-                        this._fileFilter = fileFilter === 'projectFiles' ? OnlyProjectFilesFilter : AllFilesFilter;
-                        return this.refresh();
-                    });
-            });
+        this.loadCtx()
+            .then(() => this._fileFilter = this._ctx.filter === 'projectFiles' ? OnlyProjectFilesFilter : AllFilesFilter)
+            .then(() => this.refresh());
     }
 
     private async buildVirtualFolders(node: ProjectNode) {
@@ -136,7 +170,7 @@ export class ProjectExplorerTreeDataProvider
     }
 
     private async _morph(node: ProjectNode, ctor: { new(ref: IFwFile): FwItem }) {
-        const {data:{fwItem}} = node;
+        const {data: {fwItem}} = node;
         if (!fwItem) return;
 
         const instance = new ctor(fwItem.ref);
@@ -250,21 +284,28 @@ export class ProjectExplorerTreeDataProvider
         const node = this._treeStructure.getNode(element.id);
         if (!node) return {};
 
-        return new ProjectExplorerTreeItem(node, {
+        const item = new ProjectExplorerTreeItem(node, {
             expanded: this._contextManager.get("tree_expanded_" + element.id, false),
+            contextBuilder: () => ({
+            }),
             decorationsSelector: (s) =>
                 new FactorySwitch<(IDecorationState | undefined)[]>()
-                    .case(this._showDecoration === 'decoration1', () => [s.writeTargetsDecorations, s.metadataDecorations])
-                    .case(this._showDecoration === 'decoration2', () => [s.metadataDecorations])
-                    .case(this._showDecoration === 'decoration3', () => [s.textStatisticsDecorations, s.writeTargetsDecorations])
-                    .case(this._showDecoration === 'decoration4', () => [])
+                    .case(this._ctx.decoration === 'decoration1', () => [s.writeTargetsDecorations, s.metadataDecorations])
+                    .case(this._ctx.decoration === 'decoration2', () => [s.metadataDecorations])
+                    .case(this._ctx.decoration === 'decoration3', () => [s.textStatisticsDecorations, s.writeTargetsDecorations])
+                    .case(this._ctx.decoration === 'decoration4', () => [])
                     .create()
         });
+
+        item.contextValue = Context.serialize(
+            new ProjectNodeContextBuilder().build({node, ctx:this._ctx}));
+
+        return item;
     }
 
     public async toggleVirtualFolder(node: ProjectNode): Promise<void> {
         if (node.data.fwItem?.subType === FwSubType.ProjectFile) {
-           await  this._morph(node, FwVirtualFolderItem);
+            await this._morph(node, FwVirtualFolderItem);
             this._onDidChangeTreeData.fire();
         } else if (node.data.fwItem?.subType === FwSubType.VirtualFolder) {
             if (node.children?.length === 0) {
@@ -432,20 +473,21 @@ export class ProjectExplorerTreeDataProvider
 
 
     public enableOrdering() {
-        vscode.commands.executeCommand('setContext', FictionWriter.views.projectExplorer.is, action.ordering)
+
+        this.setCtx({is: action.ordering})
             .then(() => {
-                this._isBatchOrderingEnabled = true;
                 this._treeView.description = "Reordering";
                 return this.refresh();
             });
     }
 
-    public async disableOrdering(discardChanges: boolean = true) {
-        await vscode.commands.executeCommand('setContext', FictionWriter.views.projectExplorer.is, action.none);
 
-        this._isBatchOrderingEnabled = false;
-        this._treeView.description = "";
-        if (discardChanges) return this.refresh();
+    public async disableOrdering(discardChanges: boolean = true) {
+        this.setCtx({is: undefined})
+            .then(() => {
+                this._treeView.description = "";
+                if (discardChanges) return this.refresh();
+            });
     }
 
     public async commitOrdering() {
@@ -470,23 +512,21 @@ export class ProjectExplorerTreeDataProvider
         if (crt >= 0) {
             next = (crt + 1) % decorations.length;
         }
-        vscode.commands.executeCommand('setContext', FictionWriter.views.projectExplorer.show.decorationIs, decorations[next])
+        this.setCtx({decoration: decorations[next]}, true)
             .then(() => {
-                this._showDecoration = decorations[next];
                 this.refresh();
-                return this._contextManager.set(FictionWriter.views.projectExplorer.show.decorationIs, this._showDecoration);
             });
     }
 
     public syncWithActiveEditorOn() {
-        vscode.commands.executeCommand('setContext', FictionWriter.views.projectExplorer.sync.isOn, true);
-        this._syncWithActiveEditorEnabled = true;
-        this._handleActiveTextEditorChanged(vscode.window.activeTextEditor);
+        this.setCtx({syncEditor: true}, true)
+            .then(() => {
+                this._handleActiveTextEditorChanged(vscode.window.activeTextEditor);
+            });
     }
 
     public syncWithActiveEditorOff() {
-        vscode.commands.executeCommand('setContext', FictionWriter.views.projectExplorer.sync.isOn, false);
-        this._syncWithActiveEditorEnabled = false;
+        this.setCtx({syncEditor: false}, true);
     }
 
     public async handleDrag(source: ProjectNode[], treeDataTransfer: vscode.DataTransfer, token: vscode.CancellationToken): Promise<void> {
@@ -535,7 +575,7 @@ export class ProjectExplorerTreeDataProvider
     }
 
     private _handleActiveTextEditorChanged(e: vscode.TextEditor | undefined) {
-        if (!this._syncWithActiveEditorEnabled || !e) return;
+        if (!this._ctx.syncEditor || !e) return;
         this.reveal(e.document.uri.fsPath);
     }
 
@@ -583,7 +623,7 @@ export class ProjectExplorerTreeDataProvider
         // const node = this._tree.getNode(e.id);
         // if (node) {
         //     vscode.commands.executeCommand('setContext',
-        //             FictionWriter.views.projectExplorer.is, action.compiling)
+        //             FictionWriter.ctx.projectExplorer, action.compiling)
         //         .then(() => {
         //             this._tree.toList().forEach(f => {
         //                 if (f.item.checked === undefined) {
@@ -608,7 +648,7 @@ export class ProjectExplorerTreeDataProvider
 
     public discardSelection() {
         // vscode.commands.executeCommand('setContext',
-        //         FictionWriter.views.projectExplorer.is, action.none)
+        //         FictionWriter.ctx.projectExplorer, action.none)
         //     .then(() => {
         //         this._tree.toList().forEach(f => {
         //             f.item.checked = undefined;
@@ -634,21 +674,91 @@ export class ProjectExplorerTreeDataProvider
             this._fileFilter = filter;
         }
 
-        await this._contextManager.set(
-            FictionWriter.views.projectExplorer.filters.is,
-            this._fileFilter.key);
-
-        await vscode.commands.executeCommand('setContext',
-            FictionWriter.views.projectExplorer.filters.is,
-            this._fileFilter.key);
-
-        return this.refresh();
+        this.setCtx({filter: this._fileFilter.key}, true)
+            .then(() => this.refresh());
     }
 
     private _updateCheckboxBasedOnMeta(root: ProjectNode) {
         root.selected = this._stateManager.get(root.id)?.metadata?.value?.compile !== 'exclude';
         root.children?.forEach(c => this._updateCheckboxBasedOnMeta(c as ProjectNode));
     }
+
+    private async loadCtx() {
+        await ObjectProps.updateAsync(this._ctx, {
+            onProperty: (key) => {
+                return Promise.resolve(this._contextManager.get(`${FictionWriter.views.projectExplorer.ctx}.${key}`, this._ctx[key]));
+            },
+        });
+
+        await this.setCtx(this._ctx);
+    }
+
+    private async setCtx(value: Partial<IProjectContext>, persist: boolean = false) {
+
+            await ObjectProps.patchAsync(this._ctx, value, {
+                onSinglePropertyChange: async (key, value) => {
+                    if (persist) {
+                        await this._contextManager.set(`${FictionWriter.views.projectExplorer.ctx}.${key}`, value);
+                    }
+                }
+            });
+
+        let vmChanges: Partial<IProjectTreeViewModel> = {};
+        switch (this._ctx.is) {
+            case "ordering":
+                vmChanges = {
+                    decoration: undefined,
+                    filter: undefined,
+                    compileStart: undefined,
+                    compileCommit: undefined,
+                    compileDiscard: undefined,
+                    newFile: undefined,
+                    newFolder: undefined,
+                    orderStart: undefined,
+                    orderCommit: true,
+                    orderDiscard: true,
+                    refresh: undefined,
+                    sync: undefined
+                };
+                break;
+            case "compiling":
+                vmChanges = {
+                    decoration: undefined,
+                    filter: undefined,
+                    compileStart: undefined,
+                    compileCommit: true,
+                    compileDiscard: true,
+                    newFile: undefined,
+                    newFolder: undefined,
+                    orderStart: undefined,
+                    orderCommit: undefined,
+                    orderDiscard: undefined,
+                    refresh: undefined,
+                    sync: undefined
+                };
+                break;
+            default :
+                vmChanges = {
+                    decoration: this._ctx.decoration,
+                    filter: this._ctx.filter,
+                    compileStart: true,
+                    compileCommit: undefined,
+                    compileDiscard: undefined,
+                    newFile: true,
+                    newFolder: true,
+                    orderStart: true,
+                    orderCommit: undefined,
+                    orderDiscard: undefined,
+                    refresh: true,
+                    sync: this._ctx.syncEditor ? 'on' : 'off'
+                };
+                break;
+        }
+        await ObjectProps.patchAsync(this._viewModel, vmChanges, {
+            onSinglePropertyChange: async (key, value) => await vscode.commands.executeCommand('setContext', `${FictionWriter.views.projectExplorer.ctx}.${key}`, value)
+        });
+    }
+
 
 }
 

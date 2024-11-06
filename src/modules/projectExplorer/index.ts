@@ -6,8 +6,9 @@ import {ProjectsOptions} from "./projectsOptions";
 import {DisposeManager} from "../../core";
 import {addCommand, CoreModule, FictionWriter, log} from '../../core';
 import {ProjectExplorerDecorationProvider} from './projectExplorerDecorationProvider';
-import {ProjectNode} from './projectNode';
+import {ProjectNode} from './models/projectNode';
 import * as commands from './commands';
+import {IFileState} from '../../core/state';
 
 export class ProjectsModule extends DisposeManager {
     active = false;
@@ -98,8 +99,23 @@ export class ProjectsModule extends DisposeManager {
             }),
 
             addCommand(FictionWriter.views.projectExplorer.excludeFromProject, (node: ProjectNode) => {
-                const state = this.core.stateManager.get(node.id);
-                return commands.excludeFromProject(state?.fwItem);
+                if (this.projectExplorerDataProvider){
+                    let items = node.data.fwItem ? [node.data.fwItem] : [];
+                    if (this.projectExplorerDataProvider.selectedItems.length > 1){
+                        items = this.projectExplorerDataProvider.selectedItems;
+                    }
+                 return commands.excludeFromProject(...items);
+                }
+            }),
+
+            addCommand(FictionWriter.files.combine, (node: ProjectNode) => {
+                if (this.projectExplorerDataProvider){
+                    let items = node.data.fwItem ? [node.data.fwItem] : [];
+                    if (this.projectExplorerDataProvider.selectedItems.length > 1){
+                        items = this.projectExplorerDataProvider.selectedItems;
+                    }
+                    return commands.combineFiles(...items);
+                }
             }),
 
             addCommand(FictionWriter.views.projectExplorer.debug.stateDump, (node: ProjectNode) => {

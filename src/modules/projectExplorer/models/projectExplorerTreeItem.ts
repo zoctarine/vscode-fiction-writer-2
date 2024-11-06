@@ -1,10 +1,12 @@
 import vscode from 'vscode';
-import {FictionWriter, FwControl, FwPermission, FwSubType, FwType, Permissions} from '../../core';
-import {applyDecorations, IDecorationState, IFileState} from '../../core/state';
+import {FictionWriter, FwControl, FwPermission, FwSubType, FwType, Permissions} from '../../../core';
+import {applyDecorations, IDecorationState, IFileState} from '../../../core/state';
 import {ProjectNode} from './projectNode';
+import {IProjectContext} from './IProjectContext';
 
 export interface IProjectExplorerItemOptions {
     decorationsSelector: (state: IFileState) => (IDecorationState | undefined)[];
+    contextBuilder?: (state: IFileState) => Partial<IProjectContext>;
     expanded?: boolean;
 }
 

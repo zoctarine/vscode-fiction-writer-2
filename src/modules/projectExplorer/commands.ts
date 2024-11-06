@@ -1,9 +1,101 @@
-import vscode from 'vscode';
+import vscode, {QuickPickItemKind, workspace} from 'vscode';
 import path from 'path';
-import {FwControl, FwFile, FwItem, log, notifier} from '../../core';
+import {
+    addCommand,
+    FictionWriter,
+    FwControl,
+    FwFile,
+    FwItem,
+    FwPermission,
+    log,
+    notifier,
+    Permissions, SimpleSuffixOrderParser
+} from '../../core';
 
-import {ProjectNode} from './projectNode';
+import {ProjectNode} from './models/projectNode';
+import {retryAsync} from '../../core/lib/retry';
 
+//addCommand(FictionWriter.files.combine, async () => {a
+
+export const combineFiles = async (...items: FwItem[]) => {
+    if (!items || items.length < 2) return;
+
+    const names = items.map((i) => ({
+        label: i.ref.name,
+        kind: QuickPickItemKind.Default,
+        detail: i.ref.fsPath,
+        description: i.ref.fsExt
+    }));
+
+    const name = await vscode.window.showQuickPick(names, {
+        title: "Select the file to merge into"
+    });
+    if (!name) return;
+    let mergePath = name.detail;
+
+    const result = await vscode.window.showWarningMessage("Combine files", {
+        modal: true,
+        detail: 'Are you sure you want to append contents of: \n\n' +
+            items.filter(i => i.ref.fsPath!== mergePath).map(i => i.ref.name).join("\n") + "\n\n" +
+            ' to:\n\n' + name.label + "?" +
+            "\n\n This action CANNOT be undone!"
+    }, "Ok");
+
+    if (result === "Ok") {
+        let mergedText = '';
+        let mergePath = name.detail;
+        for (const item of items) {
+            let doc = await vscode.workspace.openTextDocument(item.ref.fsPath);
+            if (!doc) throw new Error("Combine file doesn't exist!");
+            const text = doc.getText();
+            if (item.ref.fsPath === mergePath) {
+                mergedText = text + "\n\n" + mergedText;
+            } else {
+                mergedText += "\n\n" + doc.getText();
+            }
+        }
+
+        await vscode.workspace.fs.writeFile(vscode.Uri.parse(mergePath), Buffer.from(mergedText, 'utf8'));
+        for (const item of items) {
+            if (item.ref.fsPath !== mergePath) {
+                await vscode.workspace.fs.delete(vscode.Uri.parse(item.ref.fsPath));
+            }
+        }
+        notifier.info("Files combined successfully!");
+    }
+    //
+    // if (editor?.selection) {
+    //     if (editor?.selection.isEmpty) {
+    //         const orderParser = new SimpleSuffixOrderParser();
+    //         const parsed = orderParser.process(fwItem.ref.name);
+    //         parsed.mainOrder = parsed.mainOrder ? parsed.mainOrder + 1 : parsed.mainOrder;
+    //         newName = orderParser.build(parsed);
+    //         log.tmp(newName);
+    //
+    //     } else {
+    //         newName = editor.document.getText(editor.selection);
+    //     }
+    // }
+    //
+    // let splitName = `${fwItem.ref.orderString}${newName}${fwItem.ref.ext}`;
+    //
+    // const newPath = await retryAsync(async (retry) => {
+    //     if (retry > 0) {
+    //         splitName = `${fwItem.ref.orderString}${fwItem.ref.name} ${retry}${fwItem.ref.ext}`;
+    //     }
+    //     return await this.fileManager.splitFile(fwItem.ref.fsPath,
+    //         editor.selection.start.line,
+    //         editor.selection.start.character,
+    //         splitName);
+    // });
+    //
+    // if (newPath) {
+    //     await vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(newPath));
+    //
+    // } else {
+    //     notifier.warn("File cannot be split");
+    // }
+};
 
 /**
  * Reveals a file item in the VSCode Explorer view
@@ -47,12 +139,13 @@ export const addToProject = async (item: FwItem | undefined) => {
 
 /**
  * Adding a file to project, means adding the project tracking tag to the file name.
- * @param item
+ * @param items
  */
-export const excludeFromProject = async (item: FwItem | undefined) => {
-    if (!item) return;
+export const excludeFromProject = async (...items: FwItem[]) => {
+    if (!items || items.length === 0) return;
 
-    const projectTag = '.fw';
+    // TODO: make so we exclude all
+    const item = items[0];
     if (item.control !== FwControl.Active) {
         notifier.warn(`Cannot exclude ${item.ref.name} from project`);
         return;

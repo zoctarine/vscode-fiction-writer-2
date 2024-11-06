@@ -28,7 +28,6 @@ export class ActiveDocumentMonitor extends DisposeManager {
             let base = vscode.workspace.getWorkspaceFolder(value!.uri)?.uri?.fsPath ?? '';
             fPath = path.posix.relative(base, fPath);
         }
-        log.debug("ActiveDocumentChanged", fPath);
         this._activeDocument = value;
         this._onActiveDocumentChanged.fire(value);
     }

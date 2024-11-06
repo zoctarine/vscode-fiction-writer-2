@@ -96,6 +96,7 @@ export class SimpleSuffixOrderParser implements IFileNameOrderParser {
 
     process(name: string, options: any = {}): IFileOrder {
         const matches = name.match(this.orderRegex);
+        log.tmp(matches);
         if (matches?.groups) {
             return {
                 namePart: matches.groups.name,

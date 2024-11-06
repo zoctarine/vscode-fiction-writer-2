@@ -1,5 +1,5 @@
-import {FwControl, FwItem, FwType} from '../../core/fwFiles';
-import {log} from '../../core';
+import {FwControl, FwItem, FwType} from '../../../core/fwFiles';
+import {log} from '../../../core';
 
 export interface IFileFilter {
     get key(): string;

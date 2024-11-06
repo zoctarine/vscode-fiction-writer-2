@@ -10,12 +10,14 @@ export const FictionWriter = {
         revealInProjectsView: 'explorer.revealInProjectsView',
     },
     files: {
-        split: `${Files}.split`
+        split: `${Files}.split`,
+        combine: `${Files}.combine`,
     },
     views: {
         projectExplorer: {
             id: `${ViewsProjectExplorer}`,
-            is: `${ViewsProjectExplorer}.is`,
+            ctx: `${ViewsProjectExplorer}.ctx`,
+            vm: `${ViewsProjectExplorer}.vm`,
             newFile: `${ViewsProjectExplorer}.newFile`,
             newFolder: `${ViewsProjectExplorer}.newFolder`,
             rename: `${ViewsProjectExplorer}.rename`,
@@ -25,7 +27,6 @@ export const FictionWriter = {
             toggleVirtualFolder: `${ViewsProjectExplorer}.toggleVirtualFolder`,
             revealInExplorer: `${ViewsProjectExplorer}.revealInExplorer`,
             filters: {
-                is: `${ViewsProjectExplorer}.filters.is`,
                 allFiles: `${ViewsProjectExplorer}.filters.allFiles`,
                 projectFiles: `${ViewsProjectExplorer}.filters.projectFiles`,
             },
@@ -34,7 +35,6 @@ export const FictionWriter = {
                 decoration2: `${ViewsProjectExplorer}.show.decoration2`,
                 decoration3: `${ViewsProjectExplorer}.show.decoration3`,
                 decoration4: `${ViewsProjectExplorer}.show.decoration4`,
-                decorationIs: `${ViewsProjectExplorer}.show.decorationIs`,
             },
             reorder:{
                 start: `${ViewsProjectExplorer}.reorder.start`,
@@ -45,7 +45,6 @@ export const FictionWriter = {
             sync: {
                 on: `${ViewsProjectExplorer}.sync.on`,
                 off: `${ViewsProjectExplorer}.sync.off`,
-                isOn: `${ViewsProjectExplorer}.sync.isOn`,
             },
             compile: {
                 startHere: `${ViewsProjectExplorer}.compile.startHere`,

@@ -75,10 +75,11 @@ export class CoreModule extends DisposeManager {
                 if (editor?.selection) {
                     if (editor?.selection.isEmpty) {
                         const orderParser = new SimpleSuffixOrderParser();
+                        log.tmp("PARSED", fwItem.ref.name);
                         const parsed = orderParser.process(fwItem.ref.name);
-                        parsed.mainOrder = parsed.mainOrder ? parsed.mainOrder +1 : parsed.mainOrder;
+                        parsed.mainOrder = parsed.mainOrder !== undefined ? parsed.mainOrder +1 : parsed.mainOrder;
                         newName = orderParser.build(parsed);
-                        log.tmp(newName);
+                        log.tmp("New Name", newName);
 
                     } else {
                         newName = editor.document.getText(editor.selection);
@@ -103,7 +104,7 @@ export class CoreModule extends DisposeManager {
                 } else {
                     notifier.warn("File cannot be split");
                 }
-            })
+            }),
         );
     }
 }
