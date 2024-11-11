@@ -26,31 +26,33 @@ import {
     SetFwItemTypeDecorations
 } from './core/processors';
 
+import {FileWorkerClient} from './worker';
+
+const fileWorkerClient = new FileWorkerClient();
 
 export function activate(context: vscode.ExtensionContext) {
     log.enabled = true;
 
-    vscode.workspace.onDidOpenTextDocument(e => {
-        console.log(e.languageId);
-    });
-
-    const core = new CoreModule(context, {
-        createTextProcessor: () => new ChainedTextProcessor()
-            .add(new ExtractMeta())
-            .add(new SetFwItemTypeDecorations())
-            .add(new SetMetaDecorations())
-            .add(new ComputeTextStatistics())
-            .add(new SetTextStatisticsDecorations())
-            .add(new ComputeWriteTarget())
-            .add(new SetWriteTargetDecorations)
-            .add(new SetFwItemDecorations)
-            .add(new ComputeContentHash()),
-        createUpdateMetaProcessor: (updateMeta) => new ChainedTextProcessor()
-            .add(new ExtractMeta())
-            .add(new UpdateMeta(updateMeta))
-            .add(new EraseMetaFromContent())
-            .add(new InjectMetaIntoContent())
-    });
+    const core = new CoreModule(
+        context,
+        fileWorkerClient,
+        {
+            createTextProcessor: () => new ChainedTextProcessor()
+                .add(new ExtractMeta())
+                .add(new SetFwItemTypeDecorations())
+                .add(new SetMetaDecorations())
+                .add(new ComputeTextStatistics())
+                .add(new SetTextStatisticsDecorations())
+                .add(new ComputeWriteTarget())
+                .add(new SetWriteTargetDecorations)
+                .add(new SetFwItemDecorations)
+                .add(new ComputeContentHash()),
+            createUpdateMetaProcessor: (updateMeta) => new ChainedTextProcessor()
+                .add(new ExtractMeta())
+                .add(new UpdateMeta(updateMeta))
+                .add(new EraseMetaFromContent())
+                .add(new InjectMetaIntoContent())
+        });
 
     context.subscriptions.push(
         projectsModule.register(core),
@@ -77,4 +79,5 @@ export function activate(context: vscode.ExtensionContext) {
 
 // This method is called when your extension is deactivated
 export function deactivate() {
+    fileWorkerClient.stopWorker();
 }

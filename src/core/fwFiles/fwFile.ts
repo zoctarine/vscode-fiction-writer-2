@@ -74,7 +74,7 @@ export class DefaultOrderParser implements IFileNameOrderParser {
             if (orderList.length > 0) {
                 order = orderList.pop()!;
             }
-            namePart = source.substring(matches.length - 1);
+            namePart = source.substring(orderPart.length - 1);
         }
 
         return {
@@ -146,7 +146,7 @@ export class FwFileNameProcessor implements IFileNameParser {
         const parsedName = this._parse(parsed.base);
         const parsedOrder = this._orderProcessor.process(parsedName.name);
         return {
-            order: [parsedOrder.mainOrder, ...parsedOrder.otherOrders ?? []].filter(f => f !== undefined),
+            order: [...parsedOrder.otherOrders?? [], parsedOrder.mainOrder].filter(f => f !== undefined),
             orderString: parsedOrder.orderPart,
             orderedName: parsedName.name ?? '',
             name: parsedOrder.namePart ?? '',

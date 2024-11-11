@@ -57,6 +57,13 @@ async function main() {
         outfile: 'dist/extension.js',
     });
 
+    const workerCtx = esbuild.context({
+        ...buildOptions,
+        entryPoints: ['src/worker/worker.ts'],
+        outfile: 'dist/worker/worker.js',
+        external: ['vscode','worker_threads'],
+    });
+
     const cmCtx = esbuild.context({
         ...buildOptions,
         entryPoints: ['src/modules/codeMirrorEditorView/browser/codeMirrorClient.ts'],
@@ -75,12 +82,15 @@ async function main() {
         outfile: 'dist/browser/metadataEditorClient.js',
     });
 
+
+
     if (watch) {
         await Promise.all([
             mainCtx.then((ctx) => ctx.watch()),
             cmCtx.then((ctx) => ctx.watch()),
             pmCtx.then((ctx) => ctx.watch()),
             metaCtx.then((ctx) => ctx.watch()),
+            workerCtx.then((ctx) => ctx.watch()),
         ]);
     } else {
         // Rebuild both bundles
@@ -89,6 +99,7 @@ async function main() {
             cmCtx.then((ctx) => ctx.rebuild()),
             pmCtx.then((ctx) => ctx.rebuild()),
             metaCtx.then((ctx) => ctx.rebuild()),
+            workerCtx.then((ctx) => ctx.rebuild()),
         ]);
 
         await Promise.all([
@@ -96,6 +107,7 @@ async function main() {
             cmCtx.then((ctx) => ctx.dispose()),
             pmCtx.then((ctx) => ctx.dispose()),
             metaCtx.then((ctx) => ctx.dispose()),
+            workerCtx.then((ctx) => ctx.dispose()),
         ]);
     }
 }

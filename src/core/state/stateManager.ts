@@ -96,6 +96,7 @@ export class StateManager extends DisposeManager {
 
     async reload(fileInfos: FwItem[]) {
         this._enqueueOn();
+        this._fileStates.clear(); // TODO: fix this to detect changes in a more efficient way
         for (const item of fileInfos) {
             try {
                 if (item.ref.fsExists) {

@@ -13,6 +13,7 @@ import {
     FwWorkspaceFolderItem
 } from './fwItem';
 import {log, notifier} from '../logging';
+import {FileWorkerClient} from '../../worker';
 
 let loadFilesCalledCounter = 0;
 export const asPosix = (mixedPath: string) => path.posix.normalize(mixedPath.split(path.sep).join(path.posix.sep));
@@ -20,15 +21,14 @@ export const asPosix = (mixedPath: string) => path.posix.normalize(mixedPath.spl
 export class FwFileManager extends DisposeManager {
     private _fileExtensions!: string[];
     private _onFilesChanged = new vscode.EventEmitter<FwItem[]>();
-    private _onFilesDeleted = new vscode.EventEmitter<string[]>();
     private _silentUpdates = false;
     private _projectTag: string = '';
 
-    constructor(private _options: ProjectsOptions) {
+    constructor(private _options: ProjectsOptions, private _fileWorkerClient: FileWorkerClient) {
         super();
         this._loadOptions();
         // We listen to all file changes, and filter on the handler. Might change later
-        const watcher = vscode.workspace.createFileSystemWatcher('**/*.*');
+        const watcher = vscode.workspace.createFileSystemWatcher('**/*');
         this.manageDisposable(
             this._options.fileTypes.onChanged(c => {
                 this._loadOptions();
@@ -38,9 +38,11 @@ export class FwFileManager extends DisposeManager {
                 this._loadOptions();
                 this.loadFiles().then((fi) => this._onFilesChanged.fire(fi));
             }),
-            watcher.onDidChange((f) => this._fileChangeHandler(f, 'change')),
-            watcher.onDidCreate((f) => this._fileChangeHandler(f, 'create')),
-            watcher.onDidDelete((f) => this._fileChangeHandler(f, 'delete')),
+            watcher.onDidChange((f) => this._handleEvent(f, 'change')),
+            watcher.onDidCreate((f) => this._handleEvent(f, 'create')),
+            watcher.onDidDelete((f) => this._handleEvent(f, 'delete')),
+
+            this._fileWorkerClient.onFilesChanged(f => this._processFileChanges(f)),
 
             watcher);
     }
@@ -52,25 +54,50 @@ export class FwFileManager extends DisposeManager {
         if (!this._projectTag) this._projectTag = 'fw';
     }
 
-    private async _fileChangeHandler(e: vscode.Uri, action: string) {
+    // private _changes = new Map<string, string>();
+    // private _changeTimeout: NodeJS.Timeout | undefined;
+    //
+    // private _handleEvent(e: vscode.Uri, action: string){
+    //     if (this._silentUpdates) return;
+    //     if (this._changeTimeout) {
+    //         clearTimeout(this._changeTimeout);
+    //     }
+    //     this._changes.set(e.fsPath, action);
+    //
+    //     this._changeTimeout = setTimeout(()=>this._processFileChanges(), 1000);
+    // }
+    //
+    // private async _processFileChanges(){
+    //     if (this._silentUpdates) return;
+    //     const changes = [...this._changes.entries()];
+    //     this._changes.clear();
+    //     if (changes.length === 0) return;
+    //    this.loadFiles().then((fi) => this._onFilesChanged.fire(fi));
+    // }
+
+    private _handleEvent(e: vscode.Uri, action: string){
         if (this._silentUpdates) return;
 
+        this._fileWorkerClient.sendFileChanged(e.fsPath, action);
+    }
+    private async _processFileChanges(paths: string[]){
+        if (this._silentUpdates) return;
+        if (paths.length === 0) return;
+       this.loadFiles().then((fi) => this._onFilesChanged.fire(fi));
+    }
+    private async _fileChangeHandler(e: vscode.Uri, action: string) {
+        const stats = await vscode.workspace.fs.stat(e);
+        if (stats.type === vscode.FileType.File)
+        log.tmp("File changed: " + e.fsPath + " " +  action);
         switch (action) {
             case "change":
             case "create":
+            case "delete":
                 const fwItem = await this._parse(e.fsPath);
                 this._onFilesChanged.fire([fwItem]);
                 break;
-            case "delete":
-                this._onFilesDeleted.fire([e.fsPath]);
-
-                break;
         }
 
-    }
-
-    public get onFilesDeleted() {
-        return this._onFilesDeleted.event;
     }
 
     public get onFilesChanged() {
@@ -228,8 +255,8 @@ export class FwFileManager extends DisposeManager {
             .create();
 
         const {order = []} = file;
-        result.order = order.length ? order[order.length - 1] : 0;
-        result.parentOrder = order.slice(0, -1);
+        result.order = order.pop() ?? 0;
+        result.parentOrder = order;
         result.orderBy = file.orderedName;
 
         return result;

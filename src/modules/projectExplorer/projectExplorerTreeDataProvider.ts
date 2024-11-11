@@ -1,12 +1,15 @@
 import * as vscode from 'vscode';
+import {InputBoxValidationSeverity} from 'vscode';
 import * as path from 'path';
 import {
+    DefaultOrderParser,
     DisposeManager,
     FactorySwitch,
     FictionWriter,
     FwEmpty,
     FwEmptyVirtualFolder,
     FwFileManager,
+    FwFileNameProcessor,
     FwItem,
     FwProjectFileItem,
     FwRootItem,
@@ -103,11 +106,12 @@ export class ProjectExplorerTreeDataProvider
             this._treeView.onDidExpandElement((e) => {
                 this._contextManager.set("tree_expanded_" + e.element.id, true);
             }),
-            this._treeView.onDidChangeSelection((e)=>{
+            this._treeView.onDidChangeSelection((e) => {
                 this.selectedItems = e.selection?.map(s => s.data.fwItem).filter(f => f !== undefined) ?? [];
-                if (e.selection?.length > 1){
+                if (e.selection?.length > 1) {
                     return this.setCtx({multiselect: true});
-                }  if (e.selection?.length === 1){
+                }
+                if (e.selection?.length === 1) {
                     return this.setCtx({multiselect: false});
                 } else {
                     return this.setCtx({multiselect: undefined});
@@ -134,10 +138,12 @@ export class ProjectExplorerTreeDataProvider
 
         if (node.children && node.children.length > 0) {
             const possibleParents = new Map<number, ProjectNode>(node.children
-                .filter(n => n.data.fwItem?.parentOrder.length === 0)
+                .filter(n => n.data.fwItem?.parentOrder.length === 0 && n.data.fwItem.subType !== FwSubType.Folder)
                 .map(c => [c.data.fwItem?.order ?? 0, c]));
             const possibleChildren = node.children
-                .filter(n => n.data.fwItem?.parentOrder.length && n.data.fwItem?.parentOrder.length > 0);
+                .filter(n => n.data.fwItem?.parentOrder.length &&
+                    n.data.fwItem?.parentOrder.length > 0 &&
+                    n.data.fwItem.subType !== FwSubType.Folder);
 
             for (const child of possibleChildren) {
                 if (!child.data.fwItem) continue;
@@ -158,13 +164,19 @@ export class ProjectExplorerTreeDataProvider
                         this._morph(parent, parent.data.fwItem.ref.fsExists
                             ? FwVirtualFolderItem
                             : FwEmptyVirtualFolder);
-
                     }
                 }
             }
 
             for (let child of node.children) {
                 await this.buildVirtualFolders(child);
+
+                // Hide empty virtual folders that don't have any
+                // visible items.
+                if (child.data.fwItem?.subType === FwSubType.EmptyVirtualFolder &&
+                    child.children && child.children.every(c => !c.visible)) {
+                    child.visible = false;
+                }
             }
         }
     }
@@ -286,8 +298,7 @@ export class ProjectExplorerTreeDataProvider
 
         const item = new ProjectExplorerTreeItem(node, {
             expanded: this._contextManager.get("tree_expanded_" + element.id, false),
-            contextBuilder: () => ({
-            }),
+            contextBuilder: () => ({}),
             decorationsSelector: (s) =>
                 new FactorySwitch<(IDecorationState | undefined)[]>()
                     .case(this._ctx.decoration === 'decoration1', () => [s.writeTargetsDecorations, s.metadataDecorations])
@@ -298,7 +309,7 @@ export class ProjectExplorerTreeDataProvider
         });
 
         item.contextValue = Context.serialize(
-            new ProjectNodeContextBuilder().build({node, ctx:this._ctx}));
+            new ProjectNodeContextBuilder().build({node, ctx: this._ctx}));
 
         return item;
     }
@@ -327,18 +338,69 @@ export class ProjectExplorerTreeDataProvider
         //   this._addNewChild(node ?? this._treeView.selection[0], FwSubType.Folder);
     }
 
-    public rename({data: {fwItem}}: ProjectNode): void {
+    public async rename({data: {fwItem}}: ProjectNode) {
         if (fwItem) {
             const {ref} = fwItem;
-            vscode.window.showInputBox({prompt: 'Enter new name', value: ref.name})
-                .then((value) => {
-                    if (value) {
-                        this._fileManager.renameFile(
-                            ref.fsPath,
-                            path.posix.join(ref.fsDir, value + ref.ext)).then(() => {
-                        }).catch(err => console.warn(err));
+            const startIndex = ref.orderString?.length ?? 0;
+            let endIndex = (startIndex > 0 ? startIndex - 1 : startIndex) + ref.name.length;
+            const getFwChanges = (value: string) => {
+                const parser = new FwFileNameProcessor(new DefaultOrderParser());
+                let newFile = parser.process(value);
+                const messages = [];
+                if (newFile.orderString !== ref.orderString) {
+                    messages.push("the file order segment");
+                }
+                if (newFile.fsExt !== ref.fsExt) {
+                    messages.push(`the file type`);
+                } else if (newFile.ext !== ref.ext) {
+                    messages.push(`the FictionWriter extended extension`);
+                }
+
+                return messages;
+            };
+
+            const value = await vscode.window.showInputBox({
+                title: `Rename ${ref.name}`,
+                prompt: `New file name:`,
+                valueSelection: [startIndex, endIndex],
+                value: ref.fsName,
+                validateInput: (value: string) => {
+
+                    if (!value || value === '') {
+                        return {
+                            message: "Value must be a valid filename",
+                            severity: InputBoxValidationSeverity.Error
+                        };
                     }
-                });
+                    const messages = getFwChanges(value);
+
+                    if (messages.length > 0) {
+                        let last = messages.pop();
+                        if (messages.length > 0) last = ` and ${last}`;
+                        return {
+                            message: `Warning: You changed ${messages.join(', ')}${last}`,
+                            severity: InputBoxValidationSeverity.Warning
+                        };
+                    }
+                }
+            });
+            if (value) {
+                let doRename = true;
+                if (getFwChanges(value).length > 0) {
+                    doRename = await vscode.window.showWarningMessage("Are you sure?",
+                        {
+                            modal: true,
+                            detail: `Renaming\n\n'${ref.fsName}'\n\nto:\n\n ${value}\n\n may result in FictionWriter handling the file differently.\n\nJust make sure you are OK with this change.`,
+                        },
+                        "OK") === 'OK';
+                }
+                if (doRename) {
+                    await this._fileManager.renameFile(
+                        ref.fsPath,
+                        path.posix.join(ref.fsDir, value)).then(() => {
+                    }).catch(err => log.warn(err));
+                }
+            }
         }
     }
 
@@ -537,6 +599,7 @@ export class ProjectExplorerTreeDataProvider
 
 
     public refresh() {
+        log.tmp("Refresh all tree");
         const fwItems = this._stateManager.trackedFiles.filter(a => a !== undefined);
         this._treeStructure.clear();
         this.buildHierarchy(fwItems)
@@ -695,13 +758,13 @@ export class ProjectExplorerTreeDataProvider
 
     private async setCtx(value: Partial<IProjectContext>, persist: boolean = false) {
 
-            await ObjectProps.patchAsync(this._ctx, value, {
-                onSinglePropertyChange: async (key, value) => {
-                    if (persist) {
-                        await this._contextManager.set(`${FictionWriter.views.projectExplorer.ctx}.${key}`, value);
-                    }
+        await ObjectProps.patchAsync(this._ctx, value, {
+            onSinglePropertyChange: async (key, value) => {
+                if (persist) {
+                    await this._contextManager.set(`${FictionWriter.views.projectExplorer.ctx}.${key}`, value);
                 }
-            });
+            }
+        });
 
         let vmChanges: Partial<IProjectTreeViewModel> = {};
         switch (this._ctx.is) {

@@ -11,6 +11,7 @@ import {registerMarkdownFormatters} from './markdown';
 import {addCommand} from './commandExtensions';
 import {FictionWriter} from './constants';
 import {retryAsync} from './lib/retry';
+import {FileWorkerClient} from '../worker';
 
 export * from './commandExtensions';
 export * from './constants';
@@ -28,14 +29,14 @@ export class CoreModule extends DisposeManager {
     fileManager: FwFileManager;
     contextManager: ContextManager;
     projectsOptions = new ProjectsOptions();
-    processorFactory!: IStateProcessorFactory<IFileState>;
     activeDocumentMonitor: ActiveDocumentMonitor;
 
-    constructor(context: vscode.ExtensionContext, processorFactory: IStateProcessorFactory<IFileState>) {
+    constructor(context: vscode.ExtensionContext,
+                public fileWorkerClient: FileWorkerClient,
+                public processorFactory: IStateProcessorFactory<IFileState>) {
         super();
-        this.processorFactory = processorFactory;
         this.stateManager = new StateManager(this.processorFactory);
-        this.fileManager = new FwFileManager(this.projectsOptions);
+        this.fileManager = new FwFileManager(this.projectsOptions, this.fileWorkerClient);
         this.contextManager = new ContextManager(context);
         this.activeDocumentMonitor = new ActiveDocumentMonitor();
 
@@ -55,10 +56,6 @@ export class CoreModule extends DisposeManager {
                 log.debug("filesChanged", files.length);
                 return this.stateManager.reload(files);
             }),
-            this.fileManager.onFilesDeleted(filePaths => {
-                log.debug("filesDeleted", filePaths.length);
-                return this.stateManager.forget(filePaths);
-            }),
 
             this.stateManager.onFilesStateChanged(e => {
                 log.debug("StateFileChanged", e.files.length);
@@ -75,12 +72,9 @@ export class CoreModule extends DisposeManager {
                 if (editor?.selection) {
                     if (editor?.selection.isEmpty) {
                         const orderParser = new SimpleSuffixOrderParser();
-                        log.tmp("PARSED", fwItem.ref.name);
                         const parsed = orderParser.process(fwItem.ref.name);
                         parsed.mainOrder = parsed.mainOrder !== undefined ? parsed.mainOrder +1 : parsed.mainOrder;
                         newName = orderParser.build(parsed);
-                        log.tmp("New Name", newName);
-
                     } else {
                         newName = editor.document.getText(editor.selection);
                     }

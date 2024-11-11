@@ -4,6 +4,7 @@ import path from 'path';
 import {FwType} from './fwType';
 import {FwControl} from './fwControl';
 import {FwPermission} from './fwPermission';
+import {log} from '../logging';
 
 
 /**
@@ -67,14 +68,13 @@ export class FwEmptyVirtualFolder extends FwItem {
     public static create(parent: FwItem | undefined, order: number): FwEmptyVirtualFolder {
         const orders = [...(parent?.ref.order ?? []), order];
         const orderPart = `${orders.join('.')}`;
-        const name = "Scene";
+        const name = "empty";
         const orderedName = `${orderPart} ${name}`;
         const projectTag = 'fw';
         const fsExt = '.md';
         const ext = `.${projectTag}${fsExt}`;
         const fsName = `${orderedName}${ext}`;
         const fsPath = path.posix.join(parent?.ref.fsPath ?? '', fsName);
-
         const file: IFwFile = {
             data: [],
             ext,
