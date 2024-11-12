@@ -25,7 +25,6 @@ export interface IWriteTargetsState {
     progress?: string;
 }
 
-
 export interface IFileState {
     fwItem?: FwItem,
     decorations?: IDecorationState,
@@ -35,10 +34,6 @@ export interface IFileState {
     textStatisticsDecorations?: IDecorationState
     writeTargets?: IWriteTargetsState
     writeTargetsDecorations?: IDecorationState
+    orderDecorations?: IDecorationState
     contentHash?: string;
-}
-
-export interface IFileStateSnapshot {
-    prevState: IFileState,
-    state: IFileState,
 }

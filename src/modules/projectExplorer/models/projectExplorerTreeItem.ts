@@ -62,6 +62,12 @@ export class ProjectExplorerTreeItem extends vscode.TreeItem {
                 command: 'vscode.open',
                 arguments: [vscode.Uri.parse(data.fwItem!.ref.fsPath)]
             } : undefined;
+
+        this.checkboxState = node.checked === true
+            ? vscode.TreeItemCheckboxState.Checked
+            : node.checked === false
+                ? vscode.TreeItemCheckboxState.Unchecked
+                : undefined;
     }
 }
 

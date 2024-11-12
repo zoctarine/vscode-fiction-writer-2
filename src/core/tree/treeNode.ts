@@ -7,6 +7,7 @@ export class TreeNode<T> {
     public children: TreeNode<T>[] = [];
     public visible = true;
     public selected = false;
+    public checked: boolean|undefined = undefined;
     public highlighted = false;
 
     constructor(id: string, data: T) {

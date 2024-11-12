@@ -1,5 +1,5 @@
 import {ProjectNode} from './projectNode';
-import {FwControl, FwPermission, FwSubType, IBuilder, Permissions} from '../../../core';
+import {FwControl, FwPermission, FwSubType, FwType, IBuilder, Permissions} from '../../../core';
 import {IProjectContext} from './IProjectContext';
 
 export interface IProjectNodeContext {
@@ -12,6 +12,11 @@ export interface IProjectNodeContext {
     toggleVirtual: boolean;
 
     compile: boolean;
+    compileCommit: boolean,
+    compileDiscard: boolean,
+    compileChildrenInclude: boolean,
+    compileChildrenExclude: boolean,
+
     reorder: boolean;
     reorderCommit: boolean;
     reorderDiscard: boolean;
@@ -37,22 +42,32 @@ export class ProjectNodeContextBuilder implements IBuilder<{
     build({ctx, node}: { ctx: IProjectContext, node: ProjectNode }): IProjectNodeContext {
         let none = {
             compile: false,
-            delete: false,
+            compileCommit: false,
+            compileDiscard: false,
+            compileChildrenInclude: false,
+            compileChildrenExclude: false,
+
             exclude: false,
             include: false,
-            move: false,
+
             newFile: false,
             newFolder: false,
+
+            move: false,
             rename: false,
+            delete: false,
+
             reorder: false,
             reorderCommit: false,
             reorderDiscard: false,
             reorderUp: false,
             reorderDown: false,
             redistribute: false,
+
             reveal: false,
             toggleVirtual: false,
             combine: false,
+
             debug: false
         };
 
@@ -69,6 +84,10 @@ export class ProjectNodeContextBuilder implements IBuilder<{
             case "compiling":
                 return {
                     ...none,
+                    compileCommit: true,
+                    compileDiscard: true,
+                    compileChildrenInclude: node.data.fwItem?.type === FwType.Folder,
+                    compileChildrenExclude: node.data.fwItem?.type === FwType.Folder,
                 };
             default:
                 return {

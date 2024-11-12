@@ -21,13 +21,14 @@ export const FwColors = {
     black: 'fictionWriter.black'
 };
 
-export const KnownColors = {
-    foreground: 'foreground',
-    disabledForeground: 'descriptionForeground',
+export const CoreColors = {
+    active: 'foreground',
+    inactive: 'disabledForeground',
+    missing: 'foreground',
 }
 
 
 export const allKnownColors: string[] = [
     ...Object.keys(FwColors).map(v => v.toString()),
-    ...Object.values(KnownColors).map(v => v.toString()),
+    ...Object.values(CoreColors).map(v => v.toString()),
 ];

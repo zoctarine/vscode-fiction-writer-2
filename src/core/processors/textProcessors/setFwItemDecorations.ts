@@ -3,6 +3,7 @@ import {IDecorationState, IFileState} from '../../state';
 import {FwControl} from '../../fwFiles';
 import {FwSubType} from '../../fwFiles/fwSubType';
 import {log} from '../../logging';
+import {CoreColors} from '../../decorations';
 
 export class SetFwItemDecorations implements ITextProcessor<IFileState> {
     async process(content: string, data: IFileState): Promise<string> {
@@ -11,17 +12,17 @@ export class SetFwItemDecorations implements ITextProcessor<IFileState> {
         let newData: Partial<IDecorationState> = {};
 
         if (!data.fwItem.ref.fsExists) {
-            newData.color = 'disabledForeground';
-            newData.highlightColor = 'disabledForeground';
+            newData.color = CoreColors.missing;
+            newData.highlightColor = CoreColors.missing;
 
         } else if (data.fwItem.control === FwControl.Possible) {
-            newData.color = 'disabledForeground';
-            newData.highlightColor = 'disabledForeground';
+            newData.color = CoreColors.inactive;
+            newData.highlightColor = CoreColors.inactive;
 
             newData.badge = '+';
         } else if (data.fwItem.subType === FwSubType.OtherFile) {
-            newData.color = 'disabledForeground';
-            newData.highlightColor = 'disabledForeground';
+            newData.color = CoreColors.inactive;
+            newData.highlightColor = CoreColors.inactive;
             newData.badge = '-';
         }
 

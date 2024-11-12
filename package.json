@@ -712,12 +712,12 @@
         },
         {
           "command": "fictionWriter.views.projectExplorer.compile.discard",
-          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.ctx.projectExplorer.ctx.compileDiscard",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.compileDiscard",
           "group": "navigation"
         },
         {
           "command": "fictionWriter.views.projectExplorer.compile.commit",
-          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.ctx.projectExplorer.ctx.compileCommit",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.compileCommit",
           "group": "navigation"
         },
         {
@@ -815,32 +815,46 @@
         {
           "command": "fictionWriter.views.projectExplorer.reorder.start",
           "when": "view == fictionWriter.views.projectExplorer && viewItem =~ /\\breorder\\b/ && !listMultiSelection",
-          "group": "5_fictionWriter@1"
-        },
-        {
-          "command": "fictionWriter.views.projectExplorer.reorder.discard",
-          "when": "view == fictionWriter.views.projectExplorer && viewItem =~ /\\breorderDiscard\\b/",
-          "group": "5_fictionWriter@2"
+          "group": "5_fw_reorder@1"
         },
         {
           "command": "fictionWriter.views.projectExplorer.reorder.commit",
           "when": "view == fictionWriter.views.projectExplorer && viewItem =~ /\\breorderCommit\\b/",
-          "group": "5_fictionWriter@3"
+          "group": "5_fw_reorder@2"
         },
         {
           "command": "fictionWriter.views.projectExplorer.reorder.redistribute",
           "when": "view == fictionWriter.views.projectExplorer && viewItem =~ /\\bredistribute\\b/ && !listMultiSelection",
-          "group": "5_fictionWriter@4"
+          "group": "5_fw_reorder_sorting@4"
+        },
+        {
+          "command": "fictionWriter.views.projectExplorer.reorder.discard",
+          "when": "view == fictionWriter.views.projectExplorer && viewItem =~ /\\breorderDiscard\\b/",
+          "group": "99_fw_reorder_cancel@1"
         },
         {
           "command": "fictionWriter.views.projectExplorer.compile.startHere",
           "when": "view == fictionWriter.views.projectExplorer && viewItem =~ /\\bcompile\\b/",
-          "group": "6_fictionWriter@1"
+          "group": "6_fw_compile@1"
+        },
+        {
+          "command": "fictionWriter.views.projectExplorer.compile.commit",
+          "when": "view == fictionWriter.views.projectExplorer && viewItem =~ /\\bcompileCommit\\b/",
+          "group": "6_fw_compile@2"
+        },
+       {
+          "command": "fictionWriter.views.projectExplorer.compile.childrenInclude",
+          "when": "view == fictionWriter.views.projectExplorer && viewItem =~ /\\bcompileChildrenInclude\\b/",
+          "group": "6_fw_compile_selection@3"
+        }, {
+          "command": "fictionWriter.views.projectExplorer.compile.childrenExclude",
+          "when": "view == fictionWriter.views.projectExplorer && viewItem =~ /\\bcompileChildrenExclude\\b/",
+          "group": "6_fw_compile_selection@4"
         },
         {
           "command": "fictionWriter.views.projectExplorer.compile.discard",
           "when": "view == fictionWriter.views.projectExplorer && viewItem =~ /\\bcompileDiscard\\b/",
-          "group": "6_fictionWriter@2"
+          "group": "99_fw_compile_cancel@9"
         },
         {
           "command": "fictionWriter.files.combine",
@@ -874,7 +888,12 @@
         },
         {
           "command": "fictionWriter.views.metadata.filters.setFileDescriptionMetadataKey",
-          "when": "(view == fictionWriter.views.metadata && (viewItem == metaKey || viewItem == metaInlineValue)) || (view == fictionWriter.views.metadata.filters && viewItem == filterItemMetadataKey)",
+          "when": "view == fictionWriter.views.metadata.filters && viewItem == filterItemMetadataKey",
+          "group": "2_fictionWriterMeta@1"
+        },
+        {
+          "command": "fictionWriter.views.metadata.setFileDescriptionMetadataKey",
+          "when": "view == fictionWriter.views.metadata && (viewItem == metaKey || viewItem == metaInlineValue)",
           "group": "2_fictionWriterMeta@1"
         }
       ]
@@ -991,7 +1010,7 @@
       },
       {
         "command": "fictionWriter.views.projectExplorer.reorder.commit",
-        "title": "Save Order",
+        "title": "Save Order...",
         "category": "FictionWriter",
         "icon": "$(check)"
       },
@@ -1043,14 +1062,26 @@
         "category": "Markdown Fiction Writer"
       },
       {
+        "command": "fictionWriter.views.projectExplorer.compile.childrenInclude",
+        "title": "Include children",
+        "category": "FictionWriter",
+        "icon": "$(check)"
+      },
+      {
+        "command": "fictionWriter.views.projectExplorer.compile.childrenExclude",
+        "title": "Exclude children",
+        "category": "FictionWriter",
+        "icon": "$(check)"
+      },
+      {
         "command": "fictionWriter.views.projectExplorer.compile.commit",
-        "title": "Compile: Export",
+        "title": "Export...",
         "category": "FictionWriter",
         "icon": "$(check)"
       },
       {
         "command": "fictionWriter.views.projectExplorer.compile.discard",
-        "title": "Compile: Discard",
+        "title": "Discard",
         "category": "Markdown Fiction Writer",
         "icon": "$(remove-close)"
       },
@@ -1150,6 +1181,11 @@
         "command": "fictionWriter.views.metadata.filters.linkWithFileView.off",
         "title": "Sync with File Metadata: Disable",
         "icon": "$(mdi-link-off)",
+        "category": "Markdown Fiction Writer"
+      },
+      {
+        "command": "fictionWriter.views.metadata.setFileDescriptionMetadataKey",
+        "title": "Show in Project View",
         "category": "Markdown Fiction Writer"
       },
       {

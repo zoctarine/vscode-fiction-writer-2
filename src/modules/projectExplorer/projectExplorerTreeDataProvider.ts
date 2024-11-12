@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import {InputBoxValidationSeverity} from 'vscode';
+import {InputBoxValidationSeverity, TreeItemCheckboxState} from 'vscode';
 import * as path from 'path';
 import {
     DefaultOrderParser,
@@ -10,13 +10,13 @@ import {
     FwEmptyVirtualFolder,
     FwFileManager,
     FwFileNameProcessor,
-    FwItem,
+    FwItem, FwPermission,
     FwProjectFileItem,
     FwRootItem,
     FwSubType,
     FwVirtualFolderItem,
     IFwFile,
-    log,
+    log, Permissions,
     TreeStructure
 } from "../../core";
 import {ContextManager} from '../../core/contextManager';
@@ -96,7 +96,10 @@ export class ProjectExplorerTreeDataProvider
         this.manageDisposable(
             this._treeView,
             this._onDidChangeTreeData,
-            this._options.fileDescriptionMetadataKey.onChanged(_ => this.refresh()),
+            this._options.fileDescriptionMetadataKey.onChanged(v => {
+                log.tmp("fileDescriptionMetadataKey",v )
+                return this.refresh();
+            }),
             this._stateManager.onFilesStateChanged(() => {
                 this.refresh(); // TODO: Improve this, to not overlap with onFilesChanged
             }),
@@ -117,12 +120,12 @@ export class ProjectExplorerTreeDataProvider
                     return this.setCtx({multiselect: undefined});
                 }
             }),
-            // TODO(A)
-            // this._treeView.onDidChangeCheckboxState(e => {
-            //     for (let [node, state] of e.items) {
-            //         node.item.checked = state === TreeItemCheckboxState.Checked
-            //     }
-            // }),
+
+            this._treeView.onDidChangeCheckboxState(e => {
+                for (let [node, state] of e.items) {
+                    node.checked = state === TreeItemCheckboxState.Checked;
+                }
+            }),
             vscode.window.onDidChangeActiveTextEditor(e => {
                 this._handleActiveTextEditorChanged(e);
             })
@@ -296,15 +299,27 @@ export class ProjectExplorerTreeDataProvider
         const node = this._treeStructure.getNode(element.id);
         if (!node) return {};
 
+        const metaDesc = node.data.metadata?.value && this._options?.fileDescriptionMetadataKey.value
+            ? node.data.metadata.value[this._options.fileDescriptionMetadataKey.value]
+            : null;
+
+        const overwrittenMetaDecoration = metaDesc
+            ? {
+                description: metaDesc,
+            } : {};
+        const additionalDecoration =
+            this._ctx.is === action.ordering ?
+                node.data.orderDecorations
+                : {};
         const item = new ProjectExplorerTreeItem(node, {
             expanded: this._contextManager.get("tree_expanded_" + element.id, false),
             contextBuilder: () => ({}),
             decorationsSelector: (s) =>
                 new FactorySwitch<(IDecorationState | undefined)[]>()
-                    .case(this._ctx.decoration === 'decoration1', () => [s.writeTargetsDecorations, s.metadataDecorations])
-                    .case(this._ctx.decoration === 'decoration2', () => [s.metadataDecorations])
-                    .case(this._ctx.decoration === 'decoration3', () => [s.textStatisticsDecorations, s.writeTargetsDecorations])
-                    .case(this._ctx.decoration === 'decoration4', () => [])
+                    .case(this._ctx.decoration === 'decoration1', () => [s.writeTargetsDecorations, s.metadataDecorations, additionalDecoration, overwrittenMetaDecoration])
+                    .case(this._ctx.decoration === 'decoration2', () => [s.metadataDecorations, additionalDecoration, overwrittenMetaDecoration])
+                    .case(this._ctx.decoration === 'decoration3', () => [s.textStatisticsDecorations, s.writeTargetsDecorations, additionalDecoration])
+                    .case(this._ctx.decoration === 'decoration4', () => [additionalDecoration])
                     .create()
         });
 
@@ -682,23 +697,20 @@ export class ProjectExplorerTreeDataProvider
         }
     }
 
-    public startSelection(e: ProjectNode) {
-        // const node = this._tree.getNode(e.id);
-        // if (node) {
-        //     vscode.commands.executeCommand('setContext',
-        //             FictionWriter.ctx.projectExplorer, action.compiling)
-        //         .then(() => {
-        //             this._tree.toList().forEach(f => {
-        //                 if (f.item.checked === undefined) {
-        //                     f.item.checked = false;
-        //                 }
-        //             });
-        //             this._treeView.description = "Compile";
-        //
-        //             this._updateCheckboxBasedOnMeta(node);
-        //             this._onDidChangeTreeData.fire();
-        //         });
-        // }
+    public async startCompile(e: ProjectNode) {
+        const node = this._treeStructure.getNode(e.id);
+        if (node) {
+            await this.setCtx({is: action.compiling});
+            this._treeStructure.toList().forEach(n => {
+                if (Permissions.check(n.data.fwItem, FwPermission.Compile)) {
+                    n.checked = false;
+                }
+            });
+            this._treeView.description = "Compile";
+
+            this._updateCheckboxBasedOnMeta(node);
+            this._onDidChangeTreeData.fire();
+        }
     }
 
     public retrieveSelection(): string[] {
@@ -709,17 +721,14 @@ export class ProjectExplorerTreeDataProvider
         return [];
     }
 
-    public discardSelection() {
-        // vscode.commands.executeCommand('setContext',
-        //         FictionWriter.ctx.projectExplorer, action.none)
-        //     .then(() => {
-        //         this._tree.toList().forEach(f => {
-        //             f.item.checked = undefined;
-        //         });
-        //         this._treeView.description = undefined;
-        //
-        //         this._onDidChangeTreeData.fire();
-        //     });
+    public async discardCompile() {
+        await this.setCtx({is: action.none});
+        this._treeStructure.toList().forEach(n => {
+            n.checked = undefined;
+        });
+        this._treeView.description = undefined;
+
+        this._onDidChangeTreeData.fire();
     }
 
     public async filter(filter: string | IFileFilter) {

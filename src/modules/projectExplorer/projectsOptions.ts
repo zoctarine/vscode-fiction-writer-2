@@ -9,7 +9,7 @@ export class ProjectsOptions extends Options {
     public trackingTag = this.valueOf('fileAndFolderTrackingTag', '');
     public sorting = this.valueOf('sorting', 'order');
     public rootFoldersEnabled = this.valueOf('rootFoldersEnabled', true, true);
-    public fileDescriptionMetadataKey = this.valueOf('fileDescriptionMetadataKey', 'projects');
+    public fileDescriptionMetadataKey = this.valueOf('fileDescriptionMetadataKey', 'title');
     public rootFolderNames = {
         draft: 'draft',
         trash: '.trash',

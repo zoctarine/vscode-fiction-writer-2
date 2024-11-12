@@ -23,7 +23,8 @@ import {
     ChainedTextProcessor,
     SetTextStatisticsDecorations,
     SetFwItemDecorations,
-    SetFwItemTypeDecorations
+    SetFwItemTypeDecorations,
+    SetOrderDecorations
 } from './core/processors';
 
 import {FileWorkerClient} from './worker';
@@ -46,6 +47,7 @@ export function activate(context: vscode.ExtensionContext) {
                 .add(new ComputeWriteTarget())
                 .add(new SetWriteTargetDecorations)
                 .add(new SetFwItemDecorations)
+                .add(new SetOrderDecorations())
                 .add(new ComputeContentHash()),
             createUpdateMetaProcessor: (updateMeta) => new ChainedTextProcessor()
                 .add(new ExtractMeta())

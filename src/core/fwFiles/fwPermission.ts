@@ -15,6 +15,7 @@ export enum FwPermission {
     AddToProject = 1 << 8,
     RemoveFromProject = 1 << 9,
     Morph = 1 << 10,
+    Compile = 1 << 11,
 }
 
 const key = (control: FwControl, subType: FwSubType) => `${control}_${subType}`;
@@ -30,14 +31,16 @@ export class Permissions {
     static {
         Permissions._add(
             FwControl.Never, FwSubType.WorkspaceFolder,
-            FwPermission.None
+            FwPermission.None |
+            FwPermission.Compile
         );
 
         Permissions._add(
             FwControl.Never, FwSubType.Folder,
             FwPermission.Rename |
             FwPermission.Move |
-            FwPermission.Delete
+            FwPermission.Delete |
+            FwPermission.Compile
         );
 
         Permissions._add(
@@ -50,7 +53,9 @@ export class Permissions {
             FwPermission.Sort |
             FwPermission.OpenEditor |
             FwPermission.RemoveFromProject |
-            FwPermission.Morph);
+            FwPermission.Morph |
+            FwPermission.Compile
+        );
 
         Permissions._add(
             FwControl.Active, FwSubType.VirtualFolder,
@@ -62,12 +67,14 @@ export class Permissions {
             FwPermission.Sort |
             FwPermission.OpenEditor |
             FwPermission.RemoveFromProject |
-            FwPermission.Morph);
+            FwPermission.Morph |
+            FwPermission.Compile);
 
         Permissions._add(
             FwControl.Active, FwSubType.EmptyVirtualFolder,
             FwPermission.Write |
-            FwPermission.Sort );
+            FwPermission.Sort |
+            FwPermission.Compile);
 
         Permissions._add(
             FwControl.Possible, FwSubType.TextFile,
@@ -76,7 +83,8 @@ export class Permissions {
             FwPermission.Move |
             FwPermission.Delete |
             FwPermission.OpenEditor |
-            FwPermission.AddToProject
+            FwPermission.AddToProject |
+            FwPermission.Compile
         );
 
         Permissions._add(

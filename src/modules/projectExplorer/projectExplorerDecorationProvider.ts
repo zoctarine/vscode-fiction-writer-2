@@ -6,7 +6,7 @@ import vscode from 'vscode';
 import {FictionWriter, log} from '../../core';
 import {StateManager} from '../../core/state';
 import {FwControl, FwType} from '../../core/fwFiles';
-import {FwColors} from '../../core/decorations';
+import {FwColors, CoreColors} from '../../core/decorations';
 
 export class ProjectExplorerDecorationProvider implements FileDecorationProvider {
 
@@ -40,7 +40,7 @@ export class ProjectExplorerDecorationProvider implements FileDecorationProvider
         const item = this._stateManager.get(uri.fsPath);
 
         if (!item) return {
-            color: new ThemeColor('disabledForeground')
+            color: new ThemeColor(CoreColors.missing)
         };
 
         if (item.decorations?.highlightColor) {

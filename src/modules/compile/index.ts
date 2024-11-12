@@ -13,28 +13,30 @@ class CompileModule extends DisposeManager {
     activate(): void {
         this.manageDisposable(
             addCommand(FictionWriter.views.projectExplorer.compile.startHere, (item) => {
-                this._projectsModule?.projectExplorerDataProvider?.startSelection(item);
+                this._projectsModule?.projectExplorerDataProvider?.startCompile(item);
             }),
-            addCommand(FictionWriter.views.projectExplorer.compile.commit, async () => {
-               const files = this._projectsModule?.projectExplorerDataProvider?.retrieveSelection();
-               if (!files || !files.length) {return;}
-               const contents:string[] = [];
-               for (const path of files) {
-                   try {
-                       const rawBytes = await vscode.workspace.fs.readFile(vscode.Uri.parse(path));
-                       const content = rawBytes ? new TextDecoder().decode(rawBytes) : "";
-                       contents.push(content);
-                   } catch (ex){
-                        contents.push(`[CANNOT READ FILE ${path}]${ex}`);
-                   }
-               }
 
-               console.log(contents.join('\n'));
+            addCommand(FictionWriter.views.projectExplorer.compile.commit, async () => {
+                const files = this._projectsModule?.projectExplorerDataProvider?.retrieveSelection();
+                if (!files || !files.length) {
+                    return;
+                }
+                const contents: string[] = [];
+                for (const path of files) {
+                    try {
+                        const rawBytes = await vscode.workspace.fs.readFile(vscode.Uri.parse(path));
+                        const content = rawBytes ? new TextDecoder().decode(rawBytes) : "";
+                        contents.push(content);
+                    } catch (ex) {
+                        contents.push(`[CANNOT READ FILE ${path}]${ex}`);
+                    }
+                }
+
+                console.log(contents.join('\n'));
             }),
             addCommand(FictionWriter.views.projectExplorer.compile.discard, () => {
-                this._projectsModule?.projectExplorerDataProvider?.discardSelection();
+                this._projectsModule?.projectExplorerDataProvider?.discardCompile();
             }),
-
         );
     };
 

@@ -1,21 +1,5 @@
-import vscode from 'vscode';
 import {Metadata} from '../metadata/metadata';
-import {ITextProcessor} from './IProcessor';
-import {IFileState} from '../state';
 import {RegEx} from '../regEx';
-
-export class LoadContent implements ITextProcessor<IFileState> {
-    async process(content: string, data: IFileState): Promise<string> {
-        if (data.fwItem) {
-            const doc = await vscode.workspace.openTextDocument(vscode.Uri.parse(data.fwItem.ref.fsPath));
-            if (doc) {
-                content = doc.getText();
-            }
-        }
-        return content;
-    }
-}
-
 
 export class InputFileProcessor {
     constructor(private text: string) {

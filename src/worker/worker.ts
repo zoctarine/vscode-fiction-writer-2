@@ -1,6 +1,4 @@
 import {parentPort} from 'worker_threads';
-import vscode from 'vscode';
-import path from 'path';
 import {
     IWorkerMessage,
     ClientMsgRootFoldersChanged,

@@ -13,6 +13,7 @@ export {ExtractMeta} from './textProcessors/extractMeta';
 export {UpdateMeta} from './textProcessors/updateMeta';
 export {EraseMetaFromContent} from './eraseMetaFromContent';
 export {InjectMetaIntoContent} from './textProcessors/injectMetaIntoContent';
+export {SetOrderDecorations} from './textProcessors/setOrderDecorations';
 export {AlterState} from './textProcessors/alterState';
 export {ComputeContentHash} from './textProcessors/computeContentHash';
 export {SetMetaDecorations} from './textProcessors/setMetaDecorations';

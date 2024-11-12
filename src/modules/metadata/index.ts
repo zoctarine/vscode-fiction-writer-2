@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import {addCommand, CoreModule, DisposeManager, FictionWriter, mapExtensions} from '../../core';
+import {addCommand, CoreModule, DisposeManager, FictionWriter, log, mapExtensions} from '../../core';
 import {ContextManager} from '../../core/contextManager';
 import {MetadataTreeDataProvider} from './metadataTreeDataProvider';
 import {MetadataOptions} from './metadataOptions';
@@ -25,7 +25,6 @@ class MetadataModule extends DisposeManager {
         iconResolver: new IconResolver(),
         colorResolver: new ColorResolver(),
     };
-    private projectsOptions!: ProjectsOptions;
 
     constructor() {
         super();
@@ -53,12 +52,22 @@ class MetadataModule extends DisposeManager {
             this.options.metadataIcons.onChanged((customIcons) => {
                 this.resolvers.iconResolver.setCustom(mapExtensions.objectToMap(customIcons));
             }),
-            addCommand(FictionWriter.views.metadata.editSingle, (item)=>{
-              return  this.metadataTreeDataProvider?.editMetadata(item);
+            addCommand(FictionWriter.views.metadata.editSingle, (item) => {
+                return this.metadataTreeDataProvider?.editMetadata(item);
             }),
-            addCommand(FictionWriter.views.metadata.filters.setFileDescriptionMetadataKey, (item) => {
+
+            addCommand(FictionWriter.views.metadata.setFileDescriptionMetadataKey, (item) => {
                 if (item?.data.key) {
-                    this.projectsOptions.fileDescriptionMetadataKey.update(item.data.key);
+                    log.tmp("Updating Meta: ", item.data.key);
+                    this.core.projectsOptions.fileDescriptionMetadataKey.update(item.data.key);
+                }
+            }),
+
+            addCommand(FictionWriter.views.metadata.filters.setFileDescriptionMetadataKey, (item) => {
+                // TODO: use key
+                if (item?.data.name) {
+                    log.tmp("Updating Filters: ", item.data.name);
+                    this.core.projectsOptions.fileDescriptionMetadataKey.update(item.data.name);
                 }
             }),
 
@@ -97,7 +106,7 @@ class MetadataModule extends DisposeManager {
     }
 
     register(context: ExtensionContext,
-            core: CoreModule): vscode.Disposable {
+             core: CoreModule): vscode.Disposable {
         this.core = core;
         this.options.enabled.onChanged((enabled) => {
             this.updateState(enabled);

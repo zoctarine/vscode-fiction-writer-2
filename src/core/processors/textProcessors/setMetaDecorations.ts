@@ -1,6 +1,7 @@
 import {ITextProcessor} from '../IProcessor';
 import {applyDecorations, IFileState} from '../../state';
 import {log} from '../../logging';
+import {CoreColors} from '../../decorations';
 
 export class SetMetaDecorations implements ITextProcessor<IFileState> {
     async process(content: string, data: IFileState): Promise<string> {
@@ -9,7 +10,7 @@ export class SetMetaDecorations implements ITextProcessor<IFileState> {
         const metaDecorations = {
             icon: data.metadata.value?.icon,
             color: data.metadata.value?.compile === 'exclude'
-                ? 'disabledForeground' : data.metadata.value?.color
+                ? CoreColors.inactive : data.metadata.value?.color
                     ? `fictionWriter.${data.metadata.value?.color}`
                     : undefined,
             description: data.metadata.value?.title,
