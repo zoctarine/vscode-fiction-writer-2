@@ -9,7 +9,7 @@ import {ColorResolver, IconResolver} from './iconsAndColors';
 import {StateManager} from '../../core/state';
 import {ProjectsOptions} from '../projectExplorer/projectsOptions';
 import {FilterTreeDataProvider} from './filterTreeDataProvider';
-import {ActiveDocumentMonitor} from '../../core/fwFiles/activeDocumentMonitor';
+import {ActiveDocumentMonitor} from '../../core/activeDocumentMonitor';
 
 export * from './iconsAndColors';
 

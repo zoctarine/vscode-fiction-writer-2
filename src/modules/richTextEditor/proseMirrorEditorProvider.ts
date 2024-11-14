@@ -9,7 +9,7 @@ import {getNonce, getWebviewRootUri} from '../../core';
 import {ContextManager} from '../../core/contextManager';
 import {DisposeManager} from '../../core';
 import {RtEditorOptions} from './rtEditorOptions';
-import {ActiveDocumentMonitor} from '../../core/fwFiles/activeDocumentMonitor';
+import {ActiveDocumentMonitor} from '../../core/activeDocumentMonitor';
 import {ExtractMeta} from '../../core/fwFiles/commands/ExtractMeta';
 import { Node } from "prosemirror-model";
 

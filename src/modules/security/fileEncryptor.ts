@@ -44,9 +44,7 @@ export class FileEncryptor {
     public decrypt(text:string){
         return this._decrypt(text,this.options.globalPassword.value);
     }
-    public static hash(text: string){
-        return crypto.createHash('sha256').update(text).digest('hex');
-    }
+
 
     private _encrypt(text:string, password:string):string {
         // Generate a random Initialization Vector (IV)

@@ -5,7 +5,7 @@ import {ProseMirrorEditorProvider} from './proseMirrorEditorProvider';
 import * as commandBuilder from './commands';
 import {RtEditorOptions} from './rtEditorOptions';
 import {DoNothingEditor} from './doNothingEditor';
-import {ActiveDocumentMonitor} from '../../core/fwFiles/activeDocumentMonitor';
+import {ActiveDocumentMonitor} from '../../core/activeDocumentMonitor';
 
 
 class RichTextEditorModule extends DisposeManager {

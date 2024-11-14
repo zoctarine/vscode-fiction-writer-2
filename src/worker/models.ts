@@ -1,6 +1,9 @@
+import {FwFile} from '../core/fwFiles/FwFile';
+
 export class WorkerMsg {
     public static readonly start = 'started';
     public static readonly filesChanged = 'filesChanged';
+    public static readonly filesReload = 'filesReload';
 }
 
 export class ClientMsg {
@@ -35,7 +38,14 @@ export class ClientMsgFileChanged implements IWorkerMessage {
 
 export class WorkerMsgFilesChanged implements IWorkerMessage {
     type = WorkerMsg.filesChanged;
-    constructor(public paths: string[]){
+    constructor(public fwFiles: FwFile[]){
+
+    };
+}
+
+export class WorkerMsgFilesReload implements IWorkerMessage {
+    type = WorkerMsg.filesReload;
+    constructor(public fwFiles: FwFile[]){
 
     };
 }

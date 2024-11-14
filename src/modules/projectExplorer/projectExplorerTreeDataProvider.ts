@@ -619,7 +619,6 @@ export class ProjectExplorerTreeDataProvider
 
 
     public refresh() {
-        log.tmp("Refresh all tree");
         const fwItems = this._stateManager.trackedFiles.filter(a => a !== undefined);
         this._treeStructure.clear();
         this.buildHierarchy(fwItems)

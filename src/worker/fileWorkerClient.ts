@@ -1,38 +1,42 @@
 import {Worker} from 'worker_threads';
-import path from 'path';
 import vscode from 'vscode';
+import {FwFile, log} from '../core';
+import path from 'path';
 import {
-    WorkerMsgFilesChanged,
-    IWorkerMessage,
+    ClientMsgFileChanged,
     ClientMsgRootFoldersChanged,
     ClientMsgStart,
-    WorkerMsg, ClientMsgFileChanged, ClientMsgStop
+    ClientMsgStop,
+    IWorkerMessage,
+    WorkerMsg,
+    WorkerMsgFilesChanged, WorkerMsgFilesReload
 } from './models';
-import {log} from '../core';
-
 
 export class FileWorkerClient {
     w: Worker | undefined;
-    private _onFilesChanged = new vscode.EventEmitter<string[]>();
+    private _onFilesChanged = new vscode.EventEmitter<FwFile[]>();
+    private _onFilesReloaded = new vscode.EventEmitter<FwFile[]>();
 
     constructor() {
         const workerPath = path.join(__dirname, 'worker/worker.js');
 
-        this.w = new Worker(workerPath, {
+        this.w = new Worker(workerPath, {});
 
-        });
-
-        this.w.on('message', (message:IWorkerMessage) => {
-            log.debug(`FileWorker event`, message);
+        this.w.on('message', (message: IWorkerMessage) => {
+            log.debug(`FileWorker event`, message.type);
 
             switch (message.type) {
                 case WorkerMsg.start:
                     vscode.window.showInformationMessage(`Worker started`);
                     break;
-
                 case WorkerMsg.filesChanged:
-                    const msg = message as WorkerMsgFilesChanged;
-                    this._onFilesChanged.fire(msg.paths);
+                    const cMsg = message as WorkerMsgFilesChanged;
+                    this._onFilesChanged.fire(cMsg.fwFiles);
+                    break;
+
+                case WorkerMsg.filesReload:
+                    const rMsg = message as WorkerMsgFilesReload;
+                    this._onFilesReloaded.fire(rMsg.fwFiles);
                     break;
             }
         });
@@ -50,11 +54,17 @@ export class FileWorkerClient {
         this.w.postMessage(new ClientMsgStart());
     }
 
-    public get onFilesChanged() { return this._onFilesChanged.event; }
+    public get onFilesChanged() {
+        return this._onFilesChanged.event;
+    }
+  public get onFilesReloaded() {
+        return this._onFilesReloaded.event;
+    }
 
     sendWorkspaceFilesChanged(paths: string[]) {
         this.w?.postMessage(new ClientMsgRootFoldersChanged(paths));
     }
+
     sendFileChanged(path: string, action: string) {
         this.w?.postMessage(new ClientMsgFileChanged(path, action));
     }
@@ -65,6 +75,8 @@ export class FileWorkerClient {
             this.w.terminate();
             this.w = undefined;
         }
+
+        this._onFilesChanged.dispose();
+        this._onFilesReloaded.dispose();
     }
 }
-

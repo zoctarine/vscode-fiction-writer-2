@@ -59,6 +59,7 @@ async function main() {
 
     const workerCtx = esbuild.context({
         ...buildOptions,
+        platform: 'node',
         entryPoints: ['src/worker/worker.ts'],
         outfile: 'dist/worker/worker.js',
         external: ['vscode','worker_threads'],

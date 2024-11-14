@@ -1,7 +1,6 @@
 import {IFileNameParser} from './IFileNameParser';
-import {IOrderParser} from '../orderParsers/IOrderParser';
-import {defaultFileNameOptions, IFileNameOptions} from './IFileNameOptions';
-import {IFwRef} from '../IFwRef';
+import {IOrderParser} from '../order/IOrderParser';
+import {IFwRef} from '../../IFwRef';
 import path from 'path';
 import fs from 'node:fs';
 
@@ -9,16 +8,23 @@ export class FwFileNameParser implements IFileNameParser {
     constructor(private _orderParser: IOrderParser) {
     }
 
-    async parse(fsPath: string, options: Partial<IFileNameOptions> = {}): Promise<IFwRef> {
-        options = {...defaultFileNameOptions, ...options};
+    async parse(fsPath: string): Promise<IFwRef> {
 
         const parsed = path.posix.parse(fsPath);
 
         const parsedName = this._parse(parsed.base);
         const parsedOrder = this._orderParser.parse(parsedName.name);
-        const stat = await fs.promises.stat(fsPath);
-        const isFolder = stat.isDirectory();
-        const isFile = stat.isFile();
+        let exists = true;
+        let isFolder = false;
+        let isFile = false;
+        try {
+            const stat = await fs.promises.stat(fsPath);
+            isFolder = stat.isDirectory();
+            isFile = stat.isFile();
+        } catch{
+            exists = false;
+        }
+
         return {
             order: [...parsedOrder.otherOrders ?? [], parsedOrder.mainOrder].filter(f => f !== undefined),
             orderString: parsedOrder.orderPart,
@@ -33,7 +39,7 @@ export class FwFileNameParser implements IFileNameParser {
             fsPath: fsPath,
             fsIsFile: isFile,
             fsIsFolder: isFolder,
-            fsExists: true
+            fsExists: exists
         };
     }
 
@@ -61,7 +67,7 @@ export class FwFileNameParser implements IFileNameParser {
         }
     }
 
-    compile(parsed: IFwRef, opt?: IFileNameOptions | undefined): Promise<string> {
+    compile(parsed: IFwRef): Promise<string> {
         throw new Error('Method not implemented.');
     }
 

@@ -1,11 +1,11 @@
 import {ICommand} from '../../lib';
-import {FileEncryptor} from '../../../modules/security/fileEncryptor';
+import {hash} from '../../../modules/security/cryptography';
 
 export class ComputeHash implements ICommand<string, string | undefined> {
 
     run(text?: string) {
         if (!text || text.length === 0) return;
 
-        return FileEncryptor.hash(text);
+        return hash(text);
     }
 }

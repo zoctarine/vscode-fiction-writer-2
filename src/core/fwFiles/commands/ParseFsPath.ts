@@ -1,5 +1,5 @@
-import {DefaultOrderParser} from '../orderParsers/DefaultOrderParser';
-import {FwFileNameParser} from '../nameParsing/FwFileNameParser';
+import {DefaultOrderParser} from '../parsers/order/DefaultOrderParser';
+import {FwFileNameParser} from '../parsers/fileName/FwFileNameParser';
 import {IAsyncCommand} from '../../lib';
 import {IFwRef} from '../IFwRef';
 

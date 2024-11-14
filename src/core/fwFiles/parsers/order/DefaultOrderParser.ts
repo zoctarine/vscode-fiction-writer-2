@@ -1,6 +1,6 @@
 import {IOrderParser} from './IOrderParser';
 import {defaultOrderOptions, IOrderOptions} from './IOrderOptions';
-import {IFwOrder} from '../IFwOrder';
+import {IFwOrder} from '../../IFwOrder';
 
 export class DefaultOrderParser implements IOrderParser {
     orderRegex = /^(\d+\.)*(\d*) /i;

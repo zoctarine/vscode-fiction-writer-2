@@ -17,7 +17,7 @@ import {DisposeManager, log} from '../../core';
 import {Metadata, MetaNodeType} from '../../core/metadata';
 import {TreeStructure} from '../../core/tree/treeStructure';
 import {ProseMirrorEditorProvider} from '../richTextEditor/proseMirrorEditorProvider';
-import {ActiveDocumentMonitor} from '../../core/fwFiles/activeDocumentMonitor';
+import {ActiveDocumentMonitor} from '../../core/activeDocumentMonitor';
 import {TreeNode} from '../../core/tree/treeNode';
 
 export class MetaItem {

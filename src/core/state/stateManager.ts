@@ -5,8 +5,8 @@ import {FwFileState, FwFileStateChangedEvent, StateChangeAction} from './fwFileS
 import {IFileState} from './states';
 
 import {IStateProcessorFactory} from '../processors/IStateProcessorFactory';
-import {log} from '../logging';
-import {asPosix, FwItem, FwPermission, Permissions} from '../fwFiles';
+import {FwItem, FwPermission, Permissions} from '../fwFiles';
+import {asPosix} from '../FwFileManager';
 
 export class FwStateChangedEvent {
     files: FwFileStateChangedEvent[] = [];
@@ -91,24 +91,21 @@ export class StateManager extends DisposeManager {
         });
     }
 
-    async reload(fileInfos: FwItem[]) {
+    async reload(fileInfos: FwItem[], clearAll:boolean = true) {
         this._enqueueOn();
-        this._fileStates.clear(); // TODO: fix this to detect changes in a more efficient way
+        if (clearAll) {
+            this._fileStates.clear(); // TODO: fix this to detect changes in a more efficient way
+        }
         for (const item of fileInfos) {
             try {
                 if (item.ref.fsExists) {
-                    let content = '';
-                    if (Permissions.check(item, FwPermission.Read)) {
-                        const rawBytes = await vscode.workspace.fs.readFile(vscode.Uri.parse(item.ref.fsPath));
-                        content = rawBytes ? new TextDecoder().decode(rawBytes) : "";
-                    }
                     let fileState = this._fileStates.get(item.ref.fsPath);
                     // If we did not track item
                     if (!fileState) {
                         fileState = this.track(item);
                     }
                     // we do refresh
-                    await fileState.state.loadState(content, {fwItem: item});
+                    await fileState.state.loadState({fwItem: item});
 
                     // If the file does not exist
                 } else {

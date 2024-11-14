@@ -1,6 +1,6 @@
 import vscode from 'vscode';
-import {DisposeManager} from '../disposable';
-import {log} from '../logging';
+import {DisposeManager} from './disposable';
+import {log} from './logging';
 import path from 'path';
 
 export class ActiveDocumentMonitor extends DisposeManager {

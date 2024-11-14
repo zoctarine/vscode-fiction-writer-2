@@ -1,21 +1,19 @@
 import * as vscode from "vscode";
 import * as path from "path";
-import {ProjectsOptions} from '../../modules/projectExplorer/projectsOptions';
-import {DisposeManager} from '../disposable';
-import {glob} from 'glob';
+import {ProjectsOptions} from '../modules/projectExplorer/projectsOptions';
+import {DisposeManager} from './disposable';
 import fs from 'node:fs';
 import {
     FwFolderItem,
     FwItem,
     FwOtherFileItem,
-    FwProjectFileItem, FwTextFileItem,
+    FwProjectFileItem,
+    FwTextFileItem,
     FwWorkspaceFolderItem
-} from './FwItem';
-import {log, notifier} from '../logging';
-import {FileWorkerClient} from '../../worker';
-import {DefaultOrderParser} from './orderParsers/DefaultOrderParser';
-import {FwFileNameParser} from './nameParsing/FwFileNameParser';
-import {FsFileBuilder} from './builders/FsFileBuilder';
+} from './fwFiles/FwItem';
+import {log, notifier} from './logging';
+import {FwFile} from './fwFiles';
+import {FileWorkerClient} from '../worker/fileWorkerClient';
 
 let loadFilesCalledCounter = 0;
 export const asPosix = (mixedPath: string) => path.posix.normalize(mixedPath.split(path.sep).join(path.posix.sep));
@@ -23,6 +21,7 @@ export const asPosix = (mixedPath: string) => path.posix.normalize(mixedPath.spl
 export class FwFileManager extends DisposeManager {
     private _fileExtensions!: string[];
     private _onFilesChanged = new vscode.EventEmitter<FwItem[]>();
+    private _onFilesReloaded = new vscode.EventEmitter<FwItem[]>();
     private _silentUpdates = false;
     private _projectTag: string = '';
 
@@ -34,19 +33,22 @@ export class FwFileManager extends DisposeManager {
         this.manageDisposable(
             this._options.fileTypes.onChanged(c => {
                 this._loadOptions();
-                this.loadFiles().then((fi) => this._onFilesChanged.fire(fi));
+                this.loadFiles();
             }),
             this._options.trackingTag.onChanged(c => {
                 this._loadOptions();
-                this.loadFiles().then((fi) => this._onFilesChanged.fire(fi));
+                this.loadFiles();
             }),
             watcher.onDidChange((f) => this._handleEvent(f, 'change')),
             watcher.onDidCreate((f) => this._handleEvent(f, 'create')),
             watcher.onDidDelete((f) => this._handleEvent(f, 'delete')),
 
-            this._fileWorkerClient.onFilesChanged(f => this._processFileChanges(f)),
+            this._fileWorkerClient.onFilesChanged(e => this._processFileChanges(e)),
+            this._fileWorkerClient.onFilesReloaded(e => this._processFileReloaded(e)),
 
-            watcher);
+            watcher,
+            this._onFilesChanged,
+            this._onFilesReloaded);
     }
 
     private _loadOptions() {
@@ -82,44 +84,45 @@ export class FwFileManager extends DisposeManager {
 
         this._fileWorkerClient.sendFileChanged(e.fsPath, action);
     }
-    private async _processFileChanges(paths: string[]){
+    private async _processFileReloaded(fwFiles: FwFile[]){
+        log.tmp("Files reloaded:", fwFiles.length);
         if (this._silentUpdates) return;
-        if (paths.length === 0) return;
-       this.loadFiles().then((fi) => this._onFilesChanged.fire(fi));
+        if (fwFiles.length === 0) return;
+        const fi = [];
+        for (let f of fwFiles) {
+            fi.push(await this._load(f));
+        }
+
+        this._onFilesReloaded.fire(fi);
+    }
+
+    private async _processFileChanges(fwFiles: FwFile[]){
+        log.tmp("Files changed:", fwFiles.length);
+        if (this._silentUpdates) return;
+        if (fwFiles.length === 0) return;
+        const fi = [];
+        for (let f of fwFiles) {
+            fi.push(await this._load(f));
+        }
+
+        this._onFilesChanged.fire(fi);
     }
 
     public get onFilesChanged() {
         return this._onFilesChanged.event;
     }
 
-    public async loadFiles(): Promise<FwItem[]> {
+    public get onFilesReloaded() {
+        return this._onFilesReloaded.event;
+    }
+
+    public async loadFiles(): Promise<void> {
         loadFilesCalledCounter++;
-        const workspaceFolders = vscode.workspace.workspaceFolders;
 
-        if (!workspaceFolders) {
-            return [];
-        }
-        const files: FwItem[] = [];
+        this._fileWorkerClient.sendWorkspaceFilesChanged(
+            vscode.workspace.workspaceFolders?.map(f => f.uri.fsPath) ?? []
+        );
 
-        for (const folder of workspaceFolders) {
-            const dirs = await glob("**",
-                {
-                    cwd: folder.uri.fsPath,
-                    absolute: true,
-                    dot: false,
-                    ignore: ['**/.vscode/**']
-                });
-            await Promise.all(dirs.map(async (file) => {
-                try {
-
-                    const item = await this._parse(file);
-                    files.push(item);
-                } catch (err) {
-                    console.error(err);
-                }
-            }));
-        }
-        return files;
     }
 
     public renameFile(oldPath: string, newPath: string): Promise<void> {
@@ -222,14 +225,12 @@ export class FwFileManager extends DisposeManager {
         return await vscode.workspace.openTextDocument(vscode.Uri.parse(fsPath));
     }
 
-    public async _parse(fsPath: string): Promise<FwItem> {
-        fsPath = asPosix(fsPath);
+    public async _load(fwFile: FwFile): Promise<FwItem> {
         const workspaceFolders = vscode.workspace.workspaceFolders?.map(f => asPosix(f.uri.fsPath)) ?? [];
 
-        const fwFile = await new FsFileBuilder().buildAsync({fsPath});
         const ref = fwFile.ref;
 
-        const isWorkspaceFolder = ref.fsIsFolder && workspaceFolders.includes(fsPath);
+        const isWorkspaceFolder = ref.fsIsFolder && workspaceFolders.includes(fwFile.ref.fsPath);
         const isTextFile = ref.fsIsFile && this._fileExtensions.includes(ref.fsExt);
         const isProjectFile = ref.fsIsFile && ref.projectTag.length > 0 && isTextFile;
         const result = new FactorySwitch<FwItem>()

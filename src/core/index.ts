@@ -1,18 +1,20 @@
 import vscode from 'vscode';
 import {DisposeManager} from './disposable';
 import {IFileState, StateManager} from './state';
-import {FwFileManager, FwPermission, Permissions, SimpleSuffixOrderParser} from './fwFiles';
+import {FwPermission, Permissions, SimpleSuffixOrderParser} from './fwFiles';
 import {ProjectsOptions} from '../modules/projectExplorer/projectsOptions';
 import {ContextManager} from './contextManager';
 import {IStateProcessorFactory} from './processors/IStateProcessorFactory';
-import {ActiveDocumentMonitor} from './fwFiles/activeDocumentMonitor';
+import {ActiveDocumentMonitor} from './activeDocumentMonitor';
 import {log, notifier} from './logging';
 import {registerMarkdownFormatters} from './markdown';
 import {addCommand} from './commandExtensions';
 import {FictionWriter} from './constants';
 import {retryAsync} from './lib/retry';
-import {FileWorkerClient} from '../worker';
+import {FwFileManager} from './FwFileManager';
+import {FileWorkerClient} from '../worker/fileWorkerClient';
 
+export * from './FwFileManager';
 export * from './commandExtensions';
 export * from './constants';
 export * from './disposable';
@@ -23,6 +25,7 @@ export * from './regEx';
 export * from './nonce';
 export * from './fwFiles';
 export * from './tree';
+export * from './lib';
 
 export class CoreModule extends DisposeManager {
     stateManager: StateManager;
@@ -40,10 +43,7 @@ export class CoreModule extends DisposeManager {
         this.contextManager = new ContextManager(context);
         this.activeDocumentMonitor = new ActiveDocumentMonitor();
 
-        this.fileManager.loadFiles().then((files) => {
-            this.stateManager.initialize(files);
-            return this.stateManager.refresh();
-        });
+        this.fileManager.loadFiles();
 
         this.manageDisposable(
             this.stateManager,
@@ -54,6 +54,11 @@ export class CoreModule extends DisposeManager {
             registerMarkdownFormatters(),
             this.fileManager.onFilesChanged(files => {
                 log.debug("filesChanged", files.length);
+                return this.stateManager.reload(files, false);
+            }),
+
+            this.fileManager.onFilesReloaded(files => {
+                log.debug("filesReloaded", files.length);
                 return this.stateManager.reload(files);
             }),
 

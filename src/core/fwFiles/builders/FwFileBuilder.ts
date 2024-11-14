@@ -6,12 +6,14 @@ import {FwFile} from '../FwFile';
 import {ComputeHash} from '../commands/ComputeHash';
 import {AnalyzeText} from '../commands/AnalyzeText';
 
-export class FsFileBuilder implements IAsyncBuilder<{ fsPath: string }, FwFile> {
-    constructor(private _parsePath = new ParseFsPath(),
-                private _loadText = new LoadTextFile(),
-                private _extractMeta = new ExtractMeta(),
-                private _computeHash = new ComputeHash(),
-                private _analyzeText = new AnalyzeText()) {
+export class FwFileBuilder implements IAsyncBuilder<{ fsPath: string }, FwFile> {
+    constructor(
+        private _parsePath = new ParseFsPath(),
+        private _loadText = new LoadTextFile(),
+        private _extractMeta = new ExtractMeta(),
+        private _computeHash = new ComputeHash(),
+        private _analyzeText = new AnalyzeText()
+    ) {
     }
 
     public async buildAsync(input: { fsPath: string }): Promise<FwFile> {

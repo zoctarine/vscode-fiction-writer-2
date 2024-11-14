@@ -24,7 +24,8 @@ import {
     SetMetaDecorations
 } from './core/processors';
 
-import {FileWorkerClient} from './worker';
+
+import {FileWorkerClient} from './worker/fileWorkerClient';
 
 const fileWorkerClient = new FileWorkerClient();
 
