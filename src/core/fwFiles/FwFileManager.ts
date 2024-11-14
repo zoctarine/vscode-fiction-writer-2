@@ -233,11 +233,11 @@ export class FwFileManager extends DisposeManager {
         const isTextFile = ref.fsIsFile && this._fileExtensions.includes(ref.fsExt);
         const isProjectFile = ref.fsIsFile && ref.projectTag.length > 0 && isTextFile;
         const result = new FactorySwitch<FwItem>()
-            .case(isWorkspaceFolder, () => new FwWorkspaceFolderItem(ref))
-            .case(ref.fsIsFolder, () => new FwFolderItem(ref))
-            .case(isProjectFile, () => new FwProjectFileItem(ref))
-            .case(isTextFile, () => new FwTextFileItem(ref))
-            .default(() => new FwOtherFileItem(ref))
+            .case(isWorkspaceFolder, () => new FwWorkspaceFolderItem(fwFile))
+            .case(ref.fsIsFolder, () => new FwFolderItem(fwFile))
+            .case(isProjectFile, () => new FwProjectFileItem(fwFile))
+            .case(isTextFile, () => new FwTextFileItem(fwFile))
+            .default(() => new FwOtherFileItem(fwFile))
             .create();
 
         const {order = []} = ref;

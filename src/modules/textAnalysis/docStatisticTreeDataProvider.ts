@@ -82,7 +82,7 @@ export class DocStatisticTreeDataProvider extends DisposeManager implements vsco
         if (this._document) {
             this._statistics = force
                 ? TextAnalyzer.analyze(this._document.getText())
-                : this._stateManager.get(this._document.uri.fsPath)?.analysis?.statistics;
+                : this._stateManager.get(this._document.uri.fsPath)?.fwItem?.content?.stats;
         } else {
             this._statistics = undefined;
         }

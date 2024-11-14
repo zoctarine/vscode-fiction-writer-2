@@ -6,7 +6,7 @@ export * from './FwPermission';
 export * from './FwType';
 export * from './FwSubType';
 export * from './IFwFileRef';
-export {IBuilder} from '../lib/IBuilder';
+export * from '../lib/builders';
 export {IOrderOptions} from './orderParsers/IOrderOptions';
 export {IFwOrder} from './IFwOrder';
 export {IOrderParser} from './orderParsers/IOrderParser';

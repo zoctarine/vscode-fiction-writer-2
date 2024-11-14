@@ -1,8 +1,8 @@
 import {ICommand} from '../../lib';
 import {IFwMeta} from '../IFwMeta';
-import {FileEncryptor} from '../../../modules/security/fileEncryptor';
+import {Metadata} from '../../metadata';
 
-export class ExtractMeta implements ICommand<string, IFwMeta | undefined> {
+export class ExtractMeta implements ICommand<string, { meta?: IFwMeta, text?: string } | undefined> {
     public static MetadataRegex = /^(?<md>(?<begin>---[\r\n]+)(?<yml>[\s\S]*)(?<end>---|\.\.\.)(?<spaces>[\r\n]{2}))(?<text>[\s\S]*)*/im
 
     run(text?: string) {
@@ -11,13 +11,18 @@ export class ExtractMeta implements ICommand<string, IFwMeta | undefined> {
         const matches = text.match(ExtractMeta.MetadataRegex);
         if (matches?.groups) {
             return {
-                markers: {
-                    begin: matches.groups.begin,
-                    end: matches.groups.end,
+                meta: {
+                    markers: {
+                        begin: matches.groups.begin,
+                        end: matches.groups.end,
+                    },
+                    yaml: matches.groups.yml,
+                    value: Metadata.parse(matches.groups.yml),
                 },
-                yaml: matches.groups.yml,
-                contentHash: FileEncryptor.hash(matches.groups.text),
+                text: matches.groups.text
             };
         }
+
+        return {text};
     }
 }

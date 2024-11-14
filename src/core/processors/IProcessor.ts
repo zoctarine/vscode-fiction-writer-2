@@ -1,8 +1,8 @@
-export interface IProcessor<T, TIn, TOut> {
-    process(content: T, data?: TIn): TOut
+export interface IProcessor<TIn, TOut> {
+    process(data?: TIn): TOut
 }
 
-export interface ITextProcessor<TState> extends IProcessor<string, TState, Promise<string>> {
+export interface IStateProcessor<TState> extends IProcessor<TState, Promise<void>> {
 
 }
 

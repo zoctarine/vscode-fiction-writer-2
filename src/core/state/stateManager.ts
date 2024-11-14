@@ -1,6 +1,6 @@
 import {DisposeManager} from '../disposable';
 import vscode, {WorkspaceEdit} from 'vscode';
-import {ITextProcessor} from '../processors';
+import {IStateProcessor} from '../processors';
 import {FwFileState, FwFileStateChangedEvent, StateChangeAction} from './fwFileState';
 import {IFileState} from './states';
 
@@ -32,7 +32,7 @@ export class StateManager extends DisposeManager {
 
     constructor(private _processorFactory: IStateProcessorFactory<IFileState>) {
         super();
-        this._textProcessor = _processorFactory.createTextProcessor();
+        this._textProcessor = _processorFactory.crateStateProcessor();
     }
 
     initialize(files: FwItem[]) {
@@ -124,7 +124,7 @@ export class StateManager extends DisposeManager {
         this._enqueueOff();
     }
 
-    async updateFile(fsPath: string, contentProcessor: (stateProcessorFactory: IStateProcessorFactory<IFileState>) => ITextProcessor<IFileState>) {
+    async updateFile(fsPath: string, stateProcessor: (stateProcessorFactory: IStateProcessorFactory<IFileState>) => IStateProcessor<IFileState>) {
         this._enqueueOn();
         try {
             const item = this._fileStates.get(fsPath);
@@ -140,26 +140,25 @@ export class StateManager extends DisposeManager {
                 if (stat) {
                     // TODO: move to fwfilemamnager
                     if (stat.type === vscode.FileType.File) {
-                        const doc = await vscode.workspace.openTextDocument(path);
-                        const content = doc.getText();
-                        const newContent = await contentProcessor(this._processorFactory)
-                            .process(content, item);
-
-                        if (newContent !== content) {
-                            const edit = new WorkspaceEdit();
-                            edit.replace(
-                                doc.uri,
-                                new vscode.Range(0, 0, doc.lineCount, 0),
-                                newContent);
-                            vscode.workspace.applyEdit(edit)
-                                .then(() => doc.save().then(status => {
-
-                                    log.debug("Updating file content: ", {
-                                        status,
-                                        path: path.fsPath
-                                    });
-                                }));
-                        }
+                        // const doc = await vscode.workspace.openTextDocument(path);
+                        // const content = doc.getText();
+                        await stateProcessor(this._processorFactory).process(item);
+                        // TODO: need it?
+                        // if (newContent !== content) {
+                        //     const edit = new WorkspaceEdit();
+                        //     edit.replace(
+                        //         doc.uri,
+                        //         new vscode.Range(0, 0, doc.lineCount, 0),
+                        //         newContent);
+                        //     vscode.workspace.applyEdit(edit)
+                        //         .then(() => doc.save().then(status => {
+                        //
+                        //             log.debug("Updating file content: ", {
+                        //                 status,
+                        //                 path: path.fsPath
+                        //             });
+                        //         }));
+                        // }
                     }
                 }
             }
@@ -228,7 +227,7 @@ export class StateManager extends DisposeManager {
      * Processes states that are not managed by this state manager.
      * This method handles independent states that are outside the regular tracking scope.
      */
-    processUnmanaged(content: string, data: IFileState): Promise<string> {
-        return this._textProcessor.process(content, data);
+    processUnmanaged(state: IFileState): Promise<void> {
+        return this._textProcessor.process(state);
     }
 }

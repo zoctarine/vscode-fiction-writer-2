@@ -1,24 +1,23 @@
-import {ITextProcessor} from '../IProcessor';
+import {IStateProcessor} from '../IProcessor';
 import {applyDecorations, IFileState} from '../../state';
 import {log} from '../../logging';
 import {CoreColors} from '../../decorations';
 
-export class SetMetaDecorations implements ITextProcessor<IFileState> {
-    async process(content: string, data: IFileState): Promise<string> {
-        if (!data.metadata) return content;
+export class SetMetaDecorations implements IStateProcessor<IFileState> {
+    async process(state: IFileState) {
+        if (!state.metadata) return;
 
         const metaDecorations = {
-            icon: data.metadata.value?.icon,
-            color: data.metadata.value?.compile === 'exclude'
-                ? CoreColors.inactive : data.metadata.value?.color
-                    ? `fictionWriter.${data.metadata.value?.color}`
+            icon: state.metadata?.icon,
+            color: state.metadata?.compile === 'exclude'
+                ? CoreColors.inactive : state.metadata?.color
+                    ? `fictionWriter.${state.metadata?.color}`
                     : undefined,
-            description: data.metadata.value?.title,
-            badge: this.generateAbbreviation(data.metadata.value?.badge?.toString()),
+            description: state.metadata?.title,
+            badge: this.generateAbbreviation(state.metadata?.badge?.toString()),
             highlightColor: undefined,
         };
-        applyDecorations(data.metadataDecorations, metaDecorations);
-        return content;
+        applyDecorations(state.metadataDecorations, metaDecorations);
     }
 
     private generateAbbreviation(word: string): string | undefined {

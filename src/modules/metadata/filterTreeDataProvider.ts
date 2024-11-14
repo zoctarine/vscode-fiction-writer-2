@@ -192,8 +192,8 @@ export class FilterTreeDataProvider extends DisposeManager
     private _globalMetadata() {
         const metadata = new Map<string, { value: any, files: { fsPath: string, name?: string }[] }[]>();
         for (const state of this._stateManager.trackedFiles) {
-            if (state?.metadata?.value) {
-                for (const [key, value] of Object.entries(state.metadata?.value)) {
+            if (state?.metadata) {
+                for (const [key, value] of Object.entries(state.metadata)) {
                     const values = Array.isArray(value) ? value : [value];
 
                     const crtValues = metadata.get(key) ?? [];

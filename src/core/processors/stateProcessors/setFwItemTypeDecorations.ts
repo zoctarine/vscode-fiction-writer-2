@@ -1,12 +1,12 @@
-import {ITextProcessor} from '../IProcessor';
+import {IStateProcessor} from '../IProcessor';
 import {IFileState} from '../../state';
 import {FwSubType} from '../../fwFiles';
 import {FaIcons} from '../../decorations';
 import {log} from '../../logging';
 
-export class SetFwItemTypeDecorations implements ITextProcessor<IFileState> {
-    async process(content: string, data: IFileState): Promise<string> {
-        if (!data.fwItem) return content;
+export class SetFwItemTypeDecorations implements IStateProcessor<IFileState> {
+    async process(state: IFileState) {
+        if (!state.fwItem) return;
 
         const icons = new Map<FwSubType,string>([
             [FwSubType.Unknown, FaIcons.folder],
@@ -21,10 +21,10 @@ export class SetFwItemTypeDecorations implements ITextProcessor<IFileState> {
             [FwSubType.OtherFile, 'file']
         ]);
 
-        data.decorations = {
-            ...data.decorations,
-            icon: icons.get(data.fwItem.subType) ?? FaIcons.folder,
+        state.decorations = {
+            ...state.decorations,
+            icon: icons.get(state.fwItem.subType) ?? FaIcons.folder,
         };
-        return content;
+        return;
     }
 }

@@ -1,34 +1,33 @@
-import {ITextProcessor} from '../IProcessor';
+import {IStateProcessor} from '../IProcessor';
 import {IDecorationState, IFileState} from '../../state';
 import {FwControl, FwSubType} from '../../fwFiles';
 import {log} from '../../logging';
 import {CoreColors} from '../../decorations';
 
-export class SetFwItemDecorations implements ITextProcessor<IFileState> {
-    async process(content: string, data: IFileState): Promise<string> {
-        if (!data.fwItem) return content;
+export class SetFwItemDecorations implements IStateProcessor<IFileState> {
+    async process(state: IFileState){
+        if (!state.fwItem) return;
 
         let newData: Partial<IDecorationState> = {};
 
-        if (!data.fwItem.ref.fsExists) {
+        if (!state.fwItem.ref.fsExists) {
             newData.color = CoreColors.missing;
             newData.highlightColor = CoreColors.missing;
 
-        } else if (data.fwItem.control === FwControl.Possible) {
+        } else if (state.fwItem.control === FwControl.Possible) {
             newData.color = CoreColors.inactive;
             newData.highlightColor = CoreColors.inactive;
 
             newData.badge = '+';
-        } else if (data.fwItem.subType === FwSubType.OtherFile) {
+        } else if (state.fwItem.subType === FwSubType.OtherFile) {
             newData.color = CoreColors.inactive;
             newData.highlightColor = CoreColors.inactive;
             newData.badge = '-';
         }
 
-        data.decorations = {
-            ...data.decorations,
+        state.decorations = {
+            ...state.decorations,
             ...newData
         };
-        return content;
     }
 }

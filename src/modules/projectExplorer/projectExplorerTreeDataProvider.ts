@@ -7,7 +7,7 @@ import {
     FactorySwitch,
     FictionWriter,
     FwEmpty,
-    FwEmptyVirtualFolder,
+    FwEmptyVirtualFolder, FwFile,
     FwFileManager,
     FwFileNameParser,
     FwItem,
@@ -186,11 +186,11 @@ export class ProjectExplorerTreeDataProvider
         }
     }
 
-    private async _morph(node: ProjectNode, ctor: { new(ref: IFwFileRef): FwItem }) {
+    private async _morph(node: ProjectNode, ctor: { new(fwFile: FwFile): FwItem }) {
         const {data: {fwItem}} = node;
         if (!fwItem) return;
 
-        const instance = new ctor(fwItem.ref);
+        const instance = new ctor(fwItem);
         fwItem.type = instance.type;
         fwItem.control = instance.control;
         fwItem.subType = instance.subType;
@@ -202,7 +202,7 @@ export class ProjectExplorerTreeDataProvider
 
         // TODO: refactor this
         const newstate = clone(node.data);
-        await this._stateManager.processUnmanaged('', newstate);
+        await this._stateManager.processUnmanaged(newstate);
         node.data.decorations = newstate.decorations;
     }
 
@@ -301,8 +301,8 @@ export class ProjectExplorerTreeDataProvider
         const node = this._treeStructure.getNode(element.id);
         if (!node) return {};
 
-        const metaDesc = node.data.metadata?.value && this._options?.fileDescriptionMetadataKey.value
-            ? node.data.metadata.value[this._options.fileDescriptionMetadataKey.value]
+        const metaDesc = node.data.metadata && this._options?.fileDescriptionMetadataKey.value
+            ? node.data.metadata[this._options.fileDescriptionMetadataKey.value]
             : null;
 
         const overwrittenMetaDecoration = metaDesc
@@ -365,7 +365,7 @@ export class ProjectExplorerTreeDataProvider
             let endIndex = (startIndex > 0 ? startIndex - 1 : startIndex) + ref.name.length;
             const getFwChanges = async (value: string) => {
                 const parser = new FwFileNameParser(new DefaultOrderParser());
-                let newFile = await parser.process(value);
+                let newFile = await parser.parse(value);
                 const messages = [];
                 if (newFile.orderString !== ref.orderString) {
                     messages.push("the file order segment");

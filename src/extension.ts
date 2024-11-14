@@ -10,24 +10,18 @@ import {securityModule} from './modules/security';
 import {compileModule} from './modules/compile';
 import {formattingModule} from './modules/formatting';
 import {
-    ComputeTextStatistics,
     ComputeWriteTarget,
-    EraseMetaFromContent,
-    ExtractMeta,
-    InjectMetaIntoContent,
+    SetMetadata,
     SetWriteTargetDecorations,
-    UpdateMeta,
-    AlterState,
-    ComputeContentHash,
-    SetMetaDecorations,
-    ChainedTextProcessor,
+    ChainedProcessor,
     SetTextStatisticsDecorations,
     SetSecurityPermissions,
     SetFwItemDecorations,
     SetFwItemTypeDecorations,
     SetOrderDecorations,
     SetSecurityDecorations,
-    RestrictPermissionsFromMeta
+    RestrictPermissionsFromMeta,
+    SetMetaDecorations
 } from './core/processors';
 
 import {FileWorkerClient} from './worker';
@@ -41,31 +35,29 @@ export function activate(context: vscode.ExtensionContext) {
         context,
         fileWorkerClient,
         {
-            createTextProcessor: () => new ChainedTextProcessor()
+            crateStateProcessor: () => new ChainedProcessor()
                 .add(new SetFwItemTypeDecorations())
                 .add(new SetFwItemDecorations)
 
-                .add(new ExtractMeta())
+                .add(new SetMetadata())
                 .add(new SetMetaDecorations())
 
                 .add(new SetSecurityPermissions())
                 .add(new RestrictPermissionsFromMeta())
                 .add(new SetSecurityDecorations())
 
-                .add(new ComputeTextStatistics())
                 .add(new SetTextStatisticsDecorations())
 
                 .add(new ComputeWriteTarget())
                 .add(new SetWriteTargetDecorations)
 
-                .add(new SetOrderDecorations())
+                .add(new SetOrderDecorations()),
 
-                .add(new ComputeContentHash()),
-            createUpdateMetaProcessor: (updateMeta) => new ChainedTextProcessor()
-                .add(new ExtractMeta())
-                .add(new UpdateMeta(updateMeta))
-                .add(new EraseMetaFromContent())
-                .add(new InjectMetaIntoContent())
+            createUpdateMetaProcessor: (updateMeta) => new ChainedProcessor()
+                .add(new SetMetadata())
+                // .add(new UpdateMeta(updateMeta))
+                // .add(new EraseMetaFromContent())
+                // .add(new InjectMetaIntoContent())
         });
 
     context.subscriptions.push(

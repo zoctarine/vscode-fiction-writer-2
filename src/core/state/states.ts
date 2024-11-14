@@ -1,10 +1,9 @@
 import {ITextStatistics} from '../../modules/textAnalysis/textAnalyzer';
 import {FwItem, FwPermission} from '../fwFiles';
 
-export interface IMetaState {
-    value: any,
-    text: string,
-    markdownBlock: string
+export interface IMetaState  {
+    [key: string]: any;
+
 }
 
 export interface IDecorationState {
@@ -13,10 +12,6 @@ export interface IDecorationState {
     color?: string;
     description?: string;
     badge?:string;
-}
-
-export interface ITextAnalyzerState {
-    statistics?: ITextStatistics
 }
 
 export interface IWriteTargetsState {
@@ -34,7 +29,6 @@ export interface IFileState {
     decorations?: IDecorationState,
     metadata?: IMetaState,
     metadataDecorations?: IDecorationState,
-    analysis?: ITextAnalyzerState,
     textStatisticsDecorations?: IDecorationState
     writeTargets?: IWriteTargetsState
     writeTargetsDecorations?: IDecorationState

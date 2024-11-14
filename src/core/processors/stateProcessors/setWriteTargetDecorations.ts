@@ -1,11 +1,11 @@
 import {MdiIcons} from '../../decorations';
-import {ITextProcessor} from '../IProcessor';
-import {IFileState} from '../../state/states';
+import {IStateProcessor} from '../IProcessor';
+import {IFileState} from '../../state';
 
-export class SetWriteTargetDecorations implements ITextProcessor<IFileState> {
-    async process(content: string, data: IFileState): Promise<string> {
-        if (!data.writeTargets) {
-            return content;
+export class SetWriteTargetDecorations implements IStateProcessor<IFileState> {
+    async process(state: IFileState) {
+        if (!state.writeTargets) {
+            return;
         }
 
         const steps = new Map<number, { icon: string, color: string }>([
@@ -33,16 +33,13 @@ export class SetWriteTargetDecorations implements ITextProcessor<IFileState> {
             return steps[steps.length - 1];
         }
 
-        const step = getNearestStep(data.writeTargets.wordsTargetAchieved ?? 0, [...steps.keys()]);
+        const step = getNearestStep(state.writeTargets.wordsTargetAchieved ?? 0, [...steps.keys()]);
 
-        data.writeTargetsDecorations = {
-            ...data.writeTargetsDecorations,
+        state.writeTargetsDecorations = {
+            ...state.writeTargetsDecorations,
             icon: steps.get(step)?.icon,
             color: steps.get(step)?.color,
-            description: data.writeTargets.progress
+            description: state.writeTargets.progress
         };
-
-
-        return content;
     }
 }

@@ -110,7 +110,7 @@ describe('FwFileProcessor', () => {
         }])('parse - %s', ({input, expected}) => {
         const sut = new FwFileNameParser(new DefaultOrderParser());
 
-        const result = sut.process(input);
+        const result = sut.parse(input);
 
         assert.deepEqual(result, expected);
     })

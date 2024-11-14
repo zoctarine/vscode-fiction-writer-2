@@ -2,7 +2,7 @@ import vscode from 'vscode';
 import deepEqual from 'deep-equal';
 import rfdc from 'rfdc';
 import {DisposeManager, IDisposable} from '../disposable';
-import {ITextProcessor} from '../processors';
+import {IStateProcessor} from '../processors';
 import {IFileState} from './states';
 import {IStateProcessorFactory} from '../processors/IStateProcessorFactory';
 import {log} from '../logging';
@@ -25,7 +25,7 @@ export class FwFileStateChangedEvent {
 export class FwFileState extends DisposeManager {
     private _onDidChange = new vscode.EventEmitter<FwFileStateChangedEvent>();
     private _state: IFileState = {};
-    private _processor: ITextProcessor<IFileState>;
+    private _stateProcessor: IStateProcessor<IFileState>;
 
     constructor(
         initialState: any,
@@ -34,7 +34,7 @@ export class FwFileState extends DisposeManager {
 
         super();
         this._state = {...initialState};
-        this._processor = processorFactory.createTextProcessor();
+        this._stateProcessor = processorFactory.crateStateProcessor();
         this.manageDisposable(
             this._onDidChange,
             ...(disposables ?? []));
@@ -46,9 +46,8 @@ export class FwFileState extends DisposeManager {
 
     async loadState(content: string, initialState: IFileState) {
         this._state = initialState;
-        await this._process(async stateProxy => {
-
-            return this._processor.process(content, stateProxy);
+        await this._process(stateProxy => {
+            return this._stateProcessor.process(stateProxy);
         });
     }
 

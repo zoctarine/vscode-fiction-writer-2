@@ -125,7 +125,7 @@ export class MetadataTreeDataProvider extends DisposeManager implements vscode.T
         return children.filter((e) => e.visible);
     }
 
-    private _buildHierarchy(meta: any = this._metadata?.value, parentKey: string = ""): TreeNode<MetaItem>[] {
+    private _buildHierarchy(meta: any = this._metadata, parentKey: string = ""): TreeNode<MetaItem>[] {
         if (!meta) {
             return [];
         }
