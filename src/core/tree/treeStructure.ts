@@ -76,8 +76,22 @@ export class TreeStructure<T> {
         this._nodes.set(child.id, child);
     }
 
-public toList(): TreeNode<T>[] {
+    public toList(): TreeNode<T>[] {
         return [...this._nodes.values()];
+    }
+
+    public dfsList(node: TreeNode<T> | undefined, sort:(a:TreeNode<T>, b: TreeNode<T>)=>number): TreeNode<T>[] {
+        const result: TreeNode<T>[] = [];
+        if (!node) return result;
+
+        result.push(node);
+
+        const children = [...node.children.sort(sort)];
+        for (const child of children) {
+            result.push(...this.dfsList(child, sort));
+        }
+
+        return result;
     }
 
     public clear() {
@@ -113,6 +127,14 @@ public toList(): TreeNode<T>[] {
         node.visible = visible;
         for(const child of node.children) {
             this.toggleChildren(child, visible);
+        }
+    }
+
+    public selectChildren(node: TreeNode<T>, checked: boolean) {
+        if (node === undefined) return;
+        if (node.checked !== undefined) node.checked = checked;
+        for(const child of node.children) {
+            this.selectChildren(child, checked);
         }
     }
 }

@@ -1,6 +1,6 @@
-import {FwControl} from './fwControl';
-import {FwSubType} from './fwSubType';
-import {FwItem} from './fwItem';
+import {FwControl} from './FwControl';
+import {FwSubType} from './FwSubType';
+import {FwItem} from './FwItem';
 import {log} from '../logging';
 
 export enum FwPermission {
@@ -102,6 +102,12 @@ export class Permissions {
             ?? FwPermission.None;
     }
 
+    static has(a?: FwPermission, b?: FwPermission): boolean {
+        if (!a || !b) return false;
+
+        return (a & b) === b;
+    }
+
     static check(item?: FwItem, permission?: FwPermission): boolean {
         if (!permission) return false;
 
@@ -109,11 +115,12 @@ export class Permissions {
 
         if (!allowed) return false;
 
-        return (allowed & permission) === permission;
+        return Permissions.has(allowed, permission);
     }
 
-    static serialize(permission: FwPermission): string {
+    static serialize(permission?: FwPermission): string {
         const permissionNames = [];
+        if (!permission)   { return "";}
 
         for (const [name, value] of Object.entries(FwPermission)) {
             if (typeof value === 'number' &&

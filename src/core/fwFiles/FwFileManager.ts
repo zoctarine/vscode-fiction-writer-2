@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-import {DefaultOrderParser, FwFile, FwFileNameProcessor} from "./fwFile";
 import * as path from "path";
 import {ProjectsOptions} from '../../modules/projectExplorer/projectsOptions';
 import {DisposeManager} from '../disposable';
@@ -11,9 +10,12 @@ import {
     FwOtherFileItem,
     FwProjectFileItem, FwTextFileItem,
     FwWorkspaceFolderItem
-} from './fwItem';
+} from './FwItem';
 import {log, notifier} from '../logging';
 import {FileWorkerClient} from '../../worker';
+import {DefaultOrderParser} from './orderParsers/DefaultOrderParser';
+import {FwFileNameParser} from './nameParsing/FwFileNameParser';
+import {FwFileBuilder} from './builders/FwFileBuilder';
 
 let loadFilesCalledCounter = 0;
 export const asPosix = (mixedPath: string) => path.posix.normalize(mixedPath.split(path.sep).join(path.posix.sep));
@@ -84,20 +86,6 @@ export class FwFileManager extends DisposeManager {
         if (this._silentUpdates) return;
         if (paths.length === 0) return;
        this.loadFiles().then((fi) => this._onFilesChanged.fire(fi));
-    }
-    private async _fileChangeHandler(e: vscode.Uri, action: string) {
-        const stats = await vscode.workspace.fs.stat(e);
-        if (stats.type === vscode.FileType.File)
-        log.tmp("File changed: " + e.fsPath + " " +  action);
-        switch (action) {
-            case "change":
-            case "create":
-            case "delete":
-                const fwItem = await this._parse(e.fsPath);
-                this._onFilesChanged.fire([fwItem]);
-                break;
-        }
-
     }
 
     public get onFilesChanged() {
@@ -237,27 +225,25 @@ export class FwFileManager extends DisposeManager {
     public async _parse(fsPath: string): Promise<FwItem> {
         fsPath = asPosix(fsPath);
         const workspaceFolders = vscode.workspace.workspaceFolders?.map(f => asPosix(f.uri.fsPath)) ?? [];
-        const stat = await fs.promises.stat(fsPath);
 
-        const file = new FwFileNameProcessor(new DefaultOrderParser()).process(fsPath);
+        const fwFile = await new FwFileBuilder().buildAsync({fsPath});
+        const ref = fwFile.ref;
 
-        const isFolder = stat.isDirectory();
-        const isFile = stat.isFile();
-        const isWorkspaceFolder = isFolder && workspaceFolders.includes(fsPath);
-        const isTextFile = isFile && this._fileExtensions.includes(file.fsExt);
-        const isProjectFile = isFile && file.projectTag.length > 0 && isTextFile;
+        const isWorkspaceFolder = ref.fsIsFolder && workspaceFolders.includes(fsPath);
+        const isTextFile = ref.fsIsFile && this._fileExtensions.includes(ref.fsExt);
+        const isProjectFile = ref.fsIsFile && ref.projectTag.length > 0 && isTextFile;
         const result = new FactorySwitch<FwItem>()
-            .case(isWorkspaceFolder, () => new FwWorkspaceFolderItem(file))
-            .case(isFolder, () => new FwFolderItem(file))
-            .case(isProjectFile, () => new FwProjectFileItem(file))
-            .case(isTextFile, () => new FwTextFileItem(file))
-            .default(() => new FwOtherFileItem(file))
+            .case(isWorkspaceFolder, () => new FwWorkspaceFolderItem(ref))
+            .case(ref.fsIsFolder, () => new FwFolderItem(ref))
+            .case(isProjectFile, () => new FwProjectFileItem(ref))
+            .case(isTextFile, () => new FwTextFileItem(ref))
+            .default(() => new FwOtherFileItem(ref))
             .create();
 
-        const {order = []} = file;
+        const {order = []} = ref;
         result.order = order.pop() ?? 0;
         result.parentOrder = order;
-        result.orderBy = file.orderedName;
+        result.orderBy = ref.orderedName;
 
         return result;
     }

@@ -1,5 +1,6 @@
 import {ITextProcessor} from '../IProcessor';
 import {IFileState} from '../../state';
+import {FwType} from '../../fwFiles';
 
 export class SetTextStatisticsDecorations implements ITextProcessor<IFileState> {
     async process(content: string, data: IFileState): Promise<string> {

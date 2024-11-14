@@ -49,6 +49,8 @@ export const FictionWriter = {
             compile: {
                 startHere: `${ViewsProjectExplorer}.compile.startHere`,
                 commit: `${ViewsProjectExplorer}.compile.commit`,
+                childrenInclude: `${ViewsProjectExplorer}.compile.childrenInclude`,
+                childrenExclude: `${ViewsProjectExplorer}.compile.childrenExclude`,
                 discard: `${ViewsProjectExplorer}.compile.discard`,
             },
             debug: {

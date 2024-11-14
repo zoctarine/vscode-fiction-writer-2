@@ -58,7 +58,6 @@ class MetadataModule extends DisposeManager {
 
             addCommand(FictionWriter.views.metadata.setFileDescriptionMetadataKey, (item) => {
                 if (item?.data.key) {
-                    log.tmp("Updating Meta: ", item.data.key);
                     this.core.projectsOptions.fileDescriptionMetadataKey.update(item.data.key);
                 }
             }),
@@ -66,7 +65,6 @@ class MetadataModule extends DisposeManager {
             addCommand(FictionWriter.views.metadata.filters.setFileDescriptionMetadataKey, (item) => {
                 // TODO: use key
                 if (item?.data.name) {
-                    log.tmp("Updating Filters: ", item.data.name);
                     this.core.projectsOptions.fileDescriptionMetadataKey.update(item.data.name);
                 }
             }),

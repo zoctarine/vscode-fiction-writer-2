@@ -1,15 +1,12 @@
 import {DisposeManager} from '../disposable';
 import vscode, {WorkspaceEdit} from 'vscode';
 import {ITextProcessor} from '../processors';
-import {FwItem} from '../fwFiles/fwItem';
-
 import {FwFileState, FwFileStateChangedEvent, StateChangeAction} from './fwFileState';
 import {IFileState} from './states';
 
 import {IStateProcessorFactory} from '../processors/IStateProcessorFactory';
 import {log} from '../logging';
-import {FwPermission, Permissions} from '../fwFiles/fwPermission';
-import {asPosix} from '../fwFiles';
+import {asPosix, FwItem, FwPermission, Permissions} from '../fwFiles';
 
 export class FwStateChangedEvent {
     files: FwFileStateChangedEvent[] = [];

@@ -1,4 +1,4 @@
-import {DefaultOrderParser, FwFileNameProcessor} from '../core/fwFiles';
+import {DefaultOrderParser, FwFileNameParser} from '../core/fwFiles';
 import assert from 'assert';
 
 describe('FwFileProcessor', () => {
@@ -108,7 +108,7 @@ describe('FwFileProcessor', () => {
                 fsPath: 'likeADirectory',
             }
         }])('parse - %s', ({input, expected}) => {
-        const sut = new FwFileNameProcessor(new DefaultOrderParser());
+        const sut = new FwFileNameParser(new DefaultOrderParser());
 
         const result = sut.process(input);
 

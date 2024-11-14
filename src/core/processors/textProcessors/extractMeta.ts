@@ -1,8 +1,19 @@
-import {ITextProcessor} from '../IProcessor';
-import {RegEx} from '../../index';
+import {IProcessor, ITextProcessor} from '../IProcessor';
+import {
+    DefaultOrderParser,
+    FwFileNameParser,
+    FwItem,
+    FwPermission,
+    IFwFileRef, log,
+    Permissions,
+    RegEx
+} from '../../index';
 import {Metadata} from '../../metadata/metadata';
 
 import {IFileState} from '../../state/states';
+import fs from 'node:fs';
+import vscode from 'vscode';
+import {ChainedTextProcessor} from '../chainedTextProcessor';
 
 export class ExtractMeta implements ITextProcessor<IFileState> {
     async process(content: string, data: IFileState): Promise<string> {
@@ -17,3 +28,4 @@ export class ExtractMeta implements ITextProcessor<IFileState> {
         return content;
     }
 }
+

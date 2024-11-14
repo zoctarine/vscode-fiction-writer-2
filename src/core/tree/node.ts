@@ -1,5 +1,4 @@
-import {FwSubType} from '../fwFiles/fwSubType';
-import {FwPermission} from '../fwFiles/fwPermission';
+import {FwSubType, FwPermission} from '../fwFiles';
 
 /**
  * @deprecated TODO: to be moved

@@ -1,5 +1,5 @@
 import {ITextStatistics} from '../../modules/textAnalysis/textAnalyzer';
-import {FwItem} from '../fwFiles';
+import {FwItem, FwPermission} from '../fwFiles';
 
 export interface IMetaState {
     value: any,
@@ -24,9 +24,13 @@ export interface IWriteTargetsState {
     wordsTargetAchieved?: number;
     progress?: string;
 }
-
+export interface ISecurityState {
+    permissions?: FwPermission;
+}
 export interface IFileState {
     fwItem?: FwItem,
+    security?: ISecurityState,
+    securityDecorations?: IDecorationState,
     decorations?: IDecorationState,
     metadata?: IMetaState,
     metadataDecorations?: IDecorationState,

@@ -1,23 +1,23 @@
 import {FwControl, FwPermission, FwType, Permissions, TreeNode} from '../../../core';
 import {IFileState} from '../../../core/state';
-import {IList} from '../../../core/lib/IList';
+import {Collections} from '../../../core/lib/collections';
 import {IProjectNodeContext} from './IProjectNodeContext';
 
-export class ProjectNodeList implements IList<ProjectNode> {
+export class ProjectNodeList implements Collections<ProjectNode> {
     public items: ProjectNode[] = [];
 
     constructor(items: ProjectNode[]) {
         this.items = items;
     }
 
-    sort(): IList<ProjectNode> {
+    sort(): Collections<ProjectNode> {
 
         this.items.sort((a, b) => (a.data.fwItem?.orderBy ?? '') > (b.data.fwItem?.orderBy ?? '') ? 1 : -1);
 
         return this;
     }
 
-    filter(): IList<ProjectNode> {
+    filter(): Collections<ProjectNode> {
         this.items = this.items.filter(e => e.visible);
 
         return this;

@@ -1,7 +1,6 @@
 import {ITextProcessor} from '../IProcessor';
 import {IDecorationState, IFileState} from '../../state';
-import {FwControl} from '../../fwFiles';
-import {FwSubType} from '../../fwFiles/fwSubType';
+import {FwControl, FwSubType} from '../../fwFiles';
 import {log} from '../../logging';
 import {CoreColors} from '../../decorations';
 

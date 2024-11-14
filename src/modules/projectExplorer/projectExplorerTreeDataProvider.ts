@@ -9,14 +9,16 @@ import {
     FwEmpty,
     FwEmptyVirtualFolder,
     FwFileManager,
-    FwFileNameProcessor,
-    FwItem, FwPermission,
+    FwFileNameParser,
+    FwItem,
+    FwPermission,
     FwProjectFileItem,
     FwRootItem,
     FwSubType,
     FwVirtualFolderItem,
-    IFwFile,
-    log, Permissions,
+    IFwFileRef,
+    log,
+    Permissions,
     TreeStructure
 } from "../../core";
 import {ContextManager} from '../../core/contextManager';
@@ -97,7 +99,7 @@ export class ProjectExplorerTreeDataProvider
             this._treeView,
             this._onDidChangeTreeData,
             this._options.fileDescriptionMetadataKey.onChanged(v => {
-                log.tmp("fileDescriptionMetadataKey",v )
+                log.tmp("fileDescriptionMetadataKey", v)
                 return this.refresh();
             }),
             this._stateManager.onFilesStateChanged(() => {
@@ -184,7 +186,7 @@ export class ProjectExplorerTreeDataProvider
         }
     }
 
-    private async _morph(node: ProjectNode, ctor: { new(ref: IFwFile): FwItem }) {
+    private async _morph(node: ProjectNode, ctor: { new(ref: IFwFileRef): FwItem }) {
         const {data: {fwItem}} = node;
         if (!fwItem) return;
 
@@ -308,16 +310,19 @@ export class ProjectExplorerTreeDataProvider
                 description: metaDesc,
             } : {};
         const additionalDecoration =
-            this._ctx.is === action.ordering ?
-                node.data.orderDecorations
-                : {};
+            this._ctx.is === action.ordering
+                ? node.data.orderDecorations
+                : this._ctx.is === action.compiling
+                    ? node.data.securityDecorations
+                    : {};
+
         const item = new ProjectExplorerTreeItem(node, {
             expanded: this._contextManager.get("tree_expanded_" + element.id, false),
             contextBuilder: () => ({}),
             decorationsSelector: (s) =>
                 new FactorySwitch<(IDecorationState | undefined)[]>()
-                    .case(this._ctx.decoration === 'decoration1', () => [s.writeTargetsDecorations, s.metadataDecorations, additionalDecoration, overwrittenMetaDecoration])
-                    .case(this._ctx.decoration === 'decoration2', () => [s.metadataDecorations, additionalDecoration, overwrittenMetaDecoration])
+                    .case(this._ctx.decoration === 'decoration1', () => [s.writeTargetsDecorations, s.metadataDecorations, overwrittenMetaDecoration, additionalDecoration])
+                    .case(this._ctx.decoration === 'decoration2', () => [s.metadataDecorations, overwrittenMetaDecoration, additionalDecoration])
                     .case(this._ctx.decoration === 'decoration3', () => [s.textStatisticsDecorations, s.writeTargetsDecorations, additionalDecoration])
                     .case(this._ctx.decoration === 'decoration4', () => [additionalDecoration])
                     .create()
@@ -358,9 +363,9 @@ export class ProjectExplorerTreeDataProvider
             const {ref} = fwItem;
             const startIndex = ref.orderString?.length ?? 0;
             let endIndex = (startIndex > 0 ? startIndex - 1 : startIndex) + ref.name.length;
-            const getFwChanges = (value: string) => {
-                const parser = new FwFileNameProcessor(new DefaultOrderParser());
-                let newFile = parser.process(value);
+            const getFwChanges = async (value: string) => {
+                const parser = new FwFileNameParser(new DefaultOrderParser());
+                let newFile = await parser.process(value);
                 const messages = [];
                 if (newFile.orderString !== ref.orderString) {
                     messages.push("the file order segment");
@@ -379,7 +384,7 @@ export class ProjectExplorerTreeDataProvider
                 prompt: `New file name:`,
                 valueSelection: [startIndex, endIndex],
                 value: ref.fsName,
-                validateInput: (value: string) => {
+                validateInput: async (value: string) => {
 
                     if (!value || value === '') {
                         return {
@@ -387,7 +392,7 @@ export class ProjectExplorerTreeDataProvider
                             severity: InputBoxValidationSeverity.Error
                         };
                     }
-                    const messages = getFwChanges(value);
+                    const messages = await getFwChanges(value);
 
                     if (messages.length > 0) {
                         let last = messages.pop();
@@ -401,7 +406,7 @@ export class ProjectExplorerTreeDataProvider
             });
             if (value) {
                 let doRename = true;
-                if (getFwChanges(value).length > 0) {
+                if ((await getFwChanges(value)).length > 0) {
                     doRename = await vscode.window.showWarningMessage("Are you sure?",
                         {
                             modal: true,
@@ -702,23 +707,32 @@ export class ProjectExplorerTreeDataProvider
         if (node) {
             await this.setCtx({is: action.compiling});
             this._treeStructure.toList().forEach(n => {
-                if (Permissions.check(n.data.fwItem, FwPermission.Compile)) {
+                if (Permissions.has(n.data.security?.permissions, FwPermission.Compile)) {
                     n.checked = false;
+                } else {
+                    n.checked = undefined;
                 }
             });
             this._treeView.description = "Compile";
 
-            this._updateCheckboxBasedOnMeta(node);
+            this._treeStructure.selectChildren(node, true);
             this._onDidChangeTreeData.fire();
         }
     }
 
+    public selectChildren(node: ProjectNode, checked: boolean) {
+        this._treeStructure.selectChildren(node, checked);
+        this._onDidChangeTreeData.fire();
+    }
+
     public retrieveSelection(): string[] {
-        // this.discardSelection();
-        // return this._tree.toList()
-        //     .filter(l => l.item.checked && l.hasTextContent)
-        //     .map(l => l.id);
-        return [];
+        const result = this._treeStructure.dfsList(this._treeStructure.root, (a, b) => a.data.fwItem!.orderBy > b.data.fwItem!.orderBy ? 1 : -1)
+            .filter(n => n.checked === true &&
+                n.data.fwItem?.ref.fsExists &&
+                Permissions.check(n.data.fwItem, FwPermission.OpenEditor))
+            .map(l => l.data.fwItem!.ref.fsPath);
+
+        return result;
     }
 
     public async discardCompile() {
@@ -750,10 +764,13 @@ export class ProjectExplorerTreeDataProvider
             .then(() => this.refresh());
     }
 
-    private _updateCheckboxBasedOnMeta(root: ProjectNode) {
-        root.selected = this._stateManager.get(root.id)?.metadata?.value?.compile !== 'exclude';
-        root.children?.forEach(c => this._updateCheckboxBasedOnMeta(c as ProjectNode));
-    }
+    // private _updateCheckboxBasedOnMeta(root: ProjectNode) {
+    //     // only update children that already have a checkbox
+    //     root.checked = root.checked === false
+    //         ? this._stateManager.get(root.id)?.metadata?.value?.compile !== 'exclude'
+    //         : undefined;
+    //     root.children?.forEach(c => this._updateCheckboxBasedOnMeta(c as ProjectNode));
+    // }
 
     private async loadCtx() {
         await ObjectProps.updateAsync(this._ctx, {

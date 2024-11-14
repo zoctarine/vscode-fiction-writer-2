@@ -20,6 +20,9 @@ export {SetMetaDecorations} from './textProcessors/setMetaDecorations';
 export {SetFwItemDecorations} from './textProcessors/setFwItemDecorations';
 export {SetTextStatisticsDecorations} from './textProcessors/setTextStatisticsDecorations';
 export {SetFwItemTypeDecorations} from './textProcessors/setFwItemTypeDecorations';
+export {SetSecurityPermissions} from './textProcessors/setSecurityPermissions';
+export {RestrictPermissionsFromMeta} from './textProcessors/restrictPermissionsFromMeta';
+export {SetSecurityDecorations} from './textProcessors/setSecurityDecorations';
 export {IDecorationState} from '../state/states';
 export {IMetaState} from '../state/states';
 

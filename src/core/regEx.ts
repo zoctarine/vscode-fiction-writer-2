@@ -43,6 +43,8 @@ export class RegEx {
 
         ENDING_NUMBER: /\d+$/gi,
 
-        METADATA: /^(---[\r\n]+)([\s\S]*)(---|\.\.\.[\r\n]+)/im
+        METADATA: /^(---[\r\n]+)([\s\S]*)(---|\.\.\.[\r\n]+)/im,
+
+
     };
 }

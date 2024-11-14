@@ -2,10 +2,9 @@ import vscode from 'vscode';
 import deepEqual from 'deep-equal';
 import rfdc from 'rfdc';
 import {DisposeManager, IDisposable} from '../disposable';
-import {ChainedTextProcessor, ITextProcessor} from '../processors';
+import {ITextProcessor} from '../processors';
 import {IFileState} from './states';
 import {IStateProcessorFactory} from '../processors/IStateProcessorFactory';
-import {FwSubType} from '../fwFiles/fwSubType';
 import {log} from '../logging';
 
 const clone = rfdc();

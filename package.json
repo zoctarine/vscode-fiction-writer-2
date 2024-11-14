@@ -594,6 +594,13 @@
           "fontPath": "./media/webfonts/fa-solid-900.woff2",
           "fontCharacter": "\\e0e3"
         }
+      },
+      "fa-file-arrow-down": {
+        "description": "file-arrow-down",
+        "default": {
+          "fontPath": "./media/webfonts/fa-solid-900.woff2",
+          "fontCharacter": "\\f56d"
+        }
       }
     },
     "menus": {
@@ -612,7 +619,6 @@
         }
       ],
       "fictionWriter.editor": [
-
       ],
       "commandPalette": [
         {
@@ -842,11 +848,12 @@
           "when": "view == fictionWriter.views.projectExplorer && viewItem =~ /\\bcompileCommit\\b/",
           "group": "6_fw_compile@2"
         },
-       {
+        {
           "command": "fictionWriter.views.projectExplorer.compile.childrenInclude",
           "when": "view == fictionWriter.views.projectExplorer && viewItem =~ /\\bcompileChildrenInclude\\b/",
           "group": "6_fw_compile_selection@3"
-        }, {
+        },
+        {
           "command": "fictionWriter.views.projectExplorer.compile.childrenExclude",
           "when": "view == fictionWriter.views.projectExplorer && viewItem =~ /\\bcompileChildrenExclude\\b/",
           "group": "6_fw_compile_selection@4"
@@ -898,7 +905,6 @@
         }
       ]
     },
-
     "commands": [
       {
         "command": "fictionWriter.files.split",
@@ -1063,13 +1069,13 @@
       },
       {
         "command": "fictionWriter.views.projectExplorer.compile.childrenInclude",
-        "title": "Include children",
+        "title": "Include all",
         "category": "FictionWriter",
         "icon": "$(check)"
       },
       {
         "command": "fictionWriter.views.projectExplorer.compile.childrenExclude",
-        "title": "Exclude children",
+        "title": "Exclude all",
         "category": "FictionWriter",
         "icon": "$(check)"
       },
@@ -1077,7 +1083,7 @@
         "command": "fictionWriter.views.projectExplorer.compile.commit",
         "title": "Export...",
         "category": "FictionWriter",
-        "icon": "$(check)"
+        "icon": "$(fa-file-arrow-down)"
       },
       {
         "command": "fictionWriter.views.projectExplorer.compile.discard",
@@ -1085,7 +1091,7 @@
         "category": "Markdown Fiction Writer",
         "icon": "$(remove-close)"
       },
-       {
+      {
         "command": "fictionWriter.views.projectExplorer.filters.allFiles",
         "title": "A: Show/hide all files",
         "category": "Markdown Fiction Writer",

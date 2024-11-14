@@ -5,7 +5,7 @@
  * {@link order} {@link name}.{@link projectTag}.{@link data}.{@link ext}
  *
  */
-export interface IFwFile {
+export interface IFwFileRef {
     /**
      * The file order extracted from filename. Multiple order numbers indicate a hierarchy
      */
@@ -59,6 +59,12 @@ export interface IFwFile {
      * The full fsPath
      */
     readonly fsPath: string;
+
+    /**
+     * The type of the resource (folder or file)
+     */
+    readonly fsIsFile: boolean;
+    readonly fsIsFolder: boolean;
 
     /**
      * If the file exists on the fileSystem

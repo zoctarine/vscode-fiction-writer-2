@@ -22,9 +22,12 @@ import {
     SetMetaDecorations,
     ChainedTextProcessor,
     SetTextStatisticsDecorations,
+    SetSecurityPermissions,
     SetFwItemDecorations,
     SetFwItemTypeDecorations,
-    SetOrderDecorations
+    SetOrderDecorations,
+    SetSecurityDecorations,
+    RestrictPermissionsFromMeta
 } from './core/processors';
 
 import {FileWorkerClient} from './worker';
@@ -39,15 +42,24 @@ export function activate(context: vscode.ExtensionContext) {
         fileWorkerClient,
         {
             createTextProcessor: () => new ChainedTextProcessor()
-                .add(new ExtractMeta())
                 .add(new SetFwItemTypeDecorations())
+                .add(new SetFwItemDecorations)
+
+                .add(new ExtractMeta())
                 .add(new SetMetaDecorations())
+
+                .add(new SetSecurityPermissions())
+                .add(new RestrictPermissionsFromMeta())
+                .add(new SetSecurityDecorations())
+
                 .add(new ComputeTextStatistics())
                 .add(new SetTextStatisticsDecorations())
+
                 .add(new ComputeWriteTarget())
                 .add(new SetWriteTargetDecorations)
-                .add(new SetFwItemDecorations)
+
                 .add(new SetOrderDecorations())
+
                 .add(new ComputeContentHash()),
             createUpdateMetaProcessor: (updateMeta) => new ChainedTextProcessor()
                 .add(new ExtractMeta())

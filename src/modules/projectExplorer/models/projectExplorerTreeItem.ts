@@ -63,11 +63,18 @@ export class ProjectExplorerTreeItem extends vscode.TreeItem {
                 arguments: [vscode.Uri.parse(data.fwItem!.ref.fsPath)]
             } : undefined;
 
-        this.checkboxState = node.checked === true
-            ? vscode.TreeItemCheckboxState.Checked
-            : node.checked === false
-                ? vscode.TreeItemCheckboxState.Unchecked
-                : undefined;
+        this.checkboxState = boolToCheckbox(node.checked);
+    }
+}
+
+function boolToCheckbox(value?: boolean) {
+    switch (value) {
+        case true:
+            return vscode.TreeItemCheckboxState.Checked;
+        case false:
+            return vscode.TreeItemCheckboxState.Unchecked;
+        default:
+            return undefined;
     }
 }
 

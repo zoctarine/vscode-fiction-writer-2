@@ -10,7 +10,8 @@ export const FaIcons = {
     trashCan: 'fa-trash-can',
     filter: 'fa-filter',
     link: 'fa-link',
-    magnifyingGlass: 'fa-magnifying-glass'
+    magnifyingGlass: 'fa-magnifying-glass',
+    faFileArrowDown: 'fa-file-arrow-down'
 };
 
 export const MdiIcons = {
