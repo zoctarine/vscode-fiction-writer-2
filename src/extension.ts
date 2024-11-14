@@ -51,13 +51,7 @@ export function activate(context: vscode.ExtensionContext) {
                 .add(new ComputeWriteTarget())
                 .add(new SetWriteTargetDecorations)
 
-                .add(new SetOrderDecorations()),
-
-            createUpdateMetaProcessor: (updateMeta) => new ChainedProcessor()
-                .add(new SetMetadata())
-                // .add(new UpdateMeta(updateMeta))
-                // .add(new EraseMetaFromContent())
-                // .add(new InjectMetaIntoContent())
+                .add(new SetOrderDecorations())
         });
 
     context.subscriptions.push(

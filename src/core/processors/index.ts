@@ -1,6 +1,4 @@
-import {InputFileProcessor} from './inputFileProcessor';
 
-export * from './inputFileProcessor';
 export * from '../metadata/metadata';
 
 export {ComputeWriteTarget} from './stateProcessors/computeWriteTarget';
@@ -19,7 +17,3 @@ export {RestrictPermissionsFromMeta} from './stateProcessors/restrictPermissions
 export {SetSecurityDecorations} from './stateProcessors/setSecurityDecorations';
 export {IDecorationState} from '../state/states';
 export {IMetaState} from '../state/states';
-
-export const processInputFile = (text: string): string => {
-    return new InputFileProcessor(text).removeMeta.value;
-};

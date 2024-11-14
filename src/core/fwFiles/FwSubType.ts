@@ -12,15 +12,3 @@ export enum FwSubType {
     TextFile = "textFile",
     OtherFile = "otherFile",
 }
-
-
-export enum RootFolderType {
-    Other = "other",
-    Draft = "draft",
-    Trash = "trash",
-    Notes = "notes",
-    Research = "research",
-    Characters = "characters",
-    Locations = "locations",
-}
-

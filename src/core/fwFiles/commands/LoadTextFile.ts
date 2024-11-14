@@ -1,11 +1,11 @@
 import fs from 'node:fs';
 import {log} from '../../logging';
 import {IAsyncCommand} from '../../lib';
-import {IFwFileRef} from '../IFwFileRef';
+import {IFwRef} from '../IFwRef';
 
-export class LoadTextFile implements IAsyncCommand<{ ref?: IFwFileRef }, string | undefined> {
+export class LoadTextFile implements IAsyncCommand<{ ref?: IFwRef }, string | undefined> {
 
-    async runAsync({ref = undefined}: { ref?: IFwFileRef }) {
+    async runAsync({ref = undefined}: { ref?: IFwRef }) {
         if (!ref) return;
         if (!ref.fsIsFile) return;
         try {

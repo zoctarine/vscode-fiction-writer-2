@@ -1,4 +1,4 @@
-import {IFwFileRef} from './IFwFileRef';
+import {IFwRef} from './IFwRef';
 import {FwSubType} from './FwSubType';
 import path from 'path';
 import {FwType} from './FwType';
@@ -75,7 +75,7 @@ export class FwEmptyVirtualFolder extends FwItem {
         const ext = `.${projectTag}${fsExt}`;
         const fsName = `${orderedName}${ext}`;
         const fsPath = path.posix.join(parent?.ref.fsPath ?? '', fsName);
-        const ref: IFwFileRef = {
+        const ref: IFwRef = {
             data: [],
             ext,
             fsDir: parent?.ref.fsDir ?? '',

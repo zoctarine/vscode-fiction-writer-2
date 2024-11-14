@@ -26,9 +26,9 @@ class TextFileParser {
 }
 
 class TextFileSerializer {
-	public serialize(content: Node): string {
+	public serialize(content?: Node): string {
 		let result = "";
-		content.forEach(node => {
+		content?.forEach(node => {
 			result += node.textContent +
 			node ? "" : "";
 

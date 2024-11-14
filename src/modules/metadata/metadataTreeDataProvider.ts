@@ -206,14 +206,15 @@ export class MetadataTreeDataProvider extends DisposeManager implements vscode.T
         if (!selectedValue || selectedValue === prevValue) return;
 
         if (this._document?.uri.fsPath) {
-            await this._stateManager.updateFile(this._document?.uri.fsPath,
-                (processorFactory) => processorFactory
-                    .createUpdateMetaProcessor(crtMeta => {
-                        this.setPropertyByString(crtMeta, item.id, selectedValue);
-                        // crtMeta[item.id] = selectedValue;
-                        return {...crtMeta};
-                    })
-            );
+            // TODO(A)
+            // await this._stateManager.updateFile(this._document?.uri.fsPath,
+            //     (processorFactory) => processorFactory
+            //         .createUpdateMetaProcessor(crtMeta => {
+            //             this.setPropertyByString(crtMeta, item.id, selectedValue);
+            //             // crtMeta[item.id] = selectedValue;
+            //             return {...crtMeta};
+            //         })
+            // );
         }
 
     }

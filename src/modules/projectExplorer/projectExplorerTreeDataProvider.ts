@@ -16,7 +16,7 @@ import {
     FwRootItem,
     FwSubType,
     FwVirtualFolderItem,
-    IFwFileRef,
+    IFwRef,
     log,
     Permissions,
     TreeStructure

@@ -15,7 +15,7 @@ import {log, notifier} from '../logging';
 import {FileWorkerClient} from '../../worker';
 import {DefaultOrderParser} from './orderParsers/DefaultOrderParser';
 import {FwFileNameParser} from './nameParsing/FwFileNameParser';
-import {FwFileBuilder} from './builders/FwFileBuilder';
+import {FsFileBuilder} from './builders/FsFileBuilder';
 
 let loadFilesCalledCounter = 0;
 export const asPosix = (mixedPath: string) => path.posix.normalize(mixedPath.split(path.sep).join(path.posix.sep));
@@ -226,7 +226,7 @@ export class FwFileManager extends DisposeManager {
         fsPath = asPosix(fsPath);
         const workspaceFolders = vscode.workspace.workspaceFolders?.map(f => asPosix(f.uri.fsPath)) ?? [];
 
-        const fwFile = await new FwFileBuilder().buildAsync({fsPath});
+        const fwFile = await new FsFileBuilder().buildAsync({fsPath});
         const ref = fwFile.ref;
 
         const isWorkspaceFolder = ref.fsIsFolder && workspaceFolders.includes(fsPath);

@@ -640,12 +640,12 @@
       ],
       "editor/title": [
         {
-          "when": "resourceLangId == markdown && !activeCustomEditorId && fictionWriter.editors.richTextEditor.enabled == true",
+          "when": "resourceLangId == fwmarkdown && !activeCustomEditorId && fictionWriter.editors.richTextEditor.enabled == true",
           "command": "fictionWriter.editors.proseMirror.openInProseMirror",
           "group": "navigation"
         },
         {
-          "when": "resourceLangId == markdown && activeCustomEditorId && fictionWriter.editors.richTextEditor.enabled == true",
+          "when": "resourceLangId == fwmarkdown && activeCustomEditorId && fictionWriter.editors.richTextEditor.enabled == true",
           "command": "fictionWriter.editors.proseMirror.openInTextEditor",
           "group": "navigation"
         }

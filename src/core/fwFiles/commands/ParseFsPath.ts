@@ -1,9 +1,9 @@
 import {DefaultOrderParser} from '../orderParsers/DefaultOrderParser';
 import {FwFileNameParser} from '../nameParsing/FwFileNameParser';
 import {IAsyncCommand} from '../../lib';
-import {IFwFileRef} from '../IFwFileRef';
+import {IFwRef} from '../IFwRef';
 
-export class ParseFsPath implements IAsyncCommand<{ fsPath: string }, IFwFileRef> {
+export class ParseFsPath implements IAsyncCommand<{ fsPath: string }, IFwRef> {
     constructor(private _orderParser = new DefaultOrderParser()) {
     }
 

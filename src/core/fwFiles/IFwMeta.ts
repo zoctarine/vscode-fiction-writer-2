@@ -1,5 +1,3 @@
-import {ITextStatistics} from '../../modules/textAnalysis/textAnalyzer';
-
 export interface IFwMeta {
     markers: {
         begin: string
@@ -7,9 +5,4 @@ export interface IFwMeta {
     };
     yaml?: string;
     value?: any;
-}
-
-export interface IFwContent{
-    hash?: string;
-    statistics?: ITextStatistics
 }

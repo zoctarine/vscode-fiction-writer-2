@@ -5,7 +5,7 @@
  * {@link order} {@link name}.{@link projectTag}.{@link data}.{@link ext}
  *
  */
-export interface IFwFileRef {
+export interface IFwRef {
     /**
      * The file order extracted from filename. Multiple order numbers indicate a hierarchy
      */

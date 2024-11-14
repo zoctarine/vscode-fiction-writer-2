@@ -5,13 +5,13 @@ import {EditorState} from "prosemirror-state";
 import {Step} from "prosemirror-transform";
 import {fileParser, fileSerializer, schema} from "./utils/fileExtensions";
 import {exampleSetup} from "prosemirror-example-setup";
-import {InputFileProcessor, processInputFile} from "../../core/processors";
-import {getNonce, getWebviewRootUri} from '../../core/nonce';
+import {getNonce, getWebviewRootUri} from '../../core';
 import {ContextManager} from '../../core/contextManager';
-import {addCommand, DisposeManager} from '../../core';
+import {DisposeManager} from '../../core';
 import {RtEditorOptions} from './rtEditorOptions';
-import path from 'path';
 import {ActiveDocumentMonitor} from '../../core/fwFiles/activeDocumentMonitor';
+import {ExtractMeta} from '../../core/fwFiles/commands/ExtractMeta';
+import { Node } from "prosemirror-model";
 
 
 export class ProseMirrorEditorProvider extends DisposeManager
@@ -62,7 +62,7 @@ export class ProseMirrorEditorProvider extends DisposeManager
         let editorState: EditorState = new EditorState();
         let subscriptions: vscode.Disposable[] = [];
         let lastVersion = document.version;
-        let metadataBlock = new InputFileProcessor(document.getText()).metadataBlock;
+        let metadataBlock = new ExtractMeta().run(document.getText())?.meta?.yaml;
         let showMergeEditor = this._options.showMergeEditor.value;
         let tmpStorageLocation = this._context.storageUri;
 
@@ -76,7 +76,9 @@ export class ProseMirrorEditorProvider extends DisposeManager
             if (isDisposed) return;
             if (!webviewPanel || !webviewPanel.active) return;
 
-            const text = processInputFile(document.getText());
+            // TODO(a)
+            // const text = processInputFile(document.getText());
+            const text = document.getText();
             editorState = EditorState.create({
                 doc: fileParser.parse(text),
                 plugins: exampleSetup({schema: schema}),
@@ -295,7 +297,7 @@ export class ProseMirrorEditorProvider extends DisposeManager
     }
 
 
-    private updateTextDocument(document: vscode.TextDocument, metadataBlock: string, editorState: EditorState) {
+    private updateTextDocument(document: vscode.TextDocument, metadataBlock?: string, editorState?: EditorState) {
         const edit = new vscode.WorkspaceEdit();
 
         // Just replace the entire document.
@@ -304,7 +306,7 @@ export class ProseMirrorEditorProvider extends DisposeManager
         edit.replace(
             document.uri,
             new vscode.Range(0, 0, document.lineCount, 0),
-            metadataBlock + fileSerializer.serialize(editorState.doc));
+            metadataBlock + fileSerializer.serialize(editorState?.doc ?? new Node()));
 
         return vscode.workspace.applyEdit(edit);
     }

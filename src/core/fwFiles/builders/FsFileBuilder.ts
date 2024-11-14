@@ -6,7 +6,7 @@ import {FwFile} from '../FwFile';
 import {ComputeHash} from '../commands/ComputeHash';
 import {AnalyzeText} from '../commands/AnalyzeText';
 
-export class FwFileBuilder implements IAsyncBuilder<{ fsPath: string }, FwFile> {
+export class FsFileBuilder implements IAsyncBuilder<{ fsPath: string }, FwFile> {
     constructor(private _parsePath = new ParseFsPath(),
                 private _loadText = new LoadTextFile(),
                 private _extractMeta = new ExtractMeta(),

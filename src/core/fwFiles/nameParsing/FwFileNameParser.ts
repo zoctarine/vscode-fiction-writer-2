@@ -1,7 +1,7 @@
 import {IFileNameParser} from './IFileNameParser';
 import {IOrderParser} from '../orderParsers/IOrderParser';
 import {defaultFileNameOptions, IFileNameOptions} from './IFileNameOptions';
-import {IFwFileRef} from '../IFwFileRef';
+import {IFwRef} from '../IFwRef';
 import path from 'path';
 import fs from 'node:fs';
 
@@ -9,7 +9,7 @@ export class FwFileNameParser implements IFileNameParser {
     constructor(private _orderParser: IOrderParser) {
     }
 
-    async parse(fsPath: string, options: Partial<IFileNameOptions> = {}): Promise<IFwFileRef> {
+    async parse(fsPath: string, options: Partial<IFileNameOptions> = {}): Promise<IFwRef> {
         options = {...defaultFileNameOptions, ...options};
 
         const parsed = path.posix.parse(fsPath);
@@ -61,7 +61,7 @@ export class FwFileNameParser implements IFileNameParser {
         }
     }
 
-    compile(parsed: IFwFileRef, opt?: IFileNameOptions | undefined): Promise<string> {
+    compile(parsed: IFwRef, opt?: IFileNameOptions | undefined): Promise<string> {
         throw new Error('Method not implemented.');
     }
 
