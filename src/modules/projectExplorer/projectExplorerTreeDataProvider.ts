@@ -7,19 +7,17 @@ import {
     FactorySwitch,
     FictionWriter,
     FwEmpty,
-    FwEmptyVirtualFolder, FwFile,
+    FwEmptyVirtualFolder, FwItem,
     FwFileManager,
     FwFileNameParser,
-    FwItem,
     FwPermission,
     FwProjectFileItem,
     FwRootItem,
     FwSubType,
     FwVirtualFolderItem,
-    IFwRef,
     log,
     Permissions,
-    TreeStructure
+    TreeStructure, IFwProjectRef
 } from "../../core";
 import {ContextManager} from '../../core/contextManager';
 import {ProjectExplorerTreeItem} from './models/projectExplorerTreeItem';
@@ -86,7 +84,7 @@ export class ProjectExplorerTreeDataProvider
         private _options: ProjectsOptions,
         private _fileManager: FwFileManager, private _contextManager: ContextManager, private _stateManager: StateManager) {
         super();
-        this._treeStructure = new TreeStructure<IFileState>(new ProjectNode('root', {fwItem: new FwRootItem()}));
+        this._treeStructure = new TreeStructure<IFileState>(new ProjectNode('root', {fwItem: new FwItem(new FwRootItem())}));
         this._treeView = vscode.window.createTreeView(FictionWriter.views.projectExplorer.id, {
             treeDataProvider: this,
             showCollapseAll: true,
@@ -143,25 +141,25 @@ export class ProjectExplorerTreeDataProvider
 
         if (node.children && node.children.length > 0) {
             const possibleParents = new Map<number, ProjectNode>(node.children
-                .filter(n => n.data.fwItem?.parentOrder.length === 0 && n.data.fwItem.subType !== FwSubType.Folder)
-                .map(c => [c.data.fwItem?.order ?? 0, c]));
+                .filter(n => n.data.fwItem?.ref.parentOrder.length === 0 && n.data.fwItem.ref.subType !== FwSubType.Folder)
+                .map(c => [c.data.fwItem?.ref.currentOrder ?? 0, c]));
             const possibleChildren = node.children
-                .filter(n => n.data.fwItem?.parentOrder.length &&
-                    n.data.fwItem?.parentOrder.length > 0 &&
-                    n.data.fwItem.subType !== FwSubType.Folder);
+                .filter(n => n.data.fwItem?.ref.parentOrder.length &&
+                    n.data.fwItem?.ref.parentOrder.length > 0 &&
+                    n.data.fwItem.ref.subType !== FwSubType.Folder);
 
             for (const child of possibleChildren) {
                 if (!child.data.fwItem) continue;
-                const order = child.data.fwItem.parentOrder[0];
+                const order = child.data.fwItem.ref.parentOrder[0];
                 if (order && order > 0 && child.parent) {
                     let parent = possibleParents.get(order);
                     if (!parent) {
-                        parent = new ProjectNode(child.parent.id + "/" + order, {fwItem: FwEmptyVirtualFolder.create(child.parent.data.fwItem, order)});
+                        parent = new ProjectNode(child.parent.id + "/" + order, {fwItem: new FwItem(FwEmptyVirtualFolder.create(child.parent.data?.fwItem?.ref, order))});
                         this._treeStructure.addChild(parent, child.parent);
                         possibleParents.set(order, parent);
                     }
 
-                    child.data.fwItem!.parentOrder.splice(0, 1);
+                    child.data.fwItem!.ref.parentOrder.splice(0, 1);
                     this._treeStructure.detach(child);
                     this._treeStructure.addChild(child, parent);
 
@@ -178,7 +176,7 @@ export class ProjectExplorerTreeDataProvider
 
                 // Hide empty virtual folders that don't have any
                 // visible items.
-                if (child.data.fwItem?.subType === FwSubType.EmptyVirtualFolder &&
+                if (child.data.fwItem?.ref?.subType === FwSubType.EmptyVirtualFolder &&
                     child.children && child.children.every(c => !c.visible)) {
                     child.visible = false;
                 }
@@ -186,15 +184,15 @@ export class ProjectExplorerTreeDataProvider
         }
     }
 
-    private async _morph(node: ProjectNode, ctor: { new(fwFile: FwFile): FwItem }) {
-        const {data: {fwItem}} = node;
-        if (!fwItem) return;
+    private async _morph(node: ProjectNode, ctor: { new(fwFile: IFwProjectRef): IFwProjectRef }) {
+        const ref = node.data.fwItem?.ref;
+        if (!ref) return;
 
-        const instance = new ctor(fwItem);
-        fwItem.type = instance.type;
-        fwItem.control = instance.control;
-        fwItem.subType = instance.subType;
-        Object.setPrototypeOf(fwItem, Object.getPrototypeOf(instance));
+        const instance = new ctor(ref);
+        ref.type = instance.type;
+        ref.control = instance.control;
+        ref.subType = instance.subType;
+        Object.setPrototypeOf(ref, Object.getPrototypeOf(instance));
 
         if (!node.data.decorations) {
             node.data.decorations = {};
@@ -209,7 +207,7 @@ export class ProjectExplorerTreeDataProvider
     private arrangeWorkspaces() {
         const workspaces: ProjectNode[] = [];
         const collectWorkspaces = (node: ProjectNode, workspaces: ProjectNode[]) => {
-            if (node.data.fwItem?.subType === FwSubType.WorkspaceFolder) {
+            if (node.data.fwItem?.ref?.subType === FwSubType.WorkspaceFolder) {
                 workspaces.push(node);
             } else if (node.children?.length > 0) {
                 for (const child of node.children) {
@@ -238,7 +236,7 @@ export class ProjectExplorerTreeDataProvider
     }
 
     private async buildHierarchy(states: IFileState[]) {
-        const tree = new TreeStructure<IFileState>(new ProjectNode('root', {fwItem: new FwRootItem()}));
+        const tree = new TreeStructure<IFileState>(new ProjectNode('root', {fwItem: new FwItem(new FwRootItem())}));
         const workspaces: ProjectNode[] = [];
         for (const state of states) {
             if (!state?.fwItem?.ref) continue;
@@ -254,7 +252,7 @@ export class ProjectExplorerTreeDataProvider
                     node = new ProjectNode(
                         currentPath,
                         {
-                            fwItem: new FwEmpty(),
+                            fwItem: new FwItem(new FwEmpty()),
                             decorations: {
                                 icon: FaIcons.inbox
                             }
@@ -265,8 +263,8 @@ export class ProjectExplorerTreeDataProvider
             }
 
             currentLevel.data = state;
-            currentLevel.visible = this._fileFilter.check(state.fwItem);
-            if (currentLevel.data.fwItem?.subType === FwSubType.WorkspaceFolder) {
+            currentLevel.visible = this._fileFilter.check(state.fwItem?.ref);
+            if (currentLevel.data.fwItem?.ref?.subType === FwSubType.WorkspaceFolder) {
                 workspaces.push(currentLevel);
             }
         }
@@ -335,10 +333,10 @@ export class ProjectExplorerTreeDataProvider
     }
 
     public async toggleVirtualFolder(node: ProjectNode): Promise<void> {
-        if (node.data.fwItem?.subType === FwSubType.ProjectFile) {
+        if (node.data.fwItem?.ref?.subType === FwSubType.ProjectFile) {
             await this._morph(node, FwVirtualFolderItem);
             this._onDidChangeTreeData.fire();
-        } else if (node.data.fwItem?.subType === FwSubType.VirtualFolder) {
+        } else if (node.data.fwItem?.ref?.subType === FwSubType.VirtualFolder) {
             if (node.children?.length === 0) {
                 await this._morph(node, FwProjectFileItem);
                 this._onDidChangeTreeData.fire();
@@ -725,10 +723,10 @@ export class ProjectExplorerTreeDataProvider
     }
 
     public retrieveSelection(): string[] {
-        const result = this._treeStructure.dfsList(this._treeStructure.root, (a, b) => a.data.fwItem!.orderBy > b.data.fwItem!.orderBy ? 1 : -1)
+        const result = this._treeStructure.dfsList(this._treeStructure.root, (a, b) => a.data.fwItem!?.ref.orderBy > b.data.fwItem!.ref.orderBy ? 1 : -1)
             .filter(n => n.checked === true &&
                 n.data.fwItem?.ref.fsExists &&
-                Permissions.check(n.data.fwItem, FwPermission.OpenEditor))
+                Permissions.check(n.data.fwItem?.ref, FwPermission.OpenEditor))
             .map(l => l.data.fwItem!.ref.fsPath);
 
         return result;

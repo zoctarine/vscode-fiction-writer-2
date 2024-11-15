@@ -5,7 +5,7 @@ import {FwFileState, FwFileStateChangedEvent, StateChangeAction} from './fwFileS
 import {IFileState} from './states';
 
 import {IStateProcessorFactory} from '../processors/IStateProcessorFactory';
-import {FwItem, FwPermission, Permissions} from '../fwFiles';
+import {FwItem} from '../fwFiles';
 import {asPosix} from '../FwFileManager';
 
 export class FwStateChangedEvent {

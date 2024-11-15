@@ -80,7 +80,7 @@ export class CoreModule extends DisposeManager {
                 if (!doc) return;
                 const fwItem = this.stateManager.get(doc.uri.fsPath)?.fwItem;
                 if (!fwItem) return;
-                if (!Permissions.check(fwItem, FwPermission.Write)) return;
+                if (!Permissions.check(fwItem?.ref, FwPermission.Write)) return;
                 let newName = 'new';
                 if (editor?.selection) {
                     if (editor?.selection.isEmpty) {

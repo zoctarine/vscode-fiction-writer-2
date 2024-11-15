@@ -4,8 +4,8 @@ import {
     addCommand,
     FictionWriter,
     FwControl,
-    FwFile,
     FwItem,
+    FwRef,
     FwPermission,
     log,
     notifier,
@@ -116,7 +116,7 @@ export const revealInExplorer = async ({data: {fwItem}}: ProjectNode) => {
  */
 export const addToProject = async (item: FwItem | undefined) => {
     if (!item) return;
-    if (item.control !== FwControl.Possible) {
+    if (item.ref?.control !== FwControl.Possible) {
         notifier.warn(`Cannot add ${item.ref.name} to project`);
         return;
     }
@@ -146,14 +146,14 @@ export const excludeFromProject = async (...items: FwItem[]) => {
 
     // TODO: make so we exclude all
     const item = items[0];
-    if (item.control !== FwControl.Active) {
+    if (item.ref?.control !== FwControl.Active) {
         notifier.warn(`Cannot exclude ${item.ref.name} from project`);
         return;
     }
 
     let ext = item.ref.fsExt;
     const options: string[] = [];
-    if (item.order > 0) {
+    if (item.ref?.currentOrder > 0) {
         options.push(`${item.ref.fsName.substring(0, item.ref.fsName.length - item.ref.ext.length)}${ext}`);
     }
     options.push(`${item.ref.name}${ext}`);

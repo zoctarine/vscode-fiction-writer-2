@@ -14,12 +14,12 @@ export class SetFwItemDecorations implements IStateProcessor<IFileState> {
             newData.color = CoreColors.missing;
             newData.highlightColor = CoreColors.missing;
 
-        } else if (state.fwItem.control === FwControl.Possible) {
+        } else if (state.fwItem.ref?.control === FwControl.Possible) {
             newData.color = CoreColors.inactive;
             newData.highlightColor = CoreColors.inactive;
 
             newData.badge = '+';
-        } else if (state.fwItem.subType === FwSubType.OtherFile) {
+        } else if (state.fwItem?.ref.subType === FwSubType.OtherFile) {
             newData.color = CoreColors.inactive;
             newData.highlightColor = CoreColors.inactive;
             newData.badge = '-';

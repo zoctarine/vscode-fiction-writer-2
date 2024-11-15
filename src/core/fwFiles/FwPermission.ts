@@ -1,6 +1,6 @@
 import {FwControl} from './FwControl';
 import {FwSubType} from './FwSubType';
-import {FwItem} from './FwItem';
+import {FwRef, IFwProjectRef} from './FwRef';
 
 export enum FwPermission {
     None = 0,
@@ -94,7 +94,7 @@ export class Permissions {
             FwPermission.OpenEditor);
     }
 
-    static get(item?: FwItem): FwPermission {
+    static get(item?: IFwProjectRef): FwPermission {
         if (!item) return FwPermission.None;
 
         return Permissions._permissions.get(key(item?.control, item?.subType))
@@ -107,7 +107,7 @@ export class Permissions {
         return (a & b) === b;
     }
 
-    static check(item?: FwItem, permission?: FwPermission): boolean {
+    static check(item?: IFwProjectRef, permission?: FwPermission): boolean {
         if (!permission) return false;
 
         const allowed = Permissions.get(item);
@@ -131,7 +131,7 @@ export class Permissions {
         return permissionNames.join(' ');
     }
 
-    static getSerialized(item?: FwItem): string {
+    static getSerialized(item?: IFwProjectRef): string {
         return Permissions.serialize(Permissions.get(item));
     }
 }

@@ -1,6 +1,6 @@
 export * from './FwControl';
-export * from './FwFile';
 export * from './FwItem';
+export * from './FwRef';
 export * from './FwPermission';
 export * from './FwSubType';
 export * from './FwType';

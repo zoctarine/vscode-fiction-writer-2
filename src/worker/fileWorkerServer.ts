@@ -9,14 +9,14 @@ import {
     WorkerMsgJobStarted,
     WorkerMsgStart
 } from './models';
-import {FwFileBuilder} from '../core/fwFiles/builders/FwFileBuilder';
-import {FwFile, FwPermission, Permissions} from '../core/fwFiles';
+import {FwItemBuilder} from '../core/fwFiles/builders/FwItemBuilder';
+import {FwItem, FwPermission, Permissions} from '../core/fwFiles';
 import {glob} from 'glob'; // Don't wnt any dependency to vscode
 
 export class FileWorkerServer {
     private _acceptsEvents = true;
-    private _fwBuilder = new FwFileBuilder();
-    private _files = new Map<string, FwFile>();
+    private _fwBuilder = new FwItemBuilder();
+    private _files = new Map<string, FwItem>();
 
     constructor(private _parentPort: MessagePort | null) {
 
@@ -96,7 +96,7 @@ export class FileWorkerServer {
                 this.post(new WorkerMsgFilesReload([]));
                 return;
             }
-            this._files = new Map<string, FwFile>();
+            this._files = new Map<string, FwItem>();
             for (const fsPath of this._rootFolders) {
                 const allPaths = await glob("**",
                     {
@@ -107,7 +107,7 @@ export class FileWorkerServer {
                     });
                 for (const fsPath of allPaths) {
                     const value = await this._fwBuilder.buildAsync({fsPath, rootFolderPaths: this._rootFolders});
-                    if (Permissions.check(value, FwPermission.Read)) {
+                    if (Permissions.check(value?.ref, FwPermission.Read)) {
                         files++;
                     }
                     this._files.set(fsPath, value);

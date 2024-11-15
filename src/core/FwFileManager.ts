@@ -5,14 +5,14 @@ import {DisposeManager} from './disposable';
 import fs from 'node:fs';
 import {
     FwFolderItem,
-    FwItem,
+    FwRef,
     FwOtherFileItem,
     FwProjectFileItem,
     FwTextFileItem,
     FwWorkspaceFolderItem
-} from './fwFiles/FwItem';
+} from './fwFiles/FwRef';
 import {log, notifier} from './logging';
-import {FwFile} from './fwFiles';
+import {FwItem} from './fwFiles';
 import {FileWorkerClient} from '../worker/fileWorkerClient';
 import {FactorySwitch} from './lib/FactorySwitch';
 
@@ -85,28 +85,28 @@ export class FwFileManager extends DisposeManager {
 
         this._fileWorkerClient.sendFileChanged(e.fsPath, action);
     }
-    private async _processFileReloaded(fwFiles: FwFile[]){
+    private async _processFileReloaded(fwFiles: FwItem[]){
         log.tmp("Files reloaded:", fwFiles.length);
         if (this._silentUpdates) return;
         if (fwFiles.length === 0) return;
-        const fi = [];
-        for (let f of fwFiles) {
-            fi.push(await this._load(f));
-        }
+        // const fi = [];
+        // for (let f of fwFiles) {
+        //     fi.push(await this._load(f));
+        // }
 
-        this._onFilesReloaded.fire(fi);
+        this._onFilesReloaded.fire(fwFiles);
     }
 
-    private async _processFileChanges(fwFiles: FwFile[]){
+    private async _processFileChanges(fwFiles: FwItem[]){
         log.tmp("Files changed:", fwFiles.length);
         if (this._silentUpdates) return;
         if (fwFiles.length === 0) return;
-        const fi = [];
-        for (let f of fwFiles) {
-            fi.push(await this._load(f));
-        }
+        // const fi = [];
+        // for (let f of fwFiles) {
+        //     fi.push(await this._load(f));
+        // }
 
-        this._onFilesChanged.fire(fi);
+        this._onFilesChanged.fire(fwFiles);
     }
 
     public get onFilesChanged() {
@@ -225,29 +225,29 @@ export class FwFileManager extends DisposeManager {
     private async _open(fsPath: string): Promise<vscode.TextDocument | undefined> {
         return await vscode.workspace.openTextDocument(vscode.Uri.parse(fsPath));
     }
-
-    public async _load(fwFile: FwFile): Promise<FwItem> {
-        const workspaceFolders = vscode.workspace.workspaceFolders?.map(f => asPosix(f.uri.fsPath)) ?? [];
-
-        const ref = fwFile.ref;
-
-        const isWorkspaceFolder = ref.fsIsFolder && workspaceFolders.includes(fwFile.ref.fsPath);
-        const isTextFile = ref.fsIsFile && this._fileExtensions.includes(ref.fsExt);
-        const isProjectFile = ref.fsIsFile && ref.projectTag.length > 0 && isTextFile;
-        const result = new FactorySwitch<FwItem>()
-            .case(isWorkspaceFolder, () => new FwWorkspaceFolderItem(fwFile))
-            .case(ref.fsIsFolder, () => new FwFolderItem(fwFile))
-            .case(isProjectFile, () => new FwProjectFileItem(fwFile))
-            .case(isTextFile, () => new FwTextFileItem(fwFile))
-            .default(() => new FwOtherFileItem(fwFile))
-            .create();
-
-        const {order = []} = ref;
-        result.order = order.pop() ?? 0;
-        result.parentOrder = order;
-        result.orderBy = ref.orderedName;
-
-        return result;
-    }
+    //
+    // public async _load(fwFile: FwItem): Promise<FwRef> {
+    //     const workspaceFolders = vscode.workspace.workspaceFolders?.map(f => asPosix(f.uri.fsPath)) ?? [];
+    //
+    //     const ref = fwFile.ref;
+    //
+    //     const isWorkspaceFolder = ref.fsIsFolder && workspaceFolders.includes(fwFile.ref.fsPath);
+    //     const isTextFile = ref.fsIsFile && this._fileExtensions.includes(ref.fsExt);
+    //     const isProjectFile = ref.fsIsFile && ref.projectTag.length > 0 && isTextFile;
+    //     const result = new FactorySwitch<FwRef>()
+    //         .case(isWorkspaceFolder, () => new FwWorkspaceFolderItem(fwFile))
+    //         .case(ref.fsIsFolder, () => new FwFolderItem(fwFile))
+    //         .case(isProjectFile, () => new FwProjectFileItem(fwFile))
+    //         .case(isTextFile, () => new FwTextFileItem(fwFile))
+    //         .default(() => new FwOtherFileItem(fwFile))
+    //         .create();
+    //
+    //     const {order = []} = ref;
+    //     result.currentOrder = order.pop() ?? 0;
+    //     result.parentOrder = order;
+    //     result.orderBy = ref.orderedName;
+    //
+    //     return result;
+    // }
 }
 

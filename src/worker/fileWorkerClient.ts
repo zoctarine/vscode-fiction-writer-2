@@ -1,6 +1,6 @@
 import {Worker} from 'worker_threads';
 import vscode from 'vscode';
-import {FwFile, log} from '../core';
+import {FwItem, log} from '../core';
 import path from 'path';
 import {
     ClientMsgFileChanged,
@@ -14,8 +14,8 @@ import {
 
 export class FileWorkerClient {
     w: Worker | undefined;
-    private _onFilesChanged = new vscode.EventEmitter<FwFile[]>();
-    private _onFilesReloaded = new vscode.EventEmitter<FwFile[]>();
+    private _onFilesChanged = new vscode.EventEmitter<FwItem[]>();
+    private _onFilesReloaded = new vscode.EventEmitter<FwItem[]>();
     private _onJobStarted = new vscode.EventEmitter<string>();
     private _onJobFinished = new vscode.EventEmitter<string>();
 

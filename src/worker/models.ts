@@ -1,4 +1,4 @@
-import {FwFile} from '../core/fwFiles/FwFile';
+import {FwItem} from '../core/fwFiles/FwItem';
 
 export class WorkerMsg {
     public static readonly start = 'started';
@@ -40,13 +40,13 @@ export class ClientMsgFileChanged implements IWorkerMessage {
 
 export class WorkerMsgFilesChanged implements IWorkerMessage {
     type = WorkerMsg.filesChanged;
-    constructor(public fwFiles: FwFile[]){
+    constructor(public fwFiles: FwItem[]){
     };
 }
 
 export class WorkerMsgFilesReload implements IWorkerMessage {
     type = WorkerMsg.filesReload;
-    constructor(public fwFiles: FwFile[]){
+    constructor(public fwFiles: FwItem[]){
 
     };
 }

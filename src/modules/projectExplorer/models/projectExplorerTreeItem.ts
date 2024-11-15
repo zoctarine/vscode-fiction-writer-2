@@ -21,17 +21,17 @@ export class ProjectExplorerTreeItem extends vscode.TreeItem {
             decorations = applyDecorations(decorations, ...options.decorationsSelector(node.data));
         }
 
-        const nodeType = node.data.fwItem?.subType ?? FwSubType.Unknown;
+        const nodeType = node.data.fwItem?.ref?.subType ?? FwSubType.Unknown;
         const {data} = node;
 
-        this.collapsibleState = data.fwItem?.type === FwType.Folder
+        this.collapsibleState = data.fwItem?.ref?.type === FwType.Folder
             ? options?.expanded
                 ? vscode.TreeItemCollapsibleState.Expanded
                 : vscode.TreeItemCollapsibleState.Collapsed
             : vscode.TreeItemCollapsibleState.None;
 
         let name = data.fwItem?.ref?.orderedName ?? '';
-        if (node.data.fwItem?.control !== FwControl.Active) name = data.fwItem?.ref?.fsName ?? '';
+        if (node.data.fwItem?.ref?.control !== FwControl.Active) name = data.fwItem?.ref?.fsName ?? '';
 
         this.label = {
             label: name.length > 0 ? name : 'unnamed',
@@ -44,19 +44,19 @@ export class ProjectExplorerTreeItem extends vscode.TreeItem {
         this.iconPath = new vscode.ThemeIcon(icon, new vscode.ThemeColor(decorations?.color ?? 'foreground'));
         this.resourceUri = vscode.Uri.parse(node.data.fwItem?.ref.fsPath ?? node.id)
             .with({scheme: FictionWriter.views.projectExplorer.id});
-        this.contextValue = Permissions.getSerialized(node.data.fwItem);
+        this.contextValue = Permissions.getSerialized(node.data.fwItem?.ref);
 
         this.tooltip = new vscode.MarkdownString([
             `$(${icon}) **${data.fwItem?.ref.orderedName}** ${data.fwItem?.ref.ext}\n\n`,
             `- **Type:** ${typeToProjectType(nodeType)}`,
-            `- **Order:** *${data.fwItem?.order}*`,
+            `- **Order:** *${data.fwItem?.ref?.currentOrder}*`,
             `- ***Full Name:*** ${data.fwItem?.ref.fsName}`,
             `- ***Full Path:*** *${data.fwItem?.ref.fsPath}*`,
             `- ***ViewItem:*** *${this.contextValue}*`,
             `- ***ID:*** *${node.id}*`
         ].join('\n\n'), true);
 
-        this.command = Permissions.check(data?.fwItem, FwPermission.OpenEditor)
+        this.command = Permissions.check(data?.fwItem?.ref, FwPermission.OpenEditor)
             ? {
                 title: 'Open',
                 command: 'vscode.open',

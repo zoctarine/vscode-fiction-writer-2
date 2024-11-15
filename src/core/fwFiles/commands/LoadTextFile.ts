@@ -1,18 +1,18 @@
 import fs from 'node:fs';
 import {IAsyncCommand} from '../../lib';
 import {FwPermission, Permissions} from '../FwPermission';
-import {FwItem} from '../FwItem';
+import {FwRef} from '../FwRef';
 
-export class LoadTextFile implements IAsyncCommand<{ item?: FwItem }, string | undefined> {
+export class LoadTextFile implements IAsyncCommand<{ fwRef?: FwRef }, string | undefined> {
 
-    async runAsync({item = undefined}: { item?: FwItem }) {
-        if (!item) return;
-        if (!item.ref.fsIsFile) return;
-        if (!item.ref.fsExists) return;
-        if (!Permissions.check(item, FwPermission.Read)) return;
+    async runAsync({fwRef = undefined}: { fwRef?: FwRef }) {
+        if (!fwRef) return;
+        if (!fwRef.ref.fsIsFile) return;
+        if (!fwRef.ref.fsExists) return;
+        if (!Permissions.check(fwRef, FwPermission.Read)) return;
 
         try {
-            return await fs.promises.readFile(item.ref.fsPath, {encoding: 'utf8'});
+            return await fs.promises.readFile(fwRef.ref.fsPath, {encoding: 'utf8'});
         } catch (err) {
             return undefined;
         }
