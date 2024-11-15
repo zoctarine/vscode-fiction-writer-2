@@ -3,11 +3,14 @@ import {
     ClientMsgFileChanged,
     ClientMsgRootFoldersChanged,
     ClientMsgStart,
-    WorkerMsgFilesChanged, WorkerMsgFilesReload,
+    WorkerMsgFilesChanged,
+    WorkerMsgFilesReload,
+    WorkerMsgJobFinished,
+    WorkerMsgJobStarted,
     WorkerMsgStart
 } from './models';
 import {FwFileBuilder} from '../core/fwFiles/builders/FwFileBuilder';
-import {FwFile} from '../core';
+import {FwFile, FwPermission, Permissions} from '../core/fwFiles';
 import {glob} from 'glob'; // Don't wnt any dependency to vscode
 
 export class FileWorkerServer {
@@ -51,7 +54,7 @@ export class FileWorkerServer {
                 this._files.delete(change[0]);
             }
             try {
-                const item = await this._fwBuilder.buildAsync({fsPath: change[0]});
+                const item = await this._fwBuilder.buildAsync({fsPath: change[0], rootFolderPaths: this._rootFolders});
                 this._files.set(change[0], item);
             } catch (err) {
                 this._files.delete(change[0]);
@@ -85,6 +88,8 @@ export class FileWorkerServer {
 
     async _reloadAll() {
         this._acceptsEvents = false;
+        let files = 0;
+        this.post(new WorkerMsgJobStarted(""));
         try {
             this._changes.clear();
             if (!this._rootFolders || !this._rootFolders.length) {
@@ -98,10 +103,13 @@ export class FileWorkerServer {
                         cwd: fsPath,
                         absolute: true,
                         dot: false,
-                        ignore: ['**/.vscode/**']
+                        ignore: ['**/.vscode/**', '**/node_modules/**']
                     });
                 for (const fsPath of allPaths) {
-                    const value = await this._fwBuilder.buildAsync({fsPath});
+                    const value = await this._fwBuilder.buildAsync({fsPath, rootFolderPaths: this._rootFolders});
+                    if (Permissions.check(value, FwPermission.Read)) {
+                        files++;
+                    }
                     this._files.set(fsPath, value);
                 }
 
@@ -110,6 +118,7 @@ export class FileWorkerServer {
             return;
         } finally {
             this._acceptsEvents = true;
+            this.post(new WorkerMsgJobFinished(`${this._files.size}/${files}`));
         }
     }
 

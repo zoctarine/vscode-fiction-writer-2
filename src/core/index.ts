@@ -48,7 +48,6 @@ export class CoreModule extends DisposeManager {
         this.manageDisposable(
             this.stateManager,
             this.fileManager,
-            // this.storageManager,
             this.projectsOptions,
             this.activeDocumentMonitor,
             registerMarkdownFormatters(),
@@ -66,6 +65,15 @@ export class CoreModule extends DisposeManager {
                 log.debug("StateFileChanged", e.files.length);
             }),
 
+            this.fileWorkerClient.onJobStarted(e => {
+                vscode.window.showWarningMessage("Indexing project files...." + e);
+            }),
+
+            this.fileWorkerClient.onJobFinished(e => {
+                vscode.window.showWarningMessage("Indexing Finished! " + e);
+
+            }),
+
             addCommand(FictionWriter.files.split, async () => {
                 const editor = vscode.window.activeTextEditor;
                 const doc = editor?.document;
@@ -78,7 +86,7 @@ export class CoreModule extends DisposeManager {
                     if (editor?.selection.isEmpty) {
                         const orderParser = new SimpleSuffixOrderParser();
                         const parsed = orderParser.parse(fwItem.ref.name);
-                        parsed.mainOrder = parsed.mainOrder !== undefined ? parsed.mainOrder +1 : parsed.mainOrder;
+                        parsed.mainOrder = parsed.mainOrder !== undefined ? parsed.mainOrder + 1 : parsed.mainOrder;
                         newName = orderParser.compile(parsed);
                     } else {
                         newName = editor.document.getText(editor.selection);
@@ -110,3 +118,4 @@ export class CoreModule extends DisposeManager {
 
 export {RegEx} from './regEx';
 export {OptionValue} from './options/optionValue';
+export {FactorySwitch} from './lib/FactorySwitch';

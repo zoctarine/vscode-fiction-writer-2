@@ -1,7 +1,6 @@
 import {FwControl} from './FwControl';
 import {FwSubType} from './FwSubType';
 import {FwItem} from './FwItem';
-import {log} from '../logging';
 
 export enum FwPermission {
     None = 0,

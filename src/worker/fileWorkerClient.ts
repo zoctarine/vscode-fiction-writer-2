@@ -9,13 +9,15 @@ import {
     ClientMsgStop,
     IWorkerMessage,
     WorkerMsg,
-    WorkerMsgFilesChanged, WorkerMsgFilesReload
+    WorkerMsgFilesChanged, WorkerMsgFilesReload, WorkerMsgJobFinished, WorkerMsgJobStarted
 } from './models';
 
 export class FileWorkerClient {
     w: Worker | undefined;
     private _onFilesChanged = new vscode.EventEmitter<FwFile[]>();
     private _onFilesReloaded = new vscode.EventEmitter<FwFile[]>();
+    private _onJobStarted = new vscode.EventEmitter<string>();
+    private _onJobFinished = new vscode.EventEmitter<string>();
 
     constructor() {
         const workerPath = path.join(__dirname, 'worker/worker.js');
@@ -29,6 +31,7 @@ export class FileWorkerClient {
                 case WorkerMsg.start:
                     vscode.window.showInformationMessage(`Worker started`);
                     break;
+
                 case WorkerMsg.filesChanged:
                     const cMsg = message as WorkerMsgFilesChanged;
                     this._onFilesChanged.fire(cMsg.fwFiles);
@@ -37,6 +40,14 @@ export class FileWorkerClient {
                 case WorkerMsg.filesReload:
                     const rMsg = message as WorkerMsgFilesReload;
                     this._onFilesReloaded.fire(rMsg.fwFiles);
+                    break;
+
+                case WorkerMsg.jobStarted:
+                    this._onJobStarted.fire((message as WorkerMsgJobStarted).msg);
+                    break;
+
+                case WorkerMsg.jobFinished:
+                    this._onJobFinished.fire((message as WorkerMsgJobFinished).msg);
                     break;
             }
         });
@@ -57,8 +68,16 @@ export class FileWorkerClient {
     public get onFilesChanged() {
         return this._onFilesChanged.event;
     }
-  public get onFilesReloaded() {
+
+    public get onFilesReloaded() {
         return this._onFilesReloaded.event;
+    }
+    public get onJobStarted() {
+        return this._onJobStarted.event;
+    }
+
+    public get onJobFinished() {
+        return this._onJobFinished.event;
     }
 
     sendWorkspaceFilesChanged(paths: string[]) {
@@ -78,5 +97,7 @@ export class FileWorkerClient {
 
         this._onFilesChanged.dispose();
         this._onFilesReloaded.dispose();
+        this._onJobFinished.dispose();
+        this._onJobStarted.dispose();
     }
 }

@@ -4,6 +4,8 @@ export class WorkerMsg {
     public static readonly start = 'started';
     public static readonly filesChanged = 'filesChanged';
     public static readonly filesReload = 'filesReload';
+    public static readonly jobStarted = 'jobStarted';
+    public static readonly jobFinished = 'jobFinished';
 }
 
 export class ClientMsg {
@@ -39,7 +41,6 @@ export class ClientMsgFileChanged implements IWorkerMessage {
 export class WorkerMsgFilesChanged implements IWorkerMessage {
     type = WorkerMsg.filesChanged;
     constructor(public fwFiles: FwFile[]){
-
     };
 }
 
@@ -53,5 +54,16 @@ export class WorkerMsgFilesReload implements IWorkerMessage {
 export class WorkerMsgStart implements IWorkerMessage {
     type = WorkerMsg.start;
 }
+
+export class WorkerMsgJobStarted implements IWorkerMessage {
+    type = WorkerMsg.jobStarted;
+    constructor(public msg: string) {}
+}
+
+export class WorkerMsgJobFinished implements IWorkerMessage {
+    type = WorkerMsg.jobFinished;
+    constructor(public msg: string) {}
+}
+
 
 

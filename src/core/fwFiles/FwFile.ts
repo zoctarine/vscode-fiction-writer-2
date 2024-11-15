@@ -10,7 +10,7 @@ import {IFwContent} from './IFwContent';
 export class FwFile {
     constructor(
         public readonly ref: IFwRef,
-        public readonly meta?: IFwMeta,
-        public readonly content?: IFwContent) {
+        public meta?: IFwMeta,
+        public content?: IFwContent) {
     }
 }
