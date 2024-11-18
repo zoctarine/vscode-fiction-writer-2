@@ -6,7 +6,7 @@ import {
     ClientMsg,
     ClientMsgFileChanged
 } from './models';
-import {FileWorkerServer} from './fileWorkerServer';
+import {FileWorkerServer} from './FileWorkerServer';
 
 const server = new FileWorkerServer(parentPort);
 

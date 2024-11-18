@@ -206,9 +206,9 @@ export class FilterTreeDataProvider extends DisposeManager
                         const item = state?.fwItem;
                         if (!item) continue;
                         if (entry) {
-                            entry.files.push({fsPath: item.ref.fsPath, name: item.ref.name});
+                            entry.files.push({fsPath: item.ref.fsPath, name: item.ref.name.full});
                         } else {
-                            crtValues.push({value: vStr, files: [{fsPath: item.ref.fsPath, name: item.ref.name}]});
+                            crtValues.push({value: vStr, files: [{fsPath: item.ref.fsPath, name: item.ref.name.full}]});
                         }
                     }
                     metadata.set(key, crtValues);

@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import {InputBoxValidationSeverity, TreeItemCheckboxState} from 'vscode';
+import {InputBoxValidationSeverity, l10n, TreeItemCheckboxState} from 'vscode';
 import * as path from 'path';
 import {
     DefaultOrderParser,
@@ -7,17 +7,19 @@ import {
     FactorySwitch,
     FictionWriter,
     FwEmpty,
-    FwEmptyVirtualFolder, FwItem,
+    FwEmptyVirtualFolder,
     FwFileManager,
     FwFileNameParser,
+    FwItem,
     FwPermission,
     FwProjectFileItem,
     FwRootItem,
     FwSubType,
     FwVirtualFolderItem,
-    log,
+    IFwProjectRef,
+    log, notifier,
     Permissions,
-    TreeStructure, IFwProjectRef
+    TreeStructure
 } from "../../core";
 import {ContextManager} from '../../core/contextManager';
 import {ProjectExplorerTreeItem} from './models/projectExplorerTreeItem';
@@ -32,6 +34,10 @@ import {IProjectContext} from './models/IProjectContext';
 import {IProjectTreeViewModel} from './models/IProjectTreeViewModel';
 import {ProjectNodeContextBuilder} from './models/IProjectNodeContext';
 import {Context} from '../../core/lib/context';
+import fs from 'node:fs';
+import {retry} from '../../core/lib/retry';
+import {fwPath} from '../../core/FwPath';
+
 
 const clone = rfdc();
 const action = {
@@ -348,24 +354,115 @@ export class ProjectExplorerTreeDataProvider
         }
     }
 
-    public addFile(node: ProjectNode): void {
-        //  this._addNewChild(node ?? this._treeView.selection[0], FwSubType.ProjectFile);
+    public async  addFile(node: ProjectNode) {
+
+        node = node ?? this._treeView.selection[0];
+        const ref = node.data.fwItem?.ref;
+        if (!ref) return;
+
+        const fn = new FwFileNameParser(new DefaultOrderParser());
+
+        const filePath = await fn.serialize(ref);
+
+        const makeFinalPath = (value: string) => fwPath.join(ref.fsPath, value);
+
+        const baseName = 'Scene';
+        let fileName = retry<string>((cnt) => {
+            if (!fwPath.exists(makeFinalPath('Chapter' + (cnt + 1)))) {
+                return baseName + (cnt + 1);
+            }
+        }) ?? baseName;
+
+
+        if (Permissions.check(ref, FwPermission.AddChildren)) {
+            // TODO: add retry?
+            const value = await vscode.window.showInputBox({
+                title: `Add file`,
+                prompt: `File name:`,
+                valueSelection: [0, fileName.length],
+                value: filePath,
+                validateInput: async (value: string) => {
+                    if (!value || value === '') {
+                        return {
+                            message: "Value must be a valid name",
+                            severity: InputBoxValidationSeverity.Error
+                        };
+                    }
+
+                    if (fwPath.exists(makeFinalPath(value))) {
+                        return {
+                            message: "The file name already exists",
+                            severity: InputBoxValidationSeverity.Error
+                        };
+                    }
+                }
+            });
+            if (value) {
+                const fsPath = fwPath.join(ref.fsPath, value);
+                const created = await this._fileManager.createFile(fsPath, "");
+                if (!created) {
+                    notifier.warn(`Could not create file: ${value}`);
+                }
+            }
+        }
     }
 
-    public addFolder(node: ProjectNode): void {
-        //   this._addNewChild(node ?? this._treeView.selection[0], FwSubType.Folder);
+    public async addFolder(node: ProjectNode) {
+        node = node ?? this._treeView.selection[0];
+        // TODO: get parent folder if this is not folder...
+        const ref = node.data.fwItem?.ref;
+        if (!ref) return;
+        const makeFinalPath = (value: string) => fwPath.join(ref.fsPath, value);
+        const baseName = 'Chapter';
+        // TODO: get proper folder name, maybe based on ordering,1-2-3... SimpleSuffixOrderParser
+        let folderName = retry<string>((cnt) => {
+            if (!fwPath.exists(makeFinalPath('Chapter' + (cnt + 1)))) {
+                return baseName + (cnt + 1);
+            }
+        }) ?? baseName;
+        if (Permissions.check(ref, FwPermission.AddChildren)) {
+            // TODO: add retry?
+            const value = await vscode.window.showInputBox({
+                title: `Add folder`,
+                prompt: `Folder name:`,
+                valueSelection: [0, folderName.length],
+                value: folderName,
+                validateInput: async (value: string) => {
+                    if (!value || value === '') {
+                        return {
+                            message: "Value must be a valid name",
+                            severity: InputBoxValidationSeverity.Error
+                        };
+                    }
+
+                    if (fwPath.exists(makeFinalPath(value))) {
+                        return {
+                            message: "The folder name already exists",
+                            severity: InputBoxValidationSeverity.Error
+                        };
+                    }
+                }
+            });
+            if (value) {
+                const fsPath = path.posix.join(ref.fsPath, value);
+                const created = await this._fileManager.createFolder(fsPath);
+                if (!created) {
+                    notifier.warn(`Could not create folder: ${value}`);
+                }
+            }
+        }
     }
 
     public async rename({data: {fwItem}}: ProjectNode) {
         if (fwItem) {
             const {ref} = fwItem;
-            const startIndex = ref.orderString?.length ?? 0;
-            let endIndex = (startIndex > 0 ? startIndex - 1 : startIndex) + ref.name.length;
+            const startIndex = ref.name.orderPart?.length ?? 0;
+            let endIndex = (startIndex > 0 ? startIndex - 1 : startIndex) +(ref.name.namePart?.length??0);
             const getFwChanges = async (value: string) => {
                 const parser = new FwFileNameParser(new DefaultOrderParser());
                 let newFile = await parser.parse(value);
                 const messages = [];
-                if (newFile.orderString !== ref.orderString) {
+                if (newFile.name.orderPart !== ref.name.orderPart) {
                     messages.push("the file order segment");
                 }
                 if (newFile.fsExt !== ref.fsExt) {

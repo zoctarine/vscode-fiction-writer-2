@@ -3,108 +3,56 @@ import * as path from "path";
 import {ProjectsOptions} from '../modules/projectExplorer/projectsOptions';
 import {DisposeManager} from './disposable';
 import fs from 'node:fs';
-import {
-    FwFolderItem,
-    FwRef,
-    FwOtherFileItem,
-    FwProjectFileItem,
-    FwTextFileItem,
-    FwWorkspaceFolderItem
-} from './fwFiles/FwRef';
 import {log, notifier} from './logging';
 import {FwItem} from './fwFiles';
-import {FileWorkerClient} from '../worker/fileWorkerClient';
-import {FactorySwitch} from './lib/FactorySwitch';
+import {FileWorkerClient} from '../worker/FileWorkerClient';
+import {FileChangeAction} from '../worker/models';
+import {fwPath, FwPath} from './FwPath';
 
-let loadFilesCalledCounter = 0;
 export const asPosix = (mixedPath: string) => path.posix.normalize(mixedPath.split(path.sep).join(path.posix.sep));
 
+
 export class FwFileManager extends DisposeManager {
-    private _fileExtensions!: string[];
     private _onFilesChanged = new vscode.EventEmitter<FwItem[]>();
     private _onFilesReloaded = new vscode.EventEmitter<FwItem[]>();
     private _silentUpdates = false;
-    private _projectTag: string = '';
 
     constructor(private _options: ProjectsOptions, private _fileWorkerClient: FileWorkerClient) {
         super();
-        this._loadOptions();
         // We listen to all file changes, and filter on the handler. Might change later
         const watcher = vscode.workspace.createFileSystemWatcher('**/*');
         this.manageDisposable(
-            this._options.fileTypes.onChanged(c => {
-                this._loadOptions();
-                this.loadFiles();
-            }),
-            this._options.trackingTag.onChanged(c => {
-                this._loadOptions();
-                this.loadFiles();
-            }),
-            watcher.onDidChange((f) => this._handleEvent(f, 'change')),
-            watcher.onDidCreate((f) => this._handleEvent(f, 'create')),
-            watcher.onDidDelete((f) => this._handleEvent(f, 'delete')),
+            watcher.onDidChange((f) => this._handleEvent(f, FileChangeAction.Modified)),
+            watcher.onDidCreate((f) => this._handleEvent(f, FileChangeAction.Created)),
+            watcher.onDidDelete((f) => this._handleEvent(f, FileChangeAction.Deleted)),
 
             this._fileWorkerClient.onFilesChanged(e => this._processFileChanges(e)),
             this._fileWorkerClient.onFilesReloaded(e => this._processFileReloaded(e)),
 
             watcher,
+
             this._onFilesChanged,
             this._onFilesReloaded);
     }
 
-    private _loadOptions() {
-        // make sure extensions don't start with '.'
-        this._fileExtensions = this._options.fileTypes.value.map(e => !e.startsWith('.') ? `.${e}` : e);
-        this._projectTag = this._options.trackingTag.value;
-        if (!this._projectTag) this._projectTag = 'fw';
-    }
-
-    // private _changes = new Map<string, string>();
-    // private _changeTimeout: NodeJS.Timeout | undefined;
-    //
-    // private _handleEvent(e: vscode.Uri, action: string){
-    //     if (this._silentUpdates) return;
-    //     if (this._changeTimeout) {
-    //         clearTimeout(this._changeTimeout);
-    //     }
-    //     this._changes.set(e.fsPath, action);
-    //
-    //     this._changeTimeout = setTimeout(()=>this._processFileChanges(), 1000);
-    // }
-    //
-    // private async _processFileChanges(){
-    //     if (this._silentUpdates) return;
-    //     const changes = [...this._changes.entries()];
-    //     this._changes.clear();
-    //     if (changes.length === 0) return;
-    //    this.loadFiles().then((fi) => this._onFilesChanged.fire(fi));
-    // }
-
-    private _handleEvent(e: vscode.Uri, action: string){
+    private _handleEvent(e: vscode.Uri, action: FileChangeAction) {
         if (this._silentUpdates) return;
 
         this._fileWorkerClient.sendFileChanged(e.fsPath, action);
     }
-    private async _processFileReloaded(fwFiles: FwItem[]){
-        log.tmp("Files reloaded:", fwFiles.length);
+
+    private async _processFileReloaded(fwFiles: FwItem[]) {
+        log.debug("Reloading files :", fwFiles.length);
         if (this._silentUpdates) return;
         if (fwFiles.length === 0) return;
-        // const fi = [];
-        // for (let f of fwFiles) {
-        //     fi.push(await this._load(f));
-        // }
 
         this._onFilesReloaded.fire(fwFiles);
     }
 
-    private async _processFileChanges(fwFiles: FwItem[]){
-        log.tmp("Files changed:", fwFiles.length);
+    private async _processFileChanges(fwFiles: FwItem[]) {
+        log.debug("Files changed:", fwFiles.length);
         if (this._silentUpdates) return;
         if (fwFiles.length === 0) return;
-        // const fi = [];
-        // for (let f of fwFiles) {
-        //     fi.push(await this._load(f));
-        // }
 
         this._onFilesChanged.fire(fwFiles);
     }
@@ -118,8 +66,6 @@ export class FwFileManager extends DisposeManager {
     }
 
     public async loadFiles(): Promise<void> {
-        loadFilesCalledCounter++;
-
         this._fileWorkerClient.sendWorkspaceFilesChanged(
             vscode.workspace.workspaceFolders?.map(f => f.uri.fsPath) ?? []
         );
@@ -128,7 +74,7 @@ export class FwFileManager extends DisposeManager {
 
     public renameFile(oldPath: string, newPath: string): Promise<void> {
         return new Promise((resolve, reject) => {
-            if (!fs.existsSync(oldPath) || fs.existsSync(newPath)) {
+            if (!fwPath.exists(oldPath) || fwPath.exists(newPath)) {
                 notifier.warn(`Could not rename file ${oldPath} to ${newPath}`);
                 resolve();
             } else {
@@ -162,7 +108,7 @@ export class FwFileManager extends DisposeManager {
             const workspace = vscode.workspace.getWorkspaceFolder(uri);
             if (workspace) {
                 const trashPath = path.posix.join(workspace.uri.fsPath, trashFolder);
-                if (!fs.existsSync(trashPath)) {
+                if (!fwPath.exists(trashPath)) {
                     fs.mkdirSync(trashPath);
                 }
                 const file = path.posix.basename(fsPath);
@@ -194,12 +140,12 @@ export class FwFileManager extends DisposeManager {
     public async splitFile(fsPath: string, breakLine: number, breakCharacter: number, newName: string): Promise<string | undefined> {
         const doc = await this._open(fsPath);
         if (!doc) return undefined;
-        const parsed = path.posix.parse(fsPath);
+        const parsed = fwPath.parse(fsPath);
 
         const edit = new vscode.WorkspaceEdit();
         const splitPoint = new vscode.Range(breakLine, breakCharacter, doc.lineCount, 0);
         const splitContent = doc.getText(splitPoint);
-        let newPath = path.posix.join(parsed.dir, newName);
+        let newPath = fwPath.join(parsed.dir, newName);
         const newFile = await this.createFile(newPath, splitContent);
         if (newFile) {
             edit.delete(doc.uri, splitPoint);
@@ -222,32 +168,23 @@ export class FwFileManager extends DisposeManager {
         return true;
     }
 
-    private async _open(fsPath: string): Promise<vscode.TextDocument | undefined> {
-        return await vscode.workspace.openTextDocument(vscode.Uri.parse(fsPath));
+    public async createFolder(fsPath: string): Promise<boolean> {
+        try {
+            const uri = vscode.Uri.parse(fsPath);
+            if (fs.existsSync(fsPath)) {
+                log.warn(this.createFolder.name, `Folder ${fsPath} already exists`);
+                return false;
+            }
+            await vscode.workspace.fs.createDirectory(uri);
+            return true;
+        } catch (err) {
+            log.warn(this.createFolder.name, `Could not create folder ${fsPath}`, err);
+            return false;
+        }
     }
-    //
-    // public async _load(fwFile: FwItem): Promise<FwRef> {
-    //     const workspaceFolders = vscode.workspace.workspaceFolders?.map(f => asPosix(f.uri.fsPath)) ?? [];
-    //
-    //     const ref = fwFile.ref;
-    //
-    //     const isWorkspaceFolder = ref.fsIsFolder && workspaceFolders.includes(fwFile.ref.fsPath);
-    //     const isTextFile = ref.fsIsFile && this._fileExtensions.includes(ref.fsExt);
-    //     const isProjectFile = ref.fsIsFile && ref.projectTag.length > 0 && isTextFile;
-    //     const result = new FactorySwitch<FwRef>()
-    //         .case(isWorkspaceFolder, () => new FwWorkspaceFolderItem(fwFile))
-    //         .case(ref.fsIsFolder, () => new FwFolderItem(fwFile))
-    //         .case(isProjectFile, () => new FwProjectFileItem(fwFile))
-    //         .case(isTextFile, () => new FwTextFileItem(fwFile))
-    //         .default(() => new FwOtherFileItem(fwFile))
-    //         .create();
-    //
-    //     const {order = []} = ref;
-    //     result.currentOrder = order.pop() ?? 0;
-    //     result.parentOrder = order;
-    //     result.orderBy = ref.orderedName;
-    //
-    //     return result;
-    // }
+
+    private async _open(fsPath: string): Promise<vscode.TextDocument | undefined> {
+        return vscode.workspace.openTextDocument(vscode.Uri.parse(fsPath));
+    }
 }
 

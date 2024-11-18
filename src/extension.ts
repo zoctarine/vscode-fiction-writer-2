@@ -25,7 +25,7 @@ import {
 } from './core/processors';
 
 
-import {FileWorkerClient} from './worker/fileWorkerClient';
+import {FileWorkerClient} from './worker/FileWorkerClient';
 
 const fileWorkerClient = new FileWorkerClient();
 

@@ -21,7 +21,7 @@ export const combineFiles = async (...items: FwItem[]) => {
     if (!items || items.length < 2) return;
 
     const names = items.map((i) => ({
-        label: i.ref.name,
+        label: i.ref.name.full ?? '',
         kind: QuickPickItemKind.Default,
         detail: i.ref.fsPath,
         description: i.ref.fsExt

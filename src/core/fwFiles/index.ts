@@ -6,7 +6,7 @@ export * from './FwSubType';
 export * from './FwType';
 export * from './IFwContent';
 export * from './IFwMeta';
-export * from './IFwOrder';
+export * from './IFwOrderedName';
 export * from './IFwRef';
 
 export * from './parsers';

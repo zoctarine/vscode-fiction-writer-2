@@ -1,17 +1,18 @@
-import {IOrderParser} from './IOrderParser';
-import {IFwOrder} from '../../IFwOrder';
+import {IDefaultOrderInput, IOrderParser, IOrderProcessor} from './IOrderParser';
+import {IFwOrderedName} from '../../IFwOrderedName';
 
-export class SimpleSuffixOrderParser implements IOrderParser {
+export class SimpleSuffixOrderParser implements IOrderProcessor {
     orderRegex = /(?<name>.*?)(?<number>[0-9]+)$/;
 
-    parse(name: string): IFwOrder {
+    parse(name: string): IFwOrderedName {
         const matches = name.match(this.orderRegex);
         if (matches?.groups) {
             return {
                 namePart: matches.groups.name,
                 orderPart: matches.groups.order,
                 mainOrder: parseInt(matches.groups.number),
-                otherOrders: undefined
+                otherOrders: undefined,
+                full: name
             };
         } else {
             return {
@@ -19,11 +20,22 @@ export class SimpleSuffixOrderParser implements IOrderParser {
                 orderPart: undefined,
                 mainOrder: undefined,
                 otherOrders: undefined,
+                full: name
             };
         }
     }
 
-    compile(input: IFwOrder): string {
-        return `${input.namePart}${input.mainOrder ?? ''}`;
+    build(input: IDefaultOrderInput): IFwOrderedName {
+        return {
+            namePart: input.name,
+            orderPart: input.order?.toString(),
+            mainOrder: input.order,
+            otherOrders: undefined,
+            full: `${input.name}${input.order ?? ''}`
+        };
+    }
+
+    serialize(input: IFwOrderedName): string {
+        return `${input.full}`;
     }
 }

@@ -30,7 +30,7 @@ export class ProjectExplorerTreeItem extends vscode.TreeItem {
                 : vscode.TreeItemCollapsibleState.Collapsed
             : vscode.TreeItemCollapsibleState.None;
 
-        let name = data.fwItem?.ref?.orderedName ?? '';
+        let name = data.fwItem?.ref?.name.full ?? '';
         if (node.data.fwItem?.ref?.control !== FwControl.Active) name = data.fwItem?.ref?.fsName ?? '';
 
         this.label = {
@@ -47,7 +47,7 @@ export class ProjectExplorerTreeItem extends vscode.TreeItem {
         this.contextValue = Permissions.getSerialized(node.data.fwItem?.ref);
 
         this.tooltip = new vscode.MarkdownString([
-            `$(${icon}) **${data.fwItem?.ref.orderedName}** ${data.fwItem?.ref.ext}\n\n`,
+            `$(${icon}) **${data.fwItem?.ref.name.full}** ${data.fwItem?.ref.ext}\n\n`,
             `- **Type:** ${typeToProjectType(nodeType)}`,
             `- **Order:** *${data.fwItem?.ref?.currentOrder}*`,
             `- ***Full Name:*** ${data.fwItem?.ref.fsName}`,

@@ -30,10 +30,10 @@ export class BuildFwRef implements ICommand<{ ref: IFwRef, rootFolderPaths: stri
             .default(() => new FwOtherFileItem(ref))
             .create();
 
-        const {order = []} = ref;
-        result.currentOrder = order.pop() ?? 0;
-        result.parentOrder = order;
-        result.orderBy = ref.orderedName;
+        const {name} = ref;
+        result.currentOrder = name.mainOrder ?? 0;
+        result.parentOrder = name.otherOrders ?? [];
+        result.orderBy = name.full ?? '';
 
         return result;
     }

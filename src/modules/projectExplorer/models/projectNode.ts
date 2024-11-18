@@ -37,7 +37,7 @@ export class ProjectNode extends TreeNode<IFileState> {
     }
 
     override get acceptsChildren(): boolean {
-        return this.data.fwItem?.ref.type === FwType.Folder;
+        return Permissions.check(this.data.fwItem?.ref, FwPermission.AddChildren);
     }
 
     override get canMove(): boolean {

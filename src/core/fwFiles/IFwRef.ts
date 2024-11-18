@@ -1,3 +1,5 @@
+import {IFwOrderedName} from './IFwOrderedName';
+
 /**
  * Represents an interface for file name metadata within a project.
  * It should not be modified.
@@ -6,23 +8,7 @@
  *
  */
 export interface IFwRef {
-    /**
-     * The file order extracted from filename. Multiple order numbers indicate a hierarchy
-     */
-    readonly order?: number[];
-
-    readonly orderString?: string;
-
-    /**
-     * the file name before extracting order tokens
-     */
-    readonly orderedName: string;
-
-    /**
-     * The file name (without order, projectTag or data)
-     * Trimmed {@link orderedName} after removing the {@link orderString}
-     */
-    readonly name: string;
+    readonly name: IFwOrderedName
 
     /**
      * If the filename contains the projectTag, then it is returned here.

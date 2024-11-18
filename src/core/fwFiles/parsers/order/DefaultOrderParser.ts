@@ -1,11 +1,13 @@
-import {IOrderParser} from './IOrderParser';
+import {IDefaultOrderInput, IOrderBuilder, IOrderParser, IOrderProcessor} from './IOrderParser';
 import {defaultOrderOptions, IOrderOptions} from './IOrderOptions';
-import {IFwOrder} from '../../IFwOrder';
+import {IFwOrderedName} from '../../IFwOrderedName';
 
-export class DefaultOrderParser implements IOrderParser {
+
+
+export class DefaultOrderParser implements IOrderProcessor {
     orderRegex = /^(\d+\.)*(\d*) /i;
 
-    parse(source: string, options: Partial<IOrderOptions> = {}): IFwOrder {
+    parse(source: string, options: Partial<IOrderOptions> = {}): IFwOrderedName {
         const opt = {...defaultOrderOptions, ...options};
         let namePart = source;
         let orderPart = '';
@@ -28,11 +30,31 @@ export class DefaultOrderParser implements IOrderParser {
             namePart,
             orderPart,
             mainOrder: order,
-            otherOrders: orderList
+            otherOrders: orderList,
+            full: source
         };
     }
 
-    compile(parsed: IFwOrder, options?: IOrderOptions): string {
-        throw new Error('Method not implemented.');
+    build(input: IDefaultOrderInput): IFwOrderedName {
+        const orders = [];
+        if (input.otherOrders && input.otherOrders.length > 0) {
+            orders.push(...input.otherOrders);
+        }
+        if (input.order) {
+            orders.push(input.order);
+        }
+        const orderPart = orders.join('.');
+
+        return {
+            orderPart: orderPart,
+            namePart: input.name,
+            mainOrder: input.order,
+            otherOrders: input.otherOrders,
+            full: `${orderPart ? orderPart + ' ' : ''}${input.name ?? ''}`
+        };
+    }
+
+    serialize(parsed: IFwOrderedName, options?: IOrderOptions): string {
+        return `${parsed.full}`;
     }
 }

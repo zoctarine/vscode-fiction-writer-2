@@ -15,6 +15,7 @@ export enum FwPermission {
     RemoveFromProject = 1 << 9,
     Morph = 1 << 10,
     Compile = 1 << 11,
+    AddChildren = 1 << 12,
 }
 
 const key = (control: FwControl, subType: FwSubType) => `${control}_${subType}`;
@@ -31,7 +32,8 @@ export class Permissions {
         Permissions._add(
             FwControl.Never, FwSubType.WorkspaceFolder,
             FwPermission.None |
-            FwPermission.Compile
+            FwPermission.Compile |
+            FwPermission.AddChildren,
         );
 
         Permissions._add(
@@ -39,7 +41,8 @@ export class Permissions {
             FwPermission.Rename |
             FwPermission.Move |
             FwPermission.Delete |
-            FwPermission.Compile
+            FwPermission.Compile |
+            FwPermission.AddChildren,
         );
 
         Permissions._add(

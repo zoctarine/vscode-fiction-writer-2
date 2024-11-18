@@ -1,19 +1,22 @@
 import {FwItem} from '../core/fwFiles/FwItem';
 
-export class WorkerMsg {
-    public static readonly start = 'started';
-    public static readonly filesChanged = 'filesChanged';
-    public static readonly filesReload = 'filesReload';
-    public static readonly jobStarted = 'jobStarted';
-    public static readonly jobFinished = 'jobFinished';
-}
+export const WorkerMsg = {
+    start: 'started',
+    filesChanged: 'filesChanged',
+    filesReload: 'filesReload',
+    jobStarted: 'jobStarted',
+    jobProgress: 'jobProgress',
+    jobFinished: 'jobFinished',
+    message: 'message',
+} as const;
 
-export class ClientMsg {
-    public static readonly start = 'start';
-    public static readonly rootFoldersChanged = 'rootFoldersChanged';
-    public static readonly fileChanged = 'filesChanged';
-    public static readonly stop = 'stop';
-}
+export const ClientMsg = {
+    start: 'start',
+    rootFoldersChanged: 'rootFoldersChanged',
+    fileChanged: 'filesChanged',
+    stop: 'stop',
+} as const;
+
 
 export interface IWorkerMessage {
     type: string;
@@ -29,24 +32,35 @@ export class ClientMsgStop implements IWorkerMessage {
 
 export class ClientMsgRootFoldersChanged implements IWorkerMessage {
     type = ClientMsg.rootFoldersChanged;
+
     constructor(public paths: string[]) {
     }
 }
 
+export enum FileChangeAction {
+    Created = 'added',
+    Deleted = 'removed',
+    Modified = 'modified'
+}
+
 export class ClientMsgFileChanged implements IWorkerMessage {
     type = ClientMsg.fileChanged;
-    constructor(public path: string, public action:string) {}
+
+    constructor(public path: string, public action: FileChangeAction) {
+    }
 }
 
 export class WorkerMsgFilesChanged implements IWorkerMessage {
     type = WorkerMsg.filesChanged;
-    constructor(public fwFiles: FwItem[]){
+
+    constructor(public fwFiles: FwItem[]) {
     };
 }
 
 export class WorkerMsgFilesReload implements IWorkerMessage {
     type = WorkerMsg.filesReload;
-    constructor(public fwFiles: FwItem[]){
+
+    constructor(public fwFiles: FwItem[]) {
 
     };
 }
@@ -57,13 +71,30 @@ export class WorkerMsgStart implements IWorkerMessage {
 
 export class WorkerMsgJobStarted implements IWorkerMessage {
     type = WorkerMsg.jobStarted;
-    constructor(public msg: string) {}
+
+    constructor(public msg: string) {
+    }
+}
+
+export class WorkerMsgJobProgress implements IWorkerMessage {
+    type = WorkerMsg.jobProgress;
+
+    constructor(public msg: string, public current: number, public total: number) {
+    }
 }
 
 export class WorkerMsgJobFinished implements IWorkerMessage {
     type = WorkerMsg.jobFinished;
-    constructor(public msg: string) {}
+
+    constructor(public msg: string) {
+    }
 }
 
+export class WorkerMsgMessage implements IWorkerMessage {
+    type = WorkerMsg.jobFinished;
+
+    constructor(public msg: string, public severity: number) {
+    }
+}
 
 

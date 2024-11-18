@@ -47,7 +47,7 @@ class Logger extends DisposeManager {
     }
 
     private _format(type: string, message: string) {
-        return `[${new Date().toLocaleTimeString()}] ${type}: ${message}`;
+        return `[${new Date().toLocaleTimeString()}] ${type.toUpperCase()} ${message}`;
     }
 
     private _log(type: string, text?: string, obj?: any[]) {

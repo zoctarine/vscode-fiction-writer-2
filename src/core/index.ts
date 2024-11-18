@@ -12,7 +12,7 @@ import {addCommand} from './commandExtensions';
 import {FictionWriter} from './constants';
 import {retryAsync} from './lib/retry';
 import {FwFileManager} from './FwFileManager';
-import {FileWorkerClient} from '../worker/fileWorkerClient';
+import {FileWorkerClient} from '../worker/FileWorkerClient';
 
 export * from './FwFileManager';
 export * from './commandExtensions';
@@ -65,14 +65,6 @@ export class CoreModule extends DisposeManager {
                 log.debug("StateFileChanged", e.files.length);
             }),
 
-            this.fileWorkerClient.onJobStarted(e => {
-                vscode.window.showWarningMessage("Indexing project files...." + e);
-            }),
-
-            this.fileWorkerClient.onJobFinished(e => {
-                vscode.window.showWarningMessage("Indexing Finished! " + e);
-
-            }),
 
             addCommand(FictionWriter.files.split, async () => {
                 const editor = vscode.window.activeTextEditor;
@@ -85,19 +77,19 @@ export class CoreModule extends DisposeManager {
                 if (editor?.selection) {
                     if (editor?.selection.isEmpty) {
                         const orderParser = new SimpleSuffixOrderParser();
-                        const parsed = orderParser.parse(fwItem.ref.name);
+                        const parsed = orderParser.parse(fwItem.ref.name.namePart ?? '');
                         parsed.mainOrder = parsed.mainOrder !== undefined ? parsed.mainOrder + 1 : parsed.mainOrder;
-                        newName = orderParser.compile(parsed);
+                        newName = orderParser.serialize(parsed);
                     } else {
                         newName = editor.document.getText(editor.selection);
                     }
                 }
 
-                let splitName = `${fwItem.ref.orderString}${newName}${fwItem.ref.ext}`;
+                let splitName = `${fwItem.ref.name.orderPart}${newName}${fwItem.ref.ext}`;
 
                 const newPath = await retryAsync(async (retry) => {
                     if (retry > 0) {
-                        splitName = `${fwItem.ref.orderString}${fwItem.ref.name} ${retry}${fwItem.ref.ext}`;
+                        splitName = `${fwItem.ref.name.full} ${retry}${fwItem.ref.ext}`;
                     }
                     return await this.fileManager.splitFile(fwItem.ref.fsPath,
                         editor.selection.start.line,
@@ -119,3 +111,4 @@ export class CoreModule extends DisposeManager {
 export {RegEx} from './regEx';
 export {OptionValue} from './options/optionValue';
 export {FactorySwitch} from './lib/FactorySwitch';
+export {FwPath} from './FwPath';

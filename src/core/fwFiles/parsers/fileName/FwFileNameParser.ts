@@ -1,11 +1,46 @@
-import {IFileNameParser} from './IFileNameParser';
-import {IOrderParser} from '../order/IOrderParser';
+import {IFileNameInput, IFileNameProcessor} from './IFileNameParser';
+import {IOrderParser, IOrderProcessor} from '../order/IOrderParser';
 import {IFwRef} from '../../IFwRef';
 import path from 'path';
 import fs from 'node:fs';
+import {fwPath} from '../../../FwPath';
+import {FwRef} from '../../FwRef';
 
-export class FwFileNameParser implements IFileNameParser {
-    constructor(private _orderParser: IOrderParser) {
+
+export class FwFileNameParser implements IFileNameProcessor {
+    constructor(private _orderParser: IOrderProcessor) {
+    }
+
+    build(input: IFileNameInput): IFwRef {
+        const orderedName = this._orderParser.build({
+            order: 1,
+            otherOrders: [],
+            name: input.name
+        });
+
+        let fsExt = '.md';
+        let projectTag = 'fw';
+        if (!input.isFile) {
+            fsExt = '';
+            projectTag = '';
+        }
+
+        let ext = `${projectTag}${fsExt}`;
+        let fsName = `${orderedName.full}${ext}`;
+
+        return {
+            data: [],
+            ext: ext,
+            fsDir: input.dir,
+            fsExists: false,
+            fsExt: fsExt,
+            fsIsFile: input.isFile,
+            fsIsFolder: !input.isFile,
+            fsName: fsName,
+            fsPath: fwPath.join(input.dir, fsName),
+            name: orderedName,
+            projectTag: projectTag
+        };
     }
 
     async parse(fsPath: string): Promise<IFwRef> {
@@ -13,7 +48,8 @@ export class FwFileNameParser implements IFileNameParser {
         const parsed = path.posix.parse(fsPath);
 
         const parsedName = this._parse(parsed.base);
-        const parsedOrder = this._orderParser.parse(parsedName.name);
+
+        const orderedName = this._orderParser.parse(parsedName.name);
         let exists = true;
         let isFolder = false;
         let isFile = false;
@@ -21,15 +57,12 @@ export class FwFileNameParser implements IFileNameParser {
             const stat = await fs.promises.stat(fsPath);
             isFolder = stat.isDirectory();
             isFile = stat.isFile();
-        } catch{
+        } catch {
             exists = false;
         }
 
         return {
-            order: [...parsedOrder.otherOrders ?? [], parsedOrder.mainOrder].filter(f => f !== undefined),
-            orderString: parsedOrder.orderPart,
-            orderedName: parsedName.name ?? '',
-            name: parsedOrder.namePart ?? '',
+            name: orderedName,
             projectTag: parsedName?.projectTag,
             data: parsedName?.data ?? [],
             ext: parsedName?.ext,
@@ -67,8 +100,7 @@ export class FwFileNameParser implements IFileNameParser {
         }
     }
 
-    compile(parsed: IFwRef): Promise<string> {
-        throw new Error('Method not implemented.');
+    async serialize(ref: IFwRef): Promise<string> {
+        return ref?.fsPath;
     }
-
 }

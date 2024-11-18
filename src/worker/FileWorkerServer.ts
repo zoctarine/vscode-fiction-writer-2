@@ -5,9 +5,10 @@ import {
     ClientMsgStart,
     WorkerMsgFilesChanged,
     WorkerMsgFilesReload,
-    WorkerMsgJobFinished,
-    WorkerMsgJobStarted,
-    WorkerMsgStart
+    WorkerMsgJobFinished, WorkerMsgJobProgress,
+    WorkerMsgJobStarted, WorkerMsgMessage,
+    WorkerMsgStart,
+
 } from './models';
 import {FwItemBuilder} from '../core/fwFiles/builders/FwItemBuilder';
 import {FwItem, FwPermission, Permissions} from '../core/fwFiles';
@@ -17,6 +18,7 @@ export class FileWorkerServer {
     private _acceptsEvents = true;
     private _fwBuilder = new FwItemBuilder();
     private _files = new Map<string, FwItem>();
+    private _lastPostTime: number = new Date(0, 0, 0).getTime();
 
     constructor(private _parentPort: MessagePort | null) {
 
@@ -46,9 +48,9 @@ export class FileWorkerServer {
         this._changes.clear();
         if (changes.length === 0) return;
 
-        let hasStructureChanges = false;
+        let onlyContentChanges = true;
         for (const change of changes) {
-            if (change[1] !== 'change') hasStructureChanges = true;
+            if (change[1] !== 'change') onlyContentChanges = false;
 
             if (change[1] === 'delete') {
                 this._files.delete(change[0]);
@@ -61,12 +63,12 @@ export class FileWorkerServer {
             }
         }
 
-        hasStructureChanges
-            ? this.post(new WorkerMsgFilesReload([...this._files.values()]))
-            : this.post(new WorkerMsgFilesChanged(changes
+        onlyContentChanges
+            ? this.post(new WorkerMsgFilesChanged(changes
                 .map(c => this._files.get(c[0]))
                 .filter(c => c !== undefined)
-            ));
+            ))
+            : this.post(new WorkerMsgFilesReload([...this._files.values()]));
     }
 
     start(e: ClientMsgStart) {
@@ -111,8 +113,9 @@ export class FileWorkerServer {
                         files++;
                     }
                     this._files.set(fsPath, value);
+                    this.postWithThrottle(new WorkerMsgJobProgress("", this._files.size, allPaths.length));
                 }
-
+                this.post(new WorkerMsgJobProgress("", this._files.size, this._files.size));
                 this.post(new WorkerMsgFilesReload([...this._files.values()]));
             }
             return;
@@ -128,5 +131,19 @@ export class FileWorkerServer {
 
     post(msg: any) {
         this._parentPort?.postMessage(msg);
+    }
+
+    postWithThrottle(msg: any) {
+        const now = Date.now();
+        const postInterval = 1000;
+        const shouldPost = now - this._lastPostTime >= postInterval;
+        if (shouldPost) {
+            this.post(msg);
+            this._lastPostTime = now;
+        }
+    }
+
+    log(msg: string, severity: number = 10) {
+        this.post(new WorkerMsgMessage(msg, severity));
     }
 }

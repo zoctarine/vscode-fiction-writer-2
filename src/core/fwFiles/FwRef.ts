@@ -3,6 +3,8 @@ import {FwSubType} from './FwSubType';
 import path from 'path';
 import {FwType} from './FwType';
 import {FwControl} from './FwControl';
+import {EmptyFwOrderedName, IFwOrderedName} from './IFwOrderedName';
+import {DefaultOrderParser} from './parsers';
 
 export interface IFwProjectRef extends IFwRef {
     type: FwType;
@@ -29,7 +31,13 @@ export class FwRef implements IFwProjectRef {
     order?: number[] | undefined = [];
     orderString?: string | undefined = '';
     orderedName: string = '';
-    name: string = '';
+    name: IFwOrderedName = {
+        namePart: '',
+        orderPart: '',
+        mainOrder: undefined,
+        otherOrders: [],
+        full: '',
+    };
     projectTag: string;
     data: string[] = [];
     ext: string = '';
@@ -49,9 +57,6 @@ export class FwRef implements IFwProjectRef {
         this.fsName = ref.fsName;
         this.fsPath = ref.fsPath;
         this.name = ref.name;
-        this.order = ref.order;
-        this.orderedName = ref.orderedName;
-        this.orderString = ref.orderString;
         this.projectTag = ref.projectTag;
         this.fsIsFile = ref.fsIsFile;
         this.fsIsFolder = ref.fsIsFolder;
@@ -70,10 +75,13 @@ export class FwRootItem extends FwRef {
             fsExt: '',
             fsName: '',
             fsPath: '',
-            name: 'root',
-            order: [],
-            orderedName: '',
-            orderString: '',
+            name: {
+                full: 'root',
+                namePart: 'root',
+                orderPart: undefined,
+                mainOrder: undefined,
+                otherOrders: undefined
+            },
             projectTag: '',
             fsIsFile: false,
             fsIsFolder: true,
@@ -103,14 +111,17 @@ export class FwEmptyVirtualFolder extends FwRef {
     }
 
     public static create(parent: IFwProjectRef | undefined, order: number): FwEmptyVirtualFolder {
-        const orders = [...(parent?.order ?? []), order];
-        const orderPart = `${orders.join('.')}`;
-        const name = "empty";
-        const orderedName = `${orderPart} ${name}`;
+        // TODO: inject provider
+        const x = new DefaultOrderParser();
+        const name: IFwOrderedName = x.build({
+            order: order,
+            otherOrders: [...parent?.name?.otherOrders ?? [], order].filter(o => o > 0),
+            name: 'empty'
+        });
         const projectTag = 'fw';
         const fsExt = '.md';
         const ext = `.${projectTag}${fsExt}`;
-        const fsName = `${orderedName}${ext}`;
+        const fsName = `${name.full}${ext}`;
         const fsPath = path.posix.join(parent?.fsPath ?? '', fsName);
         const result = new FwEmptyVirtualFolder({
             data: [],
@@ -120,10 +131,7 @@ export class FwEmptyVirtualFolder extends FwRef {
             fsName,
             fsPath,
             name,
-            orderedName,
-            orderString: `${orderPart}`,
             projectTag,
-            order: orders,
             fsIsFolder: false,
             fsIsFile: true,
             fsExists: false
@@ -131,7 +139,7 @@ export class FwEmptyVirtualFolder extends FwRef {
 
         result.currentOrder = order;
         result.parentOrder = parent?.parentOrder ?? [];
-        result.orderBy = `${orderPart}`;
+        result.orderBy = `${result.name.full}`;
 
         return result;
     }
@@ -140,8 +148,9 @@ export class FwEmptyVirtualFolder extends FwRef {
 export class FwEmpty extends FwRef {
     constructor() {
         super({
-            data: [], ext: '', fsDir: '', fsExt: '', fsName: '', fsPath: '', name: '',
-            orderedName: '', orderString: '', projectTag: '', fsExists: false,
+            data: [], ext: '', fsDir: '', fsExt: '', fsName: '', fsPath: '',
+            name: EmptyFwOrderedName,
+            projectTag: '', fsExists: false,
             fsIsFolder: false, fsIsFile: true
         });
         this.type = FwType.Folder;
