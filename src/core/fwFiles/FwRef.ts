@@ -10,10 +10,6 @@ export interface IFwProjectRef extends IFwRef {
     type: FwType;
     subType: FwSubType;
     control: FwControl;
-
-    currentOrder: number;
-    parentOrder: number[];
-    orderBy: string;
 }
 
 /**
@@ -24,13 +20,6 @@ export class FwRef implements IFwProjectRef {
     public subType: FwSubType = FwSubType.Unknown;
     public control: FwControl = FwControl.Unknown;
 
-    public currentOrder: number = 0;
-    public parentOrder: number[] = [];
-    public orderBy: string = '';
-
-    order?: number[] | undefined = [];
-    orderString?: string | undefined = '';
-    orderedName: string = '';
     name: IFwOrderedName = {
         namePart: '',
         orderPart: '',
@@ -115,7 +104,7 @@ export class FwEmptyVirtualFolder extends FwRef {
         const x = new DefaultOrderParser();
         const name: IFwOrderedName = x.build({
             order: order,
-            otherOrders: [...parent?.name?.otherOrders ?? [], order].filter(o => o > 0),
+            otherOrders: [...parent?.name?.otherOrders ?? [], parent?.name?.mainOrder ?? 0].filter(o => o > 0),
             name: 'empty'
         });
         const projectTag = 'fw';
@@ -136,10 +125,6 @@ export class FwEmptyVirtualFolder extends FwRef {
             fsIsFile: true,
             fsExists: false
         });
-
-        result.currentOrder = order;
-        result.parentOrder = parent?.parentOrder ?? [];
-        result.orderBy = `${result.name.full}`;
 
         return result;
     }

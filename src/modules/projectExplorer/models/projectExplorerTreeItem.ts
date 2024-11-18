@@ -49,7 +49,7 @@ export class ProjectExplorerTreeItem extends vscode.TreeItem {
         this.tooltip = new vscode.MarkdownString([
             `$(${icon}) **${data.fwItem?.ref.name.full}** ${data.fwItem?.ref.ext}\n\n`,
             `- **Type:** ${typeToProjectType(nodeType)}`,
-            `- **Order:** *${data.fwItem?.ref?.currentOrder}*`,
+            `- **Order:** *${data.fwItem?.ref?.name.mainOrder}*`,
             `- ***Full Name:*** ${data.fwItem?.ref.fsName}`,
             `- ***Full Path:*** *${data.fwItem?.ref.fsPath}*`,
             `- ***ViewItem:*** *${this.contextValue}*`,

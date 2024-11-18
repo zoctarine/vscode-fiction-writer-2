@@ -147,16 +147,16 @@ export class ProjectExplorerTreeDataProvider
 
         if (node.children && node.children.length > 0) {
             const possibleParents = new Map<number, ProjectNode>(node.children
-                .filter(n => n.data.fwItem?.ref.parentOrder.length === 0 && n.data.fwItem.ref.subType !== FwSubType.Folder)
-                .map(c => [c.data.fwItem?.ref.currentOrder ?? 0, c]));
+                .filter(n => n.data.fwItem?.ref.name.otherOrders?.length === 0 && n.data.fwItem.ref.subType !== FwSubType.Folder)
+                .map(c => [c.data.fwItem?.ref.name.mainOrder ?? 0, c]));
             const possibleChildren = node.children
-                .filter(n => n.data.fwItem?.ref.parentOrder.length &&
-                    n.data.fwItem?.ref.parentOrder.length > 0 &&
+                .filter(n => n.data.fwItem?.ref.name.otherOrders?.length &&
+                    n.data.fwItem?.ref.name.otherOrders.length > 0 &&
                     n.data.fwItem.ref.subType !== FwSubType.Folder);
 
             for (const child of possibleChildren) {
                 if (!child.data.fwItem) continue;
-                const order = child.data.fwItem.ref.parentOrder[0];
+                const order = child.data.fwItem.ref.name.otherOrders ? child.data.fwItem.ref.name.otherOrders[0] : undefined;
                 if (order && order > 0 && child.parent) {
                     let parent = possibleParents.get(order);
                     if (!parent) {
@@ -165,7 +165,9 @@ export class ProjectExplorerTreeDataProvider
                         possibleParents.set(order, parent);
                     }
 
-                    child.data.fwItem!.ref.parentOrder.splice(0, 1);
+                    // TODO(TEST)
+                    if ( child.data.fwItem!.ref.name.otherOrders)
+                       child.data.fwItem!.ref.name.otherOrders.splice(0, 1);
                     this._treeStructure.detach(child);
                     this._treeStructure.addChild(child, parent);
 
@@ -820,7 +822,7 @@ export class ProjectExplorerTreeDataProvider
     }
 
     public retrieveSelection(): string[] {
-        const result = this._treeStructure.dfsList(this._treeStructure.root, (a, b) => a.data.fwItem!?.ref.orderBy > b.data.fwItem!.ref.orderBy ? 1 : -1)
+        const result = this._treeStructure.dfsList(this._treeStructure.root, (a, b) => a.data.fwItem!?.ref.name.full > b.data.fwItem!.ref.name.full ? 1 : -1)
             .filter(n => n.checked === true &&
                 n.data.fwItem?.ref.fsExists &&
                 Permissions.check(n.data.fwItem?.ref, FwPermission.OpenEditor))

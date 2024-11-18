@@ -47,7 +47,7 @@ export class DefaultOrderParser implements IOrderProcessor {
 
         return {
             orderPart: orderPart,
-            namePart: input.name,
+            namePart: input.name ?? '',
             mainOrder: input.order,
             otherOrders: input.otherOrders,
             full: `${orderPart ? orderPart + ' ' : ''}${input.name ?? ''}`

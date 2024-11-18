@@ -153,7 +153,7 @@ export const excludeFromProject = async (...items: FwItem[]) => {
 
     let ext = item.ref.fsExt;
     const options: string[] = [];
-    if (item.ref?.currentOrder > 0) {
+    if (item.ref?.name.mainOrder ?? 0 > 0) {
         options.push(`${item.ref.fsName.substring(0, item.ref.fsName.length - item.ref.ext.length)}${ext}`);
     }
     options.push(`${item.ref.name}${ext}`);

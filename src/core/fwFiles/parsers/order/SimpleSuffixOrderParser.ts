@@ -27,7 +27,7 @@ export class SimpleSuffixOrderParser implements IOrderProcessor {
 
     build(input: IDefaultOrderInput): IFwOrderedName {
         return {
-            namePart: input.name,
+            namePart: input.name ?? '',
             orderPart: input.order?.toString(),
             mainOrder: input.order,
             otherOrders: undefined,

@@ -12,7 +12,7 @@ export class ProjectNodeList implements Collections<ProjectNode> {
 
     sort(): Collections<ProjectNode> {
 
-        this.items.sort((a, b) => (a.data.fwItem?.ref?.orderBy ?? '') > (b.data.fwItem?.ref?.orderBy ?? '') ? 1 : -1);
+        this.items.sort((a, b) => (a.data.fwItem?.ref?.name.orderPart ?? '') > (b.data.fwItem?.ref?.name.orderPart ?? '') ? 1 : -1);
 
         return this;
     }

@@ -1,5 +1,9 @@
 import {IFwMeta} from './IFwMeta';
 import {IFwContent} from './IFwContent';
+import {FwType} from './FwType';
+import {FwSubType} from './FwSubType';
+import {FwControl} from './FwControl';
+import {IFwRef} from './IFwRef';
 import {IFwProjectRef} from './FwRef';
 
 /**
@@ -13,4 +17,8 @@ export class FwItem {
         public meta?: IFwMeta,
         public content?: IFwContent) {
     }
+
+    public type: FwType = FwType.Unknown;
+    public subType: FwSubType = FwSubType.Unknown;
+    public control: FwControl = FwControl.Unknown;
 }
