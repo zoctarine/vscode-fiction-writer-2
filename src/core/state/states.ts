@@ -1,9 +1,8 @@
-import {ITextStatistics} from '../../modules/textAnalysis/textAnalyzer';
-import {FwRef, FwPermission, FwItem} from '../fwFiles';
+import {FwPermission} from '../fwFiles';
+import {FwItem} from '../fwFiles/FwItem';
 
 export interface IMetaState  {
     [key: string]: any;
-
 }
 
 export interface IDecorationState {

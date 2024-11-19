@@ -5,8 +5,8 @@ import {FwFileState, FwFileStateChangedEvent, StateChangeAction} from './fwFileS
 import {IFileState} from './states';
 
 import {IStateProcessorFactory} from '../processors/IStateProcessorFactory';
-import {FwItem} from '../fwFiles';
 import {asPosix} from '../FwFileManager';
+import {FwItem} from '../fwFiles/FwItem';
 
 export class FwStateChangedEvent {
     files: FwFileStateChangedEvent[] = [];
@@ -44,8 +44,9 @@ export class StateManager extends DisposeManager {
     }
 
     public track(fwItem: FwItem): ProjectFileState {
+
         // if we previously tracked this item, dispose of it first
-        this.unTrack(fwItem.ref.fsPath);
+        this.unTrack(fwItem.fsRef?.fsPath);
 
         const projState = new ProjectFileState();
         projState.state = new FwFileState({fwItem: fwItem}, this._processorFactory);
@@ -53,11 +54,14 @@ export class StateManager extends DisposeManager {
             this._handleOnFileChanged(event);
         }));
         projState.fwItem = fwItem;
-        this._fileStates.set(fwItem.ref.fsPath, projState);
+        if (fwItem.fsRef) {
+            this._fileStates.set(fwItem.fsRef?.fsPath, projState);
+        }
         return projState;
     }
 
-    private unTrack(key: string) {
+    private unTrack(key?: string) {
+        if (!key) return;
         try {
             const item = this._fileStates.get(key);
 
@@ -98,8 +102,8 @@ export class StateManager extends DisposeManager {
         }
         for (const item of fileInfos) {
             try {
-                if (item.ref.fsExists) {
-                    let fileState = this._fileStates.get(item.ref.fsPath);
+                if (item.fsRef?.fsExists) {
+                    let fileState = this._fileStates.get(item.fsRef.fsPath);
                     // If we did not track item
                     if (!fileState) {
                         fileState = this.track(item);
@@ -111,11 +115,11 @@ export class StateManager extends DisposeManager {
                 } else {
                     // If we tracked it, we delete it
                     if (item) {
-                        this.unTrack(item.ref.fsPath);
+                        this.unTrack(item.fsRef?.fsPath);
                     }
                 }
             } catch (error) {
-                console.warn("Cannot load file: " + item.ref.fsPath, error);
+                console.warn("Cannot load file: " + item.fsRef?.fsPath, error);
             }
         }
         this._enqueueOff();

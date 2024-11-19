@@ -9,14 +9,13 @@ import {
     FwEmpty,
     FwEmptyVirtualFolder,
     FwFileManager,
-    FwFileNameParser,
-    FwItem,
+
+    FwInfo,
     FwPermission,
     FwProjectFileItem,
     FwRootItem,
     FwSubType,
-    FwVirtualFolderItem,
-    IFwProjectRef,
+    FwVirtualFolderItem, IFwInfo,
     log, notifier,
     Permissions,
     TreeStructure
@@ -34,9 +33,10 @@ import {IProjectContext} from './models/IProjectContext';
 import {IProjectTreeViewModel} from './models/IProjectTreeViewModel';
 import {ProjectNodeContextBuilder} from './models/IProjectNodeContext';
 import {Context} from '../../core/lib/context';
-import fs from 'node:fs';
 import {retry} from '../../core/lib/retry';
 import {fwPath} from '../../core/FwPath';
+import {FwItem} from '../../core/fwFiles/FwItem';
+import {FsPathParser} from '../../core/fwFiles/parsers/fileName/FwFileNameParser';
 
 
 const clone = rfdc();
@@ -145,55 +145,62 @@ export class ProjectExplorerTreeDataProvider
     private async buildVirtualFolders(node: ProjectNode) {
         if (!node) return;
 
-        if (node.children && node.children.length > 0) {
-            const possibleParents = new Map<number, ProjectNode>(node.children
-                .filter(n => n.data.fwItem?.ref.name.otherOrders?.length === 0 && n.data.fwItem.ref.subType !== FwSubType.Folder)
-                .map(c => [c.data.fwItem?.ref.name.mainOrder ?? 0, c]));
-            const possibleChildren = node.children
-                .filter(n => n.data.fwItem?.ref.name.otherOrders?.length &&
-                    n.data.fwItem?.ref.name.otherOrders.length > 0 &&
-                    n.data.fwItem.ref.subType !== FwSubType.Folder);
-
-            for (const child of possibleChildren) {
-                if (!child.data.fwItem) continue;
-                const order = child.data.fwItem.ref.name.otherOrders ? child.data.fwItem.ref.name.otherOrders[0] : undefined;
-                if (order && order > 0 && child.parent) {
-                    let parent = possibleParents.get(order);
-                    if (!parent) {
-                        parent = new ProjectNode(child.parent.id + "/" + order, {fwItem: new FwItem(FwEmptyVirtualFolder.create(child.parent.data?.fwItem?.ref, order))});
-                        this._treeStructure.addChild(parent, child.parent);
-                        possibleParents.set(order, parent);
-                    }
-
-                    // TODO(TEST)
-                    if ( child.data.fwItem!.ref.name.otherOrders)
-                       child.data.fwItem!.ref.name.otherOrders.splice(0, 1);
-                    this._treeStructure.detach(child);
-                    this._treeStructure.addChild(child, parent);
-
-                    if (parent.data.fwItem) {
-                        this._morph(parent, parent.data.fwItem.ref.fsExists
-                            ? FwVirtualFolderItem
-                            : FwEmptyVirtualFolder);
-                    }
-                }
-            }
-
-            for (let child of node.children) {
-                await this.buildVirtualFolders(child);
-
-                // Hide empty virtual folders that don't have any
-                // visible items.
-                if (child.data.fwItem?.ref?.subType === FwSubType.EmptyVirtualFolder &&
-                    child.children && child.children.every(c => !c.visible)) {
-                    child.visible = false;
-                }
-            }
-        }
+        // if (node.children && node.children.length > 0) {
+        //     const possibleParents = new Map<number, ProjectNode>(node.children
+        //         .filter(n =>
+        //             n.data.fwItem?.info?.order.length &&
+        //             n.data.fwItem.info.order.length > 0 &&
+        //             n.data.fwItem.info.subType !== FwSubType.Folder)
+        //         .map(c => [c.data.fwItem?.info?.order[0]!, c]));
+        //
+        //     const possibleChildren = node.children
+        //         .filter(n =>
+        //             n.data.fwItem?.info?.order.length &&
+        //             n.data.fwItem.info.order.length > 1 &&
+        //             n.data.fwItem.info.subType !== FwSubType.Folder);
+        //
+        //     for (const child of possibleChildren) {
+        //         if (!child.data.fwItem?.info) continue;
+        //         const parentOrders = child.data.fwItem.info?.order.slice(1) ?? [];
+        //         const order = parentOrders.pop();
+        //         if (order && order > 0 && child.parent) {
+        //             let parent = possibleParents.get(order);
+        //             if (!parent) {
+        //                 parent = new ProjectNode(child.parent.id + "/" + order, {fwItem: new FwInfo(FwEmptyVirtualFolder.create(child.parent.data?.fwItem?.ref, order))});
+        //                 this._treeStructure.addChild(parent, child.parent);
+        //                 possibleParents.set(order, parent);
+        //             }
+        //
+        //             // TODO(TEST)
+        //             if (child.data.fwItem!.ref.name.otherOrders) {
+        //                 child.data.fwItem!.ref.name.otherOrders.splice(0, 1);
+        //             }
+        //             this._treeStructure.detach(child);
+        //             this._treeStructure.addChild(child, parent);
+        //
+        //             if (parent.data.fwItem) {
+        //                 this._morph(parent, parent.data.fwItem.ref.fsExists
+        //                     ? FwVirtualFolderItem
+        //                     : FwEmptyVirtualFolder);
+        //             }
+        //         }
+        //     }
+        //
+        //     for (let child of node.children) {
+        //         await this.buildVirtualFolders(child);
+        //
+        //         // Hide empty virtual folders that don't have any
+        //         // visible items.
+        //         if (child.data.fwItem?.ref?.subType === FwSubType.EmptyVirtualFolder &&
+        //             child.children && child.children.every(c => !c.visible)) {
+        //             child.visible = false;
+        //         }
+        //     }
+        // }
     }
 
-    private async _morph(node: ProjectNode, ctor: { new(fwFile: IFwProjectRef): IFwProjectRef }) {
-        const ref = node.data.fwItem?.ref;
+    private async _morph(node: ProjectNode, ctor: { new(fwFile: IFwInfo): IFwInfo }) {
+        const ref = node.data.fwItem?.info;
         if (!ref) return;
 
         const instance = new ctor(ref);
@@ -215,7 +222,7 @@ export class ProjectExplorerTreeDataProvider
     private arrangeWorkspaces() {
         const workspaces: ProjectNode[] = [];
         const collectWorkspaces = (node: ProjectNode, workspaces: ProjectNode[]) => {
-            if (node.data.fwItem?.ref?.subType === FwSubType.WorkspaceFolder) {
+            if (node.data.fwItem?.info?.subType === FwSubType.WorkspaceFolder) {
                 workspaces.push(node);
             } else if (node.children?.length > 0) {
                 for (const child of node.children) {
@@ -247,8 +254,8 @@ export class ProjectExplorerTreeDataProvider
         const tree = new TreeStructure<IFileState>(new ProjectNode('root', {fwItem: new FwItem(new FwRootItem())}));
         const workspaces: ProjectNode[] = [];
         for (const state of states) {
-            if (!state?.fwItem?.ref) continue;
-            const {fsPath} = state.fwItem.ref;
+            if (!state?.fwItem?.fsRef) continue;
+            const {fsPath} = state.fwItem.fsRef;
             const segments = fsPath.split(path.posix.sep);
             let currentLevel = tree.root;
             let currentPath = '/';
@@ -271,8 +278,8 @@ export class ProjectExplorerTreeDataProvider
             }
 
             currentLevel.data = state;
-            currentLevel.visible = this._fileFilter.check(state.fwItem?.ref);
-            if (currentLevel.data.fwItem?.ref?.subType === FwSubType.WorkspaceFolder) {
+            currentLevel.visible = this._fileFilter.check(state.fwItem?.info);
+            if (currentLevel.data.fwItem?.info?.subType === FwSubType.WorkspaceFolder) {
                 workspaces.push(currentLevel);
             }
         }
@@ -341,10 +348,10 @@ export class ProjectExplorerTreeDataProvider
     }
 
     public async toggleVirtualFolder(node: ProjectNode): Promise<void> {
-        if (node.data.fwItem?.ref?.subType === FwSubType.ProjectFile) {
+        if (node.data.fwItem?.info?.subType === FwSubType.ProjectFile) {
             await this._morph(node, FwVirtualFolderItem);
             this._onDidChangeTreeData.fire();
-        } else if (node.data.fwItem?.ref?.subType === FwSubType.VirtualFolder) {
+        } else if (node.data.fwItem?.info?.subType === FwSubType.VirtualFolder) {
             if (node.children?.length === 0) {
                 await this._morph(node, FwProjectFileItem);
                 this._onDidChangeTreeData.fire();
@@ -356,63 +363,64 @@ export class ProjectExplorerTreeDataProvider
         }
     }
 
-    public async  addFile(node: ProjectNode) {
-
-        node = node ?? this._treeView.selection[0];
-        const ref = node.data.fwItem?.ref;
-        if (!ref) return;
-
-        const fn = new FwFileNameParser(new DefaultOrderParser());
-
-        const filePath = await fn.serialize(ref);
-
-        const makeFinalPath = (value: string) => fwPath.join(ref.fsPath, value);
-
-        const baseName = 'Scene';
-        let fileName = retry<string>((cnt) => {
-            if (!fwPath.exists(makeFinalPath('Chapter' + (cnt + 1)))) {
-                return baseName + (cnt + 1);
-            }
-        }) ?? baseName;
-
-
-        if (Permissions.check(ref, FwPermission.AddChildren)) {
-            // TODO: add retry?
-            const value = await vscode.window.showInputBox({
-                title: `Add file`,
-                prompt: `File name:`,
-                valueSelection: [0, fileName.length],
-                value: filePath,
-                validateInput: async (value: string) => {
-                    if (!value || value === '') {
-                        return {
-                            message: "Value must be a valid name",
-                            severity: InputBoxValidationSeverity.Error
-                        };
-                    }
-
-                    if (fwPath.exists(makeFinalPath(value))) {
-                        return {
-                            message: "The file name already exists",
-                            severity: InputBoxValidationSeverity.Error
-                        };
-                    }
-                }
-            });
-            if (value) {
-                const fsPath = fwPath.join(ref.fsPath, value);
-                const created = await this._fileManager.createFile(fsPath, "");
-                if (!created) {
-                    notifier.warn(`Could not create file: ${value}`);
-                }
-            }
-        }
+    public async addFile(node: ProjectNode) {
+        //
+        // node = node ?? this._treeView.selection[0];
+        // const ref = node.data.fwItem?.info;
+        // if (!ref) return;
+        //
+        // const fn = new FwFileNameParser(new DefaultOrderParser());
+        // const fs = new FsPathParser();
+        //
+        // const filePath = await fs.serializeAsync(fn);
+        //
+        // const makeFinalPath = (value: string) => fwPath.join(ref.fsPath, value);
+        //
+        // const baseName = 'Scene';
+        // let fileName = retry<string>((cnt) => {
+        //     if (!fwPath.exists(makeFinalPath('Chapter' + (cnt + 1)))) {
+        //         return baseName + (cnt + 1);
+        //     }
+        // }) ?? baseName;
+        //
+        //
+        // if (Permissions.check(ref, FwPermission.AddChildren)) {
+        //     // TODO: add retry?
+        //     const value = await vscode.window.showInputBox({
+        //         title: `Add file`,
+        //         prompt: `File name:`,
+        //         valueSelection: [0, fileName.length],
+        //         value: filePath,
+        //         validateInput: async (value: string) => {
+        //             if (!value || value === '') {
+        //                 return {
+        //                     message: "Value must be a valid name",
+        //                     severity: InputBoxValidationSeverity.Error
+        //                 };
+        //             }
+        //
+        //             if (fwPath.exists(makeFinalPath(value))) {
+        //                 return {
+        //                     message: "The file name already exists",
+        //                     severity: InputBoxValidationSeverity.Error
+        //                 };
+        //             }
+        //         }
+        //     });
+        //     if (value) {
+        //         const fsPath = fwPath.join(ref.fsPath, value);
+        //         const created = await this._fileManager.createFile(fsPath, "");
+        //         if (!created) {
+        //             notifier.warn(`Could not create file: ${value}`);
+        //         }
+        //     }
+        // }
     }
 
     public async addFolder(node: ProjectNode) {
         node = node ?? this._treeView.selection[0];
         // TODO: get parent folder if this is not folder...
-        const ref = node.data.fwItem?.ref;
+        const ref = node.data.fwItem?.fsRef;
         if (!ref) return;
         const makeFinalPath = (value: string) => fwPath.join(ref.fsPath, value);
         const baseName = 'Chapter';
@@ -422,7 +430,7 @@ export class ProjectExplorerTreeDataProvider
                 return baseName + (cnt + 1);
             }
         }) ?? baseName;
-        if (Permissions.check(ref, FwPermission.AddChildren)) {
+        if (Permissions.check( node.data.fwItem?.info, FwPermission.AddChildren)) {
             // TODO: add retry?
             const value = await vscode.window.showInputBox({
                 title: `Add folder`,
@@ -456,69 +464,69 @@ export class ProjectExplorerTreeDataProvider
     }
 
     public async rename({data: {fwItem}}: ProjectNode) {
-        if (fwItem) {
-            const {ref} = fwItem;
-            const startIndex = ref.name.orderPart?.length ?? 0;
-            let endIndex = (startIndex > 0 ? startIndex - 1 : startIndex) +(ref.name.namePart?.length??0);
-            const getFwChanges = async (value: string) => {
-                const parser = new FwFileNameParser(new DefaultOrderParser());
-                let newFile = await parser.parse(value);
-                const messages = [];
-                if (newFile.name.orderPart !== ref.name.orderPart) {
-                    messages.push("the file order segment");
-                }
-                if (newFile.fsExt !== ref.fsExt) {
-                    messages.push(`the file type`);
-                } else if (newFile.ext !== ref.ext) {
-                    messages.push(`the FictionWriter extended extension`);
-                }
-
-                return messages;
-            };
-
-            const value = await vscode.window.showInputBox({
-                title: `Rename ${ref.name}`,
-                prompt: `New file name:`,
-                valueSelection: [startIndex, endIndex],
-                value: ref.fsName,
-                validateInput: async (value: string) => {
-
-                    if (!value || value === '') {
-                        return {
-                            message: "Value must be a valid filename",
-                            severity: InputBoxValidationSeverity.Error
-                        };
-                    }
-                    const messages = await getFwChanges(value);
-
-                    if (messages.length > 0) {
-                        let last = messages.pop();
-                        if (messages.length > 0) last = ` and ${last}`;
-                        return {
-                            message: `Warning: You changed ${messages.join(', ')}${last}`,
-                            severity: InputBoxValidationSeverity.Warning
-                        };
-                    }
-                }
-            });
-            if (value) {
-                let doRename = true;
-                if ((await getFwChanges(value)).length > 0) {
-                    doRename = await vscode.window.showWarningMessage("Are you sure?",
-                        {
-                            modal: true,
-                            detail: `Renaming\n\n'${ref.fsName}'\n\nto:\n\n ${value}\n\n may result in FictionWriter handling the file differently.\n\nJust make sure you are OK with this change.`,
-                        },
-                        "OK") === 'OK';
-                }
-                if (doRename) {
-                    await this._fileManager.renameFile(
-                        ref.fsPath,
-                        path.posix.join(ref.fsDir, value)).then(() => {
-                    }).catch(err => log.warn(err));
-                }
-            }
-        }
+        // if (fwItem) {
+        //     const {info} = fwItem;
+        //     const startIndex = ref.name.orderPart?.length ?? 0;
+        //     let endIndex = (startIndex > 0 ? startIndex - 1 : startIndex) + (ref.name.namePart?.length ?? 0);
+        //     const getFwChanges = async (value: string) => {
+        //         const parser = new FwFileNameParser(new DefaultOrderParser());
+        //         let newFile = await parser.parse(value);
+        //         const messages = [];
+        //         if (newFile.name.orderPart !== ref.name.orderPart) {
+        //             messages.push("the file order segment");
+        //         }
+        //         if (newFile.fsExt !== ref.fsExt) {
+        //             messages.push(`the file type`);
+        //         } else if (newFile.ext !== ref.ext) {
+        //             messages.push(`the FictionWriter extended extension`);
+        //         }
+        //
+        //         return messages;
+        //     };
+        //
+        //     const value = await vscode.window.showInputBox({
+        //         title: `Rename ${ref.name}`,
+        //         prompt: `New file name:`,
+        //         valueSelection: [startIndex, endIndex],
+        //         value: ref.fsName,
+        //         validateInput: async (value: string) => {
+        //
+        //             if (!value || value === '') {
+        //                 return {
+        //                     message: "Value must be a valid filename",
+        //                     severity: InputBoxValidationSeverity.Error
+        //                 };
+        //             }
+        //             const messages = await getFwChanges(value);
+        //
+        //             if (messages.length > 0) {
+        //                 let last = messages.pop();
+        //                 if (messages.length > 0) last = ` and ${last}`;
+        //                 return {
+        //                     message: `Warning: You changed ${messages.join(', ')}${last}`,
+        //                     severity: InputBoxValidationSeverity.Warning
+        //                 };
+        //             }
+        //         }
+        //     });
+        //     if (value) {
+        //         let doRename = true;
+        //         if ((await getFwChanges(value)).length > 0) {
+        //             doRename = await vscode.window.showWarningMessage("Are you sure?",
+        //                 {
+        //                     modal: true,
+        //                     detail: `Renaming\n\n'${ref.fsName}'\n\nto:\n\n ${value}\n\n may result in FictionWriter handling the file differently.\n\nJust make sure you are OK with this change.`,
+        //                 },
+        //                 "OK") === 'OK';
+        //         }
+        //         if (doRename) {
+        //             await this._fileManager.renameFile(
+        //                 ref.fsPath,
+        //                 path.posix.join(ref.fsDir, value)).then(() => {
+        //             }).catch(err => log.warn(err));
+        //         }
+        //     }
+        // }
     }
 
     public delete(node: ProjectNode): void {
@@ -822,11 +830,12 @@ export class ProjectExplorerTreeDataProvider
     }
 
     public retrieveSelection(): string[] {
-        const result = this._treeStructure.dfsList(this._treeStructure.root, (a, b) => a.data.fwItem!?.ref.name.full > b.data.fwItem!.ref.name.full ? 1 : -1)
+        const result = this._treeStructure.dfsList(this._treeStructure.root,
+                (a, b) => a.data.fwItem!.info!.name > b.data.fwItem!.info!.name ? 1 : -1)
             .filter(n => n.checked === true &&
-                n.data.fwItem?.ref.fsExists &&
-                Permissions.check(n.data.fwItem?.ref, FwPermission.OpenEditor))
-            .map(l => l.data.fwItem!.ref.fsPath);
+                n.data.fwItem?.fsRef?.fsExists &&
+                Permissions.check(n.data.fwItem?.info, FwPermission.OpenEditor))
+            .map(l => l.data.fwItem!.fsRef!.fsPath);
 
         return result;
     }

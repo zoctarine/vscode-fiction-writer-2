@@ -21,17 +21,17 @@ export class ProjectExplorerTreeItem extends vscode.TreeItem {
             decorations = applyDecorations(decorations, ...options.decorationsSelector(node.data));
         }
 
-        const nodeType = node.data.fwItem?.ref?.subType ?? FwSubType.Unknown;
+        const nodeType = node.data.fwItem?.info?.subType ?? FwSubType.Unknown;
         const {data} = node;
 
-        this.collapsibleState = data.fwItem?.ref?.type === FwType.Folder
+        this.collapsibleState = data.fwItem?.info?.type === FwType.Folder
             ? options?.expanded
                 ? vscode.TreeItemCollapsibleState.Expanded
                 : vscode.TreeItemCollapsibleState.Collapsed
             : vscode.TreeItemCollapsibleState.None;
 
-        let name = data.fwItem?.ref?.name.full ?? '';
-        if (node.data.fwItem?.ref?.control !== FwControl.Active) name = data.fwItem?.ref?.fsName ?? '';
+        let name = data.fwItem?.info?.name ?? '';
+        if (node.data.fwItem?.info?.control !== FwControl.Active) name = data.fwItem?.fsRef?.fsName ?? '';
 
         this.label = {
             label: name.length > 0 ? name : 'unnamed',
@@ -42,25 +42,25 @@ export class ProjectExplorerTreeItem extends vscode.TreeItem {
         this.description = decorations?.description;
 
         this.iconPath = new vscode.ThemeIcon(icon, new vscode.ThemeColor(decorations?.color ?? 'foreground'));
-        this.resourceUri = vscode.Uri.parse(node.data.fwItem?.ref.fsPath ?? node.id)
+        this.resourceUri = vscode.Uri.parse(node.data.fwItem?.fsRef?.fsPath ?? node.id)
             .with({scheme: FictionWriter.views.projectExplorer.id});
-        this.contextValue = Permissions.getSerialized(node.data.fwItem?.ref);
+        this.contextValue = Permissions.getSerialized(node.data.fwItem?.info);
 
         this.tooltip = new vscode.MarkdownString([
-            `$(${icon}) **${data.fwItem?.ref.name.full}** ${data.fwItem?.ref.ext}\n\n`,
+            `$(${icon}) **${data.fwItem?.fsRef?.fsName}**\n\n`,
             `- **Type:** ${typeToProjectType(nodeType)}`,
-            `- **Order:** *${data.fwItem?.ref?.name.mainOrder}*`,
-            `- ***Full Name:*** ${data.fwItem?.ref.fsName}`,
-            `- ***Full Path:*** *${data.fwItem?.ref.fsPath}*`,
+            `- **Order:** *${data.fwItem?.info?.order}*`,
+            `- ***Full Name:*** ${data.fwItem?.fsRef?.fsBaseName}**\n\n`,
+            `- ***Full Path:*** *${data.fwItem?.fsRef?.fsPath}*`,
             `- ***ViewItem:*** *${this.contextValue}*`,
             `- ***ID:*** *${node.id}*`
         ].join('\n\n'), true);
 
-        this.command = Permissions.check(data?.fwItem?.ref, FwPermission.OpenEditor)
+        this.command = Permissions.check(data?.fwItem?.info, FwPermission.OpenEditor)
             ? {
                 title: 'Open',
                 command: 'vscode.open',
-                arguments: [vscode.Uri.parse(data.fwItem!.ref.fsPath)]
+                arguments: [vscode.Uri.parse(data.fwItem!.fsRef!.fsPath)]
             } : undefined;
 
         this.checkboxState = boolToCheckbox(node.checked);

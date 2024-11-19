@@ -1,4 +1,4 @@
-export interface IFwMeta {
+export interface IMarkdownMeta {
     markers: {
         begin: string
         end: string

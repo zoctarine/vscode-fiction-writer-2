@@ -1,5 +1,5 @@
 import {ICommand} from '../../lib';
-import {IFwMeta} from '../IFwMeta';
+import {IMarkdownMeta} from '../IMarkdownMeta';
 import {FileEncryptor} from '../../../modules/security/fileEncryptor';
 import {ITextStatistics, TextAnalyzer} from '../../../modules/textAnalysis/textAnalyzer';
 

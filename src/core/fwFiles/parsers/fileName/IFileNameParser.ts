@@ -1,19 +1,10 @@
-import {IFwRef} from '../../IFwRef';
+import {IFsRef} from '../../IFsRef';
 
-import {IAsyncParser, IBuilder} from '../../../lib';
+import {IAsyncParser} from '../../../lib';
+import {IFwInfo} from '../../FwInfo';
 
-export interface IFileNameParser extends IAsyncParser<string, any, IFwRef> {
+export interface IFwFsPathParser extends IAsyncParser<string, any, IFsRef> {
 }
 
-export interface IFileNameBuilder<T> extends IBuilder<T, IFwRef>{
-
-}
-export interface IFileNameInput{
-    name?: string;
-    isFile: boolean;
-    dir: string;
-}
-
-export interface IFileNameProcessor extends IFileNameParser, IFileNameBuilder<IFileNameInput>{
-
+export interface IFileNameParser extends IAsyncParser<IFsRef, any, IFwInfo> {
 }

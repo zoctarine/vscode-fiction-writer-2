@@ -1,15 +1,9 @@
 export interface IFwOrderedName {
-    namePart: string;
-    orderPart: string | undefined;
-    mainOrder: number | undefined;
-    otherOrders: number[] | undefined;
-    full: string;
+    name: string;
+    order: number[];
 }
 
-export const EmptyFwOrderedName : IFwOrderedName = {
-    namePart: '',
-    orderPart: undefined,
-    mainOrder: undefined,
-    otherOrders: undefined,
-    full: '',
+export class EmptyFwOrderedName implements IFwOrderedName {
+    name: string = '';
+    order: number[] = [];
 };

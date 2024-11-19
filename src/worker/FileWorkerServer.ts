@@ -11,8 +11,9 @@ import {
 
 } from './models';
 import {FwItemBuilder} from '../core/fwFiles/builders/FwItemBuilder';
-import {FwItem, FwPermission, Permissions} from '../core/fwFiles';
-import {glob} from 'glob'; // Don't wnt any dependency to vscode
+import {FwInfo, FwPermission, Permissions} from '../core/fwFiles';
+import {glob} from 'glob';
+import {FwItem} from '../core/fwFiles/FwItem'; // Don't wnt any dependency to vscode
 
 export class FileWorkerServer {
     private _acceptsEvents = true;
@@ -109,7 +110,7 @@ export class FileWorkerServer {
                     });
                 for (const fsPath of allPaths) {
                     const value = await this._fwBuilder.buildAsync({fsPath, rootFolderPaths: this._rootFolders});
-                    if (Permissions.check(value?.ref, FwPermission.Read)) {
+                    if (Permissions.check(value?.info, FwPermission.Read)) {
                         files++;
                     }
                     this._files.set(fsPath, value);

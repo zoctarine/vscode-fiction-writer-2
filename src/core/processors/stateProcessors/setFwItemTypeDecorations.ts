@@ -23,7 +23,7 @@ export class SetFwItemTypeDecorations implements IStateProcessor<IFileState> {
 
         state.decorations = {
             ...state.decorations,
-            icon: icons.get(state.fwItem.ref?.subType) ?? FaIcons.folder,
+            icon: icons.get(state.fwItem?.info?.subType!) ?? FaIcons.folder,
         };
         return;
     }

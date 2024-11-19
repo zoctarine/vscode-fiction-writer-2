@@ -1,22 +1,22 @@
-import {FwControl, FwRef, FwType, IFwProjectRef} from '../../../core/fwFiles';
+import {FwControl, FwInfo, FwType, IFwInfo} from '../../../core/fwFiles';
 import {log} from '../../../core';
 
 export interface IFileFilter {
     get key(): string;
 
-    check(fileInfo: IFwProjectRef): boolean;
+    check(fileInfo?: IFwInfo): boolean;
 }
 
 export const OnlyProjectFilesFilter: IFileFilter = {
     key: 'projectFiles',
-    check(item: FwRef): boolean {
-        return item.control === FwControl.Active ||
-            item.type === FwType.Folder;
+    check(item?: FwInfo): boolean {
+        return item?.control === FwControl.Active ||
+            item?.type === FwType.Folder;
     }
 };
 export const AllFilesFilter: IFileFilter = {
     key: 'allFiles',
-    check(item: FwRef): boolean {
+    check(item?: FwInfo): boolean {
         return true;
     }
 };

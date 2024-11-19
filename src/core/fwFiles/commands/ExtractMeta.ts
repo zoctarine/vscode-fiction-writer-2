@@ -1,8 +1,8 @@
 import {ICommand} from '../../lib';
-import {IFwMeta} from '../IFwMeta';
+import {IMarkdownMeta} from '../IMarkdownMeta';
 import {Metadata} from '../../metadata';
 
-export class ExtractMeta implements ICommand<string, { meta?: IFwMeta, text?: string } | undefined> {
+export class ExtractMeta implements ICommand<string, { meta?: IMarkdownMeta, text?: string } | undefined> {
     public static MetadataRegex = /^(?<md>(?<begin>---[\r\n]+)(?<yml>[\s\S]*)(?<end>---|\.\.\.)(?<spaces>[\r\n]{2}))(?<text>[\s\S]*)*/im
 
     run(text?: string) {

@@ -4,6 +4,6 @@ export interface IParser<T, TOpt, TOut> {
 }
 
 export interface IAsyncParser<T, TOpt, TOut> {
-    parse(unparsed: T, opt?: Partial<TOpt>): Promise<TOut>,
-    serialize(parsed: TOut, opt?: TOpt): Promise<T>
+    parseAsync(unparsed: T, opt?: Partial<TOpt>): Promise<TOut>,
+    serializeAsync(parsed: TOut, opt?: TOpt): Promise<T>
 }

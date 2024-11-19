@@ -1,5 +1,5 @@
 import {TreeNode} from './treeNode';
-import {FwEmpty, FwRef, FwRootItem} from '../fwFiles';
+import {FwEmpty, FwInfo, FwRootItem} from '../fwFiles';
 import path from 'path';
 
 export class TreeStructure<T> {

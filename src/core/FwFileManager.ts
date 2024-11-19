@@ -4,10 +4,10 @@ import {ProjectsOptions} from '../modules/projectExplorer/projectsOptions';
 import {DisposeManager} from './disposable';
 import fs from 'node:fs';
 import {log, notifier} from './logging';
-import {FwItem} from './fwFiles';
 import {FileWorkerClient} from '../worker/FileWorkerClient';
 import {FileChangeAction} from '../worker/models';
 import {fwPath, FwPath} from './FwPath';
+import {FwItem} from './fwFiles/FwItem';
 
 export const asPosix = (mixedPath: string) => path.posix.normalize(mixedPath.split(path.sep).join(path.posix.sep));
 

@@ -1,6 +1,6 @@
 import {Worker} from 'worker_threads';
 import vscode from 'vscode';
-import {DisposeManager, FwItem, log} from '../core';
+import {DisposeManager, FwInfo, log} from '../core';
 import path from 'path';
 import {
     ClientMsgFileChanged,
@@ -11,6 +11,7 @@ import {
     WorkerMsg,
     WorkerMsgFilesChanged, WorkerMsgFilesReload, WorkerMsgJobFinished, WorkerMsgJobProgress, WorkerMsgJobStarted
 } from './models';
+import {FwItem} from '../core/fwFiles/FwItem';
 
 export class StatusBarMessage extends DisposeManager {
     private readonly _statusBarItem: vscode.StatusBarItem;

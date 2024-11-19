@@ -22,8 +22,8 @@ export class ProjectExplorerDecorationProvider implements FileDecorationProvider
             this._stateManager.onFilesStateChanged((f) => {
                 this._onDidChangeFileDecorations.fire(
                     f.files
-                        .filter(p => p.state.fwItem?.ref.fsPath)
-                        .map(p => vscode.Uri.parse(p.state.fwItem!.ref.fsPath)
+                        .filter(p => p.state.fwItem?.fsRef?.fsPath)
+                        .map(p => vscode.Uri.parse(p.state.fwItem!.fsRef!.fsPath)
                             .with({scheme: FictionWriter.views.projectExplorer.id}))
                 );
             })

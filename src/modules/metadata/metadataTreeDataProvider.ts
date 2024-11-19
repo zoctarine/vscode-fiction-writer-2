@@ -69,7 +69,7 @@ export class MetadataTreeDataProvider extends DisposeManager implements vscode.T
             }),
 
             this._stateManager.onFilesStateChanged(e => {
-                if (e.files.map(f => f.state.fwItem?.ref.fsPath).includes(this._document?.uri.fsPath)) {
+                if (e.files.map(f => f.state.fwItem?.fsRef?.fsPath).includes(this._document?.uri.fsPath)) {
                     this._loadDocument(this._document);
                 }
             }),

@@ -10,16 +10,16 @@ export class SetFwItemDecorations implements IStateProcessor<IFileState> {
 
         let newData: Partial<IDecorationState> = {};
 
-        if (!state.fwItem.ref.fsExists) {
+        if (!state.fwItem.fsRef?.fsExists) {
             newData.color = CoreColors.missing;
             newData.highlightColor = CoreColors.missing;
 
-        } else if (state.fwItem.ref?.control === FwControl.Possible) {
+        } else if (state.fwItem.info?.control === FwControl.Possible) {
             newData.color = CoreColors.inactive;
             newData.highlightColor = CoreColors.inactive;
 
             newData.badge = '+';
-        } else if (state.fwItem?.ref.subType === FwSubType.OtherFile) {
+        } else if (state.fwItem?.info?.subType === FwSubType.OtherFile) {
             newData.color = CoreColors.inactive;
             newData.highlightColor = CoreColors.inactive;
             newData.badge = '-';

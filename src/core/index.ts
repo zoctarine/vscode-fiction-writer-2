@@ -67,42 +67,42 @@ export class CoreModule extends DisposeManager {
 
 
             addCommand(FictionWriter.files.split, async () => {
-                const editor = vscode.window.activeTextEditor;
-                const doc = editor?.document;
-                if (!doc) return;
-                const fwItem = this.stateManager.get(doc.uri.fsPath)?.fwItem;
-                if (!fwItem) return;
-                if (!Permissions.check(fwItem?.ref, FwPermission.Write)) return;
-                let newName = 'new';
-                if (editor?.selection) {
-                    if (editor?.selection.isEmpty) {
-                        const orderParser = new SimpleSuffixOrderParser();
-                        const parsed = orderParser.parse(fwItem.ref.name.namePart ?? '');
-                        parsed.mainOrder = parsed.mainOrder !== undefined ? parsed.mainOrder + 1 : parsed.mainOrder;
-                        newName = orderParser.serialize(parsed);
-                    } else {
-                        newName = editor.document.getText(editor.selection);
-                    }
-                }
-
-                let splitName = `${fwItem.ref.name.orderPart}${newName}${fwItem.ref.ext}`;
-
-                const newPath = await retryAsync(async (retry) => {
-                    if (retry > 0) {
-                        splitName = `${fwItem.ref.name.full} ${retry}${fwItem.ref.ext}`;
-                    }
-                    return await this.fileManager.splitFile(fwItem.ref.fsPath,
-                        editor.selection.start.line,
-                        editor.selection.start.character,
-                        splitName);
-                });
-
-                if (newPath) {
-                    await vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(newPath));
-
-                } else {
-                    notifier.warn("File cannot be split");
-                }
+                // const editor = vscode.window.activeTextEditor;
+                // const doc = editor?.document;
+                // if (!doc) return;
+                // const fwItem = this.stateManager.get(doc.uri.fsPath)?.fwItem;
+                // if (!fwItem) return;
+                // if (!Permissions.check(fwItem?.ref, FwPermission.Write)) return;
+                // let newName = 'new';
+                // if (editor?.selection) {
+                //     if (editor?.selection.isEmpty) {
+                //         const orderParser = new SimpleSuffixOrderParser();
+                //         const parsed = orderParser.parse(fwItem.ref.name.namePart ?? '');
+                //         parsed.mainOrder = parsed.mainOrder !== undefined ? parsed.mainOrder + 1 : parsed.mainOrder;
+                //         newName = orderParser.serialize(parsed);
+                //     } else {
+                //         newName = editor.document.getText(editor.selection);
+                //     }
+                // }
+                //
+                // let splitName = `${fwItem.ref.name.orderPart}${newName}${fwItem.ref.ext}`;
+                //
+                // const newPath = await retryAsync(async (retry) => {
+                //     if (retry > 0) {
+                //         splitName = `${fwItem.ref.name.full} ${retry}${fwItem.ref.ext}`;
+                //     }
+                //     return await this.fileManager.splitFile(fwItem.ref.fsPath,
+                //         editor.selection.start.line,
+                //         editor.selection.start.character,
+                //         splitName);
+                // });
+                //
+                // if (newPath) {
+                //     await vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(newPath));
+                //
+                // } else {
+                //     notifier.warn("File cannot be split");
+                // }
             }),
         );
     }

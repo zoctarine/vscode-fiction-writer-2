@@ -12,7 +12,7 @@ export class ProjectNodeList implements Collections<ProjectNode> {
 
     sort(): Collections<ProjectNode> {
 
-        this.items.sort((a, b) => (a.data.fwItem?.ref?.name.orderPart ?? '') > (b.data.fwItem?.ref?.name.orderPart ?? '') ? 1 : -1);
+        this.items.sort((a, b) => (a.data.fwItem?.info?.orderBy ?? '') > (b.data.fwItem?.info?.orderBy ?? '') ? 1 : -1);
 
         return this;
     }
@@ -30,25 +30,25 @@ export class ProjectNode extends TreeNode<IFileState> {
         if (child === this) return false;
         if (child.parent === this) return false;
         if (!this.acceptsChildren) return false;
-        if (!Permissions.check(child.data.fwItem?.ref, FwPermission.Move)) return false;
+        if (!Permissions.check(child.data.fwItem?.info, FwPermission.Move)) return false;
         if (this.id.startsWith(child.id)) return false;
 
         return true;
     }
 
     override get acceptsChildren(): boolean {
-        return Permissions.check(this.data.fwItem?.ref, FwPermission.AddChildren);
+        return Permissions.check(this.data.fwItem?.info, FwPermission.AddChildren);
     }
 
     override get canMove(): boolean {
-        return Permissions.check(this.data.fwItem?.ref, FwPermission.Move);
+        return Permissions.check(this.data.fwItem?.info, FwPermission.Move);
     }
 
     override get canEdit(): boolean {
-        return Permissions.check(this.data.fwItem?.ref, FwPermission.Rename);
+        return Permissions.check(this.data.fwItem?.info, FwPermission.Rename);
     }
 
     override get canDelete(): boolean {
-        return Permissions.check(this.data.fwItem?.ref, FwPermission.Delete);
+        return Permissions.check(this.data.fwItem?.info, FwPermission.Delete);
     }
 }

@@ -86,24 +86,24 @@ export class ProjectNodeContextBuilder implements IBuilder<{
                     ...none,
                     compileCommit: true,
                     compileDiscard: true,
-                    compileChildrenInclude: node.data.fwItem?.ref?.type === FwType.Folder,
-                    compileChildrenExclude: node.data.fwItem?.ref?.type === FwType.Folder,
+                    compileChildrenInclude: node.data.fwItem?.info?.type === FwType.Folder,
+                    compileChildrenExclude: node.data.fwItem?.info?.type === FwType.Folder,
                 };
             default:
                 return {
                     ...none,
                     compile: true,
                     delete: node.canDelete,
-                    exclude: (node.data.fwItem?.ref.fsExists && node.data.fwItem?.ref?.control === FwControl.Active) ?? false,
-                    include: node.data.fwItem?.ref?.control === FwControl.Possible,
+                    exclude: (node.data.fwItem?.fsRef?.fsExists && node.data.fwItem?.info?.control === FwControl.Active) ?? false,
+                    include: node.data.fwItem?.info?.control === FwControl.Possible,
                     move: node.canMove,
                     newFile: node.acceptsChildren,
                     newFolder: node.acceptsChildren,
                     rename: node.canEdit,
-                    reorder: Permissions.check(node.data.fwItem?.ref, FwPermission.Sort),
-                    reveal: node.data.fwItem?.ref.fsExists ?? false,
-                    toggleVirtual: Permissions.check(node.data.fwItem?.ref, FwPermission.Morph) && node.children.length === 0,
-                    combine: node.data.fwItem?.ref?.subType === FwSubType.ProjectFile ?? false,
+                    reorder: Permissions.check(node.data.fwItem?.info, FwPermission.Sort),
+                    reveal: node.data.fwItem?.fsRef?.fsExists ?? false,
+                    toggleVirtual: Permissions.check(node.data.fwItem?.info, FwPermission.Morph) && node.children.length === 0,
+                    combine: node.data.fwItem?.info?.subType === FwSubType.ProjectFile ?? false,
                     debug: true
                 };
         }

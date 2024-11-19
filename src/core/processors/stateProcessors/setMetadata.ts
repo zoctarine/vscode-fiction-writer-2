@@ -3,11 +3,11 @@ import {IFileState} from '../../state';
 
 export class SetMetadata implements IStateProcessor<IFileState> {
     async process(state: IFileState) {
-        if (!state.fwItem?.meta) return;
+        if (!state.fwItem?.fsContent) return;
 
         // TODO: arrange meta in project specific way?
         //       filter out unknown stuff?
-        state.metadata = state.fwItem.meta.value;
+        state.metadata = state.fwItem.fsContent.meta?.value;
     }
 }
 

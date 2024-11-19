@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'path';
-import {IFwProjectRef} from './fwFiles';
+import {FwItem} from './fwFiles/FwItem';
 
 /**
  * Wrapper over path library, to make sure all operations are done using posix path
@@ -21,15 +21,15 @@ export class FwPath {
         return true;
     }
 
-    public getChildPath(parent: IFwProjectRef, name: string) {
-        if (this.isValidName(name)) return false;
-        let dirPath = parent.fsDir;
-        if (parent.fsIsFolder) {
-            dirPath = parent.fsPath;
-        }
-        const fullPath = path.join(dirPath, name);
-        return fs.existsSync(fullPath);
-    };
+    // public getChildPath(parent: FwItem, name: string) {
+    //     if (this.isValidName(name)) return false;
+    //     let dirPath = parent.fsDir;
+    //     if (parent.fsIsFolder) {
+    //         dirPath = parent.fsPath;
+    //     }
+    //     const fullPath = path.join(dirPath, name);
+    //     return fs.existsSync(fullPath);
+    // };
 
     public parse(fsPath: string){
         return path.posix.parse(fsPath);

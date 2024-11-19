@@ -2,10 +2,12 @@ import {IAsyncBuilder} from '../../lib';
 import {ParseFsPath} from '../commands/ParseFsPath';
 import {LoadTextFile} from '../commands/LoadTextFile';
 import {ExtractMeta} from '../commands/ExtractMeta';
-import {FwItem} from '../FwItem';
 import {ComputeHash} from '../commands/ComputeHash';
 import {AnalyzeText} from '../commands/AnalyzeText';
-import {BuildFwRef} from '../commands/BuildFwRef';
+import {FwItemParser} from '../parsers/FwItemParser';
+import {DefaultOrderParser} from '../parsers';
+import {FwItem} from '../FwItem';
+import {FwPermission, Permissions} from '../FwPermission';
 
 export class FwItemBuilder implements IAsyncBuilder<{ fsPath: string }, FwItem> {
     constructor(
@@ -14,25 +16,28 @@ export class FwItemBuilder implements IAsyncBuilder<{ fsPath: string }, FwItem> 
         private _extractMeta = new ExtractMeta(),
         private _computeHash = new ComputeHash(),
         private _analyzeText = new AnalyzeText(),
-        private _buildFwRef = new BuildFwRef()
+        private _fwItemParser = new FwItemParser(new DefaultOrderParser())
     ) {
     }
 
     public async buildAsync(input: { fsPath: string, rootFolderPaths: string[] }): Promise<FwItem> {
-        const ref = await this._parsePath.runAsync(input);
-        const fwRef = this._buildFwRef.run({ref, ...input});
-        const text = await this._loadText.runAsync({fwRef});
-        const sections = this._extractMeta.run(text);
+        const fwItem = new FwItem(undefined);
 
-        const item = new FwItem(
-            fwRef,
-            sections?.meta,
-            {
-                hash: this._computeHash.run(text),
-                stats: this._analyzeText.run(text)
-            });
+        fwItem.fsRef = await this._parsePath.runAsync(input);
+        fwItem.info = await this._fwItemParser.parseAsync(fwItem.fsRef!, {rootFolderPaths: input.rootFolderPaths});
 
-        return item;
+        const fullText = (Permissions.check(fwItem.info, FwPermission.Read))
+            ? await this._loadText.runAsync({fsRef: fwItem.fsRef!})
+            : undefined;
+
+        const sections = this._extractMeta.run(fullText);
+        fwItem.fsContent = {
+            hash: this._computeHash.run(fullText),
+            stats: this._analyzeText.run(sections?.text),
+            meta: sections?.meta,
+        };
+
+        return fwItem;
     }
 }
 

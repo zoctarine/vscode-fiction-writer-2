@@ -5,7 +5,7 @@ import {CoreColors} from '../../decorations';
 
 export class SetOrderDecorations implements IStateProcessor<IFileState> {
     async process(state: IFileState) {
-        const canSort = Permissions.check(state.fwItem?.ref, FwPermission.Sort);
+        const canSort = Permissions.check(state.fwItem?.info, FwPermission.Sort);
 
         const decorations: Partial<IDecorationState> = canSort
             ? {
