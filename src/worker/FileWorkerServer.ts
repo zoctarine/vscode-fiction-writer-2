@@ -2,7 +2,7 @@ import {MessagePort} from 'node:worker_threads';
 import {
     ClientMsgFileChanged,
     ClientMsgRootFoldersChanged,
-    ClientMsgStart,
+    ClientMsgStart, FileChangeAction,
     WorkerMsgFilesChanged,
     WorkerMsgFilesReload,
     WorkerMsgJobFinished, WorkerMsgJobProgress,
@@ -50,9 +50,9 @@ export class FileWorkerServer {
 
         let onlyContentChanges = true;
         for (const change of changes) {
-            if (change[1] !== 'change') onlyContentChanges = false;
+            if (change[1] !== FileChangeAction.Modified) onlyContentChanges = false;
 
-            if (change[1] === 'delete') {
+            if (change[1] === FileChangeAction.Deleted) {
                 this._files.delete(change[0]);
             }
             try {
