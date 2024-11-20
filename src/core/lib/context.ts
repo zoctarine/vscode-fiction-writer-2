@@ -1,12 +1,4 @@
-import vscode from 'vscode';
-
 export class Context {
-
-    public static async setAsync(contextKey: string, value: any) {
-        return vscode.commands.executeCommand('setContext',
-            contextKey,
-            Context.serialize(value));
-    }
 
     public static serialize(ctx: Record<string, any>): string {
         return Object.entries(ctx)

@@ -10,10 +10,12 @@ import {
     WorkerMsgStart,
 
 } from './models';
+import {FwInfo, FwPermission, FwSubType, FwType, FwVirtualFolderItem, Permissions} from '../core/fwFiles';
+import {FwItem} from '../core/fwFiles/FwItem';
 import {FwItemBuilder} from '../core/fwFiles/builders/FwItemBuilder';
-import {FwInfo, FwPermission, Permissions} from '../core/fwFiles';
-import {glob} from 'glob';
-import {FwItem} from '../core/fwFiles/FwItem'; // Don't wnt any dependency to vscode
+import {fwPath} from '../core/FwPath';
+import {FwItemHierarchyBuilder} from '../core/fwFiles/builders/FwItemHierarchyBuilder';
+import {ObjectProps} from '../core/lib'; // Don't wnt any dependency to vscode
 
 export class FileWorkerServer {
     private _acceptsEvents = true;
@@ -57,19 +59,20 @@ export class FileWorkerServer {
                 this._files.delete(change[0]);
             }
             try {
-                const item = await this._fwBuilder.buildAsync({fsPath: change[0], rootFolderPaths: this._rootFolders});
+                const pc = await fwPath.getSelfAsync(change[0]);
+                const item = await this._fwBuilder.buildAsync({path: pc, rootFolderPaths: this._rootFolders});
                 this._files.set(change[0], item);
             } catch (err) {
                 this._files.delete(change[0]);
             }
         }
 
-        onlyContentChanges
+       /* onlyContentChanges
             ? this.post(new WorkerMsgFilesChanged(changes
                 .map(c => this._files.get(c[0]))
                 .filter(c => c !== undefined)
             ))
-            : this.post(new WorkerMsgFilesReload([...this._files.values()]));
+            : */this.post(new WorkerMsgFilesReload(ObjectProps.deepClone(this._files)));
     }
 
     start(e: ClientMsgStart) {
@@ -89,6 +92,7 @@ export class FileWorkerServer {
         }
     }
 
+
     async _reloadAll() {
         this._acceptsEvents = false;
         let files = 0;
@@ -96,33 +100,59 @@ export class FileWorkerServer {
         try {
             this._changes.clear();
             if (!this._rootFolders || !this._rootFolders.length) {
-                this.post(new WorkerMsgFilesReload([]));
+                this.post(new WorkerMsgFilesReload(new Map<string,FwItem>()));
                 return;
             }
             this._files = new Map<string, FwItem>();
+
+            let finishedOperations = 0;
             for (const fsPath of this._rootFolders) {
-                const allPaths = await glob("**",
-                    {
-                        cwd: fsPath,
-                        absolute: true,
-                        dot: false,
-                        ignore: ['**/.vscode/**', '**/node_modules/**']
-                    });
-                for (const fsPath of allPaths) {
-                    const value = await this._fwBuilder.buildAsync({fsPath, rootFolderPaths: this._rootFolders});
+                const allPaths = await fwPath.getAllAsync(fsPath);
+
+                for (const p of allPaths) {
+                    const value = await this._fwBuilder.buildAsync({path: p, rootFolderPaths: this._rootFolders});
                     if (Permissions.check(value?.info, FwPermission.Read)) {
                         files++;
                     }
-                    this._files.set(fsPath, value);
-                    this.postWithThrottle(new WorkerMsgJobProgress("", this._files.size, allPaths.length));
+                    this._files.set(value.fsRef.fsPath, value);
+
+                    this.postWithThrottle(new WorkerMsgJobProgress("", this._files.size - finishedOperations, allPaths.length));
                 }
-                this.post(new WorkerMsgJobProgress("", this._files.size, this._files.size));
-                this.post(new WorkerMsgFilesReload([...this._files.values()]));
+                finishedOperations = this._files.size;
             }
+            const hierarchyBuilder = new FwItemHierarchyBuilder();
+            this._files = hierarchyBuilder.build({items: this._files});
+
+            this.visitAll([...this._files.values()][0], '', (node: any, depth: string) => {
+                if (!node) return;
+                let t = node.fsRef.fsBaseName + " = " + node.info.subType.toString();
+                if (node.info.subType === FwSubType.VirtualFolder) {
+                    t = `(${t})/`;
+                } else if (node.info.subType === FwSubType.Folder) {
+                    t = `${t}/`;
+                }
+                console.log(depth + t);
+            });
+
+            this.post(new WorkerMsgJobProgress("", finishedOperations,finishedOperations));
+            this.post(new WorkerMsgFilesReload(ObjectProps.deepClone(this._files)));
             return;
         } finally {
             this._acceptsEvents = true;
             this.post(new WorkerMsgJobFinished(`${this._files.size}/${files}`));
+        }
+    }
+
+// Helper function to visit all nodes of a particular type in the AST
+    private visitAll(tree: any, depth: string, visitor: any) {
+        if (!tree) return;
+        visitor(tree, depth);
+
+        if (tree.children) {
+            tree.children.forEach((child: any) => {
+                const c = this._files.get(child);
+                this.visitAll(c, depth + '  ', visitor);
+            });
         }
     }
 

@@ -38,8 +38,8 @@ export class StatusBarMessage extends DisposeManager {
 
 export class FileWorkerClient extends DisposeManager {
     w: Worker | undefined;
-    private _onFilesChanged = new vscode.EventEmitter<FwItem[]>();
-    private _onFilesReloaded = new vscode.EventEmitter<FwItem[]>();
+    private _onFilesChanged = new vscode.EventEmitter<Map<string, FwItem>>();
+    private _onFilesReloaded = new vscode.EventEmitter<Map<string, FwItem>>();
     private _onJobStarted = new vscode.EventEmitter<string>();
     private _onJobFinished = new vscode.EventEmitter<string>();
 

@@ -1,0 +1,46 @@
+import {IBuilder, ObjectProps} from '../../lib';
+import {FwItem} from '../FwItem';
+import {FwInfo, FwVirtualFolderItem} from '../FwInfo';
+import {FwSubType} from '../FwSubType';
+
+export class FwItemHierarchyBuilder implements IBuilder<{ items: Map<string, FwItem> }, Map<string, FwItem>> {
+    constructor() {
+    }
+
+    public build(input: { items: Map<string, FwItem> }): Map<string, FwItem> {
+        const result = ObjectProps.deepClone(input.items);
+
+        const vFolders = new Map<string, string>();
+        const makeVPath = (path: string, order: number[]) => `[${path}:${order.join('.')}]`;
+
+        for (const [_, item] of result) {
+            if (item.info.order && item.info.order.length > 0 &&
+                item.info.subType === FwSubType.ProjectFile) {
+                vFolders.set(makeVPath(item.fsRef.fsDir, item.info.order), item.fsRef.fsPath);
+            }
+        }
+
+        for (const [_, item] of result) {
+            let parent = result.get(item.fsRef.fsDir);
+
+            if (item.info.order.length > 1) {
+                const vPath = makeVPath(item.fsRef.fsDir, item.info.order.slice(0, -1));
+                const vFolderPath = vFolders.get(vPath);
+                if (vFolderPath) {
+                    const vParent = result.get(vFolderPath);
+                    if (vParent) {
+                        parent = vParent;
+                        FwInfo.morph(parent.info, FwVirtualFolderItem);
+                    }
+                }
+            }
+            if (parent) {
+                parent.children.push(item.fsRef.fsPath);
+                item.parent = parent.fsRef.fsPath;
+            }
+        }
+
+        return result;
+    }
+}
+

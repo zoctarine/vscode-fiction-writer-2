@@ -8,8 +8,6 @@ export class IFsContent {
     meta?: IMarkdownMeta;
 }
 
+export class FsContentEmpty implements IFsContent{
 
-export class IFsItem {
-    ref?: IFsRef;
-    content?: IFsContent;
 }

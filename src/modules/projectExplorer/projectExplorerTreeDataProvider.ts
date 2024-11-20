@@ -10,7 +10,7 @@ import {
     FwEmptyVirtualFolder,
     FwFileManager,
 
-    FwInfo,
+    FwInfo, FwItemBuilder,
     FwPermission,
     FwProjectFileItem,
     FwRootItem,
@@ -35,8 +35,7 @@ import {ProjectNodeContextBuilder} from './models/IProjectNodeContext';
 import {Context} from '../../core/lib/context';
 import {retry} from '../../core/lib/retry';
 import {fwPath} from '../../core/FwPath';
-import {FwItem} from '../../core/fwFiles/FwItem';
-import {FsPathParser} from '../../core/fwFiles/parsers/fileName/FwFileNameParser';
+import {FwItem, FwItemEmpty, FwItemRoot} from '../../core/fwFiles/FwItem';
 
 
 const clone = rfdc();
@@ -68,6 +67,8 @@ export class ProjectExplorerTreeDataProvider
     };
     public selectedItems: FwItem[] = [];
 
+    // TODO: inject it
+    private _fwItemBuilder = new FwItemBuilder();
 
     private _viewModel: IProjectTreeViewModel = {
         compileCommit: false,
@@ -90,7 +91,8 @@ export class ProjectExplorerTreeDataProvider
         private _options: ProjectsOptions,
         private _fileManager: FwFileManager, private _contextManager: ContextManager, private _stateManager: StateManager) {
         super();
-        this._treeStructure = new TreeStructure<IFileState>(new ProjectNode('root', {fwItem: new FwItem(new FwRootItem())}));
+        this._treeStructure = new TreeStructure<IFileState>(
+            new ProjectNode('root', {fwItem: new FwItemRoot()}));
         this._treeView = vscode.window.createTreeView(FictionWriter.views.projectExplorer.id, {
             treeDataProvider: this,
             showCollapseAll: true,
@@ -99,6 +101,7 @@ export class ProjectExplorerTreeDataProvider
             manageCheckboxStateManually: true,
 
         });
+
         this.manageDisposable(
             this._treeView,
             this._onDidChangeTreeData,
@@ -142,83 +145,6 @@ export class ProjectExplorerTreeDataProvider
             .then(() => this.refresh());
     }
 
-    private async buildVirtualFolders(node: ProjectNode) {
-        if (!node) return;
-
-        // if (node.children && node.children.length > 0) {
-        //     const possibleParents = new Map<number, ProjectNode>(node.children
-        //         .filter(n =>
-        //             n.data.fwItem?.info?.order.length &&
-        //             n.data.fwItem.info.order.length > 0 &&
-        //             n.data.fwItem.info.subType !== FwSubType.Folder)
-        //         .map(c => [c.data.fwItem?.info?.order[0]!, c]));
-        //
-        //     const possibleChildren = node.children
-        //         .filter(n =>
-        //             n.data.fwItem?.info?.order.length &&
-        //             n.data.fwItem.info.order.length > 1 &&
-        //             n.data.fwItem.info.subType !== FwSubType.Folder);
-        //
-        //     for (const child of possibleChildren) {
-        //         if (!child.data.fwItem?.info) continue;
-        //         const parentOrders = child.data.fwItem.info?.order.slice(1) ?? [];
-        //         const order = parentOrders.pop();
-        //         if (order && order > 0 && child.parent) {
-        //             let parent = possibleParents.get(order);
-        //             if (!parent) {
-        //                 parent = new ProjectNode(child.parent.id + "/" + order, {fwItem: new FwInfo(FwEmptyVirtualFolder.create(child.parent.data?.fwItem?.ref, order))});
-        //                 this._treeStructure.addChild(parent, child.parent);
-        //                 possibleParents.set(order, parent);
-        //             }
-        //
-        //             // TODO(TEST)
-        //             if (child.data.fwItem!.ref.name.otherOrders) {
-        //                 child.data.fwItem!.ref.name.otherOrders.splice(0, 1);
-        //             }
-        //             this._treeStructure.detach(child);
-        //             this._treeStructure.addChild(child, parent);
-        //
-        //             if (parent.data.fwItem) {
-        //                 this._morph(parent, parent.data.fwItem.ref.fsExists
-        //                     ? FwVirtualFolderItem
-        //                     : FwEmptyVirtualFolder);
-        //             }
-        //         }
-        //     }
-        //
-        //     for (let child of node.children) {
-        //         await this.buildVirtualFolders(child);
-        //
-        //         // Hide empty virtual folders that don't have any
-        //         // visible items.
-        //         if (child.data.fwItem?.ref?.subType === FwSubType.EmptyVirtualFolder &&
-        //             child.children && child.children.every(c => !c.visible)) {
-        //             child.visible = false;
-        //         }
-        //     }
-        // }
-    }
-
-    private async _morph(node: ProjectNode, ctor: { new(fwFile: IFwInfo): IFwInfo }) {
-        const ref = node.data.fwItem?.info;
-        if (!ref) return;
-
-        const instance = new ctor(ref);
-        ref.type = instance.type;
-        ref.control = instance.control;
-        ref.subType = instance.subType;
-        Object.setPrototypeOf(ref, Object.getPrototypeOf(instance));
-
-        if (!node.data.decorations) {
-            node.data.decorations = {};
-        }
-
-        // TODO: refactor this
-        const newstate = clone(node.data);
-        await this._stateManager.processUnmanaged(newstate);
-        node.data.decorations = newstate.decorations;
-    }
-
     private arrangeWorkspaces() {
         const workspaces: ProjectNode[] = [];
         const collectWorkspaces = (node: ProjectNode, workspaces: ProjectNode[]) => {
@@ -251,36 +177,28 @@ export class ProjectExplorerTreeDataProvider
     }
 
     private async buildHierarchy(states: IFileState[]) {
-        const tree = new TreeStructure<IFileState>(new ProjectNode('root', {fwItem: new FwItem(new FwRootItem())}));
+        const tree = new TreeStructure<IFileState>(new ProjectNode('root', {fwItem: new FwItemRoot()}));
         const workspaces: ProjectNode[] = [];
-        for (const state of states) {
-            if (!state?.fwItem?.fsRef) continue;
-            const {fsPath} = state.fwItem.fsRef;
-            const segments = fsPath.split(path.posix.sep);
-            let currentLevel = tree.root;
-            let currentPath = '/';
-            for (const segment of segments) {
-                currentPath = path.posix.join(currentPath, segment);
 
-                let node = tree.getNode(currentPath);
-                if (!node) {
-                    node = new ProjectNode(
-                        currentPath,
-                        {
-                            fwItem: new FwItem(new FwEmpty()),
-                            decorations: {
-                                icon: FaIcons.inbox
-                            }
-                        });
-                    tree.addChild(node, currentLevel);
-                }
-                currentLevel = node;
+        states.sort((a, b)=> a?.fwItem?.parent?.localeCompare(b?.fwItem?.parent ??'') ?? 0);
+        for (const state of states) {
+             if (!state.fwItem?.fsRef) continue;
+            const current = state.fwItem.fsRef.fsPath;
+            const parent = state.fwItem.parent;
+
+            let currentNode = tree.getNode(current);
+            let parentNode = parent ? tree.getNode(parent) : tree.root;
+            if (!currentNode) {
+                currentNode = new ProjectNode(current, {fwItem: state.fwItem});
+            }
+            if (parentNode) {
+                tree.addChild(currentNode, parentNode);
             }
 
-            currentLevel.data = state;
-            currentLevel.visible = this._fileFilter.check(state.fwItem?.info);
-            if (currentLevel.data.fwItem?.info?.subType === FwSubType.WorkspaceFolder) {
-                workspaces.push(currentLevel);
+            currentNode.data = state;
+            currentNode.visible = this._fileFilter.check(state.fwItem?.info);
+            if (currentNode.data.fwItem?.info.subType === FwSubType.WorkspaceFolder) {
+                workspaces.push(currentNode);
             }
         }
 
@@ -289,7 +207,6 @@ export class ProjectExplorerTreeDataProvider
         // TODO: optimize workspace folder filtering) and virtual folder building
         //       should be more efficient for larger implementation. (current draft)
         this.arrangeWorkspaces();
-        await this.buildVirtualFolders(tree.root);
     }
 
     public getParent(element: ProjectNode): ProjectNode | undefined {
@@ -349,11 +266,11 @@ export class ProjectExplorerTreeDataProvider
 
     public async toggleVirtualFolder(node: ProjectNode): Promise<void> {
         if (node.data.fwItem?.info?.subType === FwSubType.ProjectFile) {
-            await this._morph(node, FwVirtualFolderItem);
+            FwInfo.morph(node.data.fwItem.info, FwVirtualFolderItem);
             this._onDidChangeTreeData.fire();
         } else if (node.data.fwItem?.info?.subType === FwSubType.VirtualFolder) {
             if (node.children?.length === 0) {
-                await this._morph(node, FwProjectFileItem);
+                FwInfo.morph(node.data.fwItem.info, FwProjectFileItem);
                 this._onDidChangeTreeData.fire();
             } else {
                 vscode.window.showInformationMessage("Cannot break a virtual folder with children", {

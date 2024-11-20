@@ -1,23 +1,23 @@
-import {ICommand, FactorySwitch, IParser, IAsyncParser} from '../../lib';
+import {FactorySwitch} from '../../../lib';
 import {
     FwEmpty,
     FwFolderItem,
     FwInfo,
     FwOtherFileItem,
     FwProjectFileItem,
-    FwTextFileItem, FwVirtualFolderItem,
+    FwTextFileItem,
     FwWorkspaceFolderItem
-} from '../FwInfo';
-import {IFsRef} from '../IFsRef';
-import {IFileNameParser, IOrderParser} from './index';
-import {FwType} from '../FwType';
-import {fwPath} from '../../FwPath';
+} from '../../FwInfo';
+import {IFsRef} from '../../IFsRef';
+import {IFwInfoParser, IOrderParser} from '../index';
+import {FwType} from '../../FwType';
+import {fwPath} from '../../../FwPath';
 import fs from 'node:fs';
 
-export class FwItemParser implements IFileNameParser {
+export class FwInfoParser implements IFwInfoParser {
     private _fileExtensions = ['.md', '.txt'];
 
-    constructor(private _orderParser: IOrderParser){
+    constructor(private _orderParser: IOrderParser) {
 
     }
 
@@ -81,7 +81,8 @@ export class FwItemParser implements IFileNameParser {
             fsIsFile: parsed.type === FwType.File,
             fsIsFolder: parsed.type === FwType.Folder,
             fsName,
-            fsPath
+            fsPath,
+            fsModifiedDate: undefined,
         };
     }
 

@@ -3,6 +3,10 @@ import rfdc from 'rfdc';
 const clone = rfdc();
 
 export class ObjectProps {
+    public static deepClone(obj: any) {
+       return clone(obj);
+    }
+
     public static async updateAsync<T extends Record<string, any>>(crt: T, opt: {
         onProperty: (key: keyof T) => Promise<any>
     }) {

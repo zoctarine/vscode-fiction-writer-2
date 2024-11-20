@@ -3,6 +3,7 @@ import {FwType} from './FwType';
 import {FwControl} from './FwControl';
 import {IFwOrderedName} from './IFwOrderedName';
 import {DefaultOrderParser} from './parsers';
+import {FwPermission, Permissions} from './FwPermission';
 
 /**
  * A full name could look like:
@@ -43,6 +44,17 @@ export class FwInfo implements IFwInfo {
     orderBy: string = '';
 
     constructor() {
+    }
+
+    public static morph(sub: IFwInfo, ctor: { new(): IFwInfo }) {
+        if (!Permissions.check(sub, FwPermission.Morph)) return;
+
+        const instance = new ctor();
+        sub.type = instance.type;
+        sub.control = instance.control;
+        sub.subType = instance.subType;
+        sub.projectTag = instance.projectTag;
+        Object.setPrototypeOf(sub, Object.getPrototypeOf(instance));
     }
 }
 

@@ -53,14 +53,14 @@ export class ClientMsgFileChanged implements IWorkerMessage {
 export class WorkerMsgFilesChanged implements IWorkerMessage {
     type = WorkerMsg.filesChanged;
 
-    constructor(public fwFiles: FwItem[]) {
+    constructor(public fwFiles: Map<string, FwItem>) {
     };
 }
 
 export class WorkerMsgFilesReload implements IWorkerMessage {
     type = WorkerMsg.filesReload;
 
-    constructor(public fwFiles: FwItem[]) {
+    constructor(public fwFiles: Map<string, FwItem>) {
 
     };
 }

@@ -52,12 +52,12 @@ export class CoreModule extends DisposeManager {
             this.activeDocumentMonitor,
             registerMarkdownFormatters(),
             this.fileManager.onFilesChanged(files => {
-                log.debug("filesChanged", files.length);
+                log.debug("filesChanged", files.size);
                 return this.stateManager.reload(files, false);
             }),
 
             this.fileManager.onFilesReloaded(files => {
-                log.debug("filesReloaded", files.length);
+                log.debug("filesReloaded", files.size);
                 return this.stateManager.reload(files);
             }),
 

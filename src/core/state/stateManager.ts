@@ -74,7 +74,9 @@ export class StateManager extends DisposeManager {
     }
 
     refresh() {
-        return this.reload([...this._fileStates.values()].map(s => s.fwItem));
+        return this.reload( new Map<string, FwItem>(
+            [...this._fileStates.values()].map(s => [s.fwItem.fsRef.fsPath, s.fwItem])
+        ));
     }
 
     forget(fsPaths: string[]) {
@@ -95,12 +97,12 @@ export class StateManager extends DisposeManager {
         });
     }
 
-    async reload(fileInfos: FwItem[], clearAll:boolean = true) {
+    async reload(fileInfos: Map<string, FwItem>, clearAll:boolean = true) {
         this._enqueueOn();
         if (clearAll) {
             this._fileStates.clear(); // TODO: fix this to detect changes in a more efficient way
         }
-        for (const item of fileInfos) {
+        for (const [path, item] of fileInfos) {
             try {
                 if (item.fsRef?.fsExists) {
                     let fileState = this._fileStates.get(item.fsRef.fsPath);

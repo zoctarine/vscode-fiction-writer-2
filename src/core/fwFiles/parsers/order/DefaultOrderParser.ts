@@ -19,9 +19,9 @@ export class DefaultOrderParser implements IOrderParser {
                 const order = parseInt(o.trim(), 10);
                 return Number.isNaN(order) ? 0 : order;
             });
-            if (orderList.length > 0) {
-                orderList.reverse();
-            }
+            // if (orderList.length > 0) {
+            //     orderList.reverse();
+            // }
             namePart = orderedName.substring(orderPart.length - 1);
         }
 

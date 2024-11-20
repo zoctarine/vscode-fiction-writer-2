@@ -1,4 +1,5 @@
 import {IFwOrderedName} from './IFwOrderedName';
+import {IFsContent} from './IFsContent';
 
 /**
  * Represents an interface for file name metadata within a project.
@@ -18,7 +19,7 @@ export interface IFsRef {
     readonly fsName: string;
 
     /**
-     * The file name as it appears in the file system. It can include order, project tag and data
+     * The file name as it appears in the file system. It includes full name + extension
      */
     readonly fsBaseName: string;
 
@@ -42,4 +43,18 @@ export interface IFsRef {
      * If the file exists on the fileSystem
      */
     readonly fsExists: boolean;
+
+    readonly fsModifiedDate: number | undefined;
+}
+
+export class FsRefEmpty implements IFsRef{
+    fsExt: string = '';
+    fsName: string = '';
+    fsBaseName: string = '';
+    fsDir: string = '';
+    fsPath: string = '';
+    fsIsFile: boolean = false;
+    fsIsFolder: boolean = false;
+    fsExists: boolean = false;
+    fsModifiedDate: number | undefined;
 }

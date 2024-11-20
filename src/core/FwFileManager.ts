@@ -13,8 +13,8 @@ export const asPosix = (mixedPath: string) => path.posix.normalize(mixedPath.spl
 
 
 export class FwFileManager extends DisposeManager {
-    private _onFilesChanged = new vscode.EventEmitter<FwItem[]>();
-    private _onFilesReloaded = new vscode.EventEmitter<FwItem[]>();
+    private _onFilesChanged = new vscode.EventEmitter<Map<string, FwItem>>();
+    private _onFilesReloaded = new vscode.EventEmitter<Map<string, FwItem>>();
     private _silentUpdates = false;
 
     constructor(private _options: ProjectsOptions, private _fileWorkerClient: FileWorkerClient) {
@@ -41,18 +41,18 @@ export class FwFileManager extends DisposeManager {
         this._fileWorkerClient.sendFileChanged(e.fsPath, action);
     }
 
-    private async _processFileReloaded(fwFiles: FwItem[]) {
-        log.debug("Reloading files :", fwFiles.length);
+    private async _processFileReloaded(fwFiles: Map<string, FwItem>) {
+        log.debug("Reloading files :", fwFiles.size);
         if (this._silentUpdates) return;
-        if (fwFiles.length === 0) return;
+        if (fwFiles.size === 0) return;
 
         this._onFilesReloaded.fire(fwFiles);
     }
 
-    private async _processFileChanges(fwFiles: FwItem[]) {
-        log.debug("Files changed:", fwFiles.length);
+    private async _processFileChanges(fwFiles: Map<string, FwItem>) {
+        log.debug("Files changed:", fwFiles.size);
         if (this._silentUpdates) return;
-        if (fwFiles.length === 0) return;
+        if (fwFiles.size === 0) return;
 
         this._onFilesChanged.fire(fwFiles);
     }
