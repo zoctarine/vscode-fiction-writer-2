@@ -4,5 +4,7 @@ export * from './commands';
 export * from './context';
 export * from './FactorySwitch';
 export * from './objectProps';
+export * from './arrayTools';
 export * from './parsers';
 export * from './retry';
+export {ArrayTools} from './arrayTools';

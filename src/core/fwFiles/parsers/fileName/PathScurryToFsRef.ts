@@ -4,7 +4,7 @@ import {fwPath} from '../../../FwPath';
 import {Path} from 'glob';
 
 
-export class FsRefParser implements IFsRefParser {
+export class PathScurryToFsRef implements IFsRefParser {
     constructor() {
     }
 

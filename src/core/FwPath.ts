@@ -15,6 +15,19 @@ export class FwPath {
         return fs.existsSync(path);
     };
 
+    public toFilename(name: string, maxLength = 30): string {
+        name ??= '';
+        const invalidChars = /[^\w.\-_]+/g;
+        let filename = name.replace(invalidChars, ' ');
+        if (filename.length > maxLength) {
+            filename = filename.substring(0, maxLength);
+        }
+        filename = filename.trim();
+
+        return filename ? filename : 'new';
+    }
+
+
     public isValidName(name: string): boolean {
         if (!name) return false;
         if (path.posix.basename(name) !== name) return false;
@@ -40,10 +53,10 @@ export class FwPath {
         return path.posix.join(...paths);
     }
 
-    public async getSelfAsync(fsPath: string) {
+    public async getOneAsync(fsPath: string) {
         const parsed = this.parse(fsPath);
-        const matches = await this.getAsync(parsed.dir, fsPath);
-        return matches ? matches[0]: undefined;
+        const matches = await this.getAsync(fsPath, parsed.dir);
+        return matches ? matches[0] : undefined;
     }
 
     public getChildrenAsync(fsPath: string) {
@@ -54,7 +67,7 @@ export class FwPath {
         return this.getAsync("**", fsPath);
     }
 
-    public async getAsync(pattern: string, cwd:string): Promise<any> {
+    public async getAsync(pattern: string, cwd: string): Promise<any> {
         return glob(pattern,
             {
                 cwd: cwd,

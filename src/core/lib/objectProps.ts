@@ -4,8 +4,9 @@ const clone = rfdc();
 
 export class ObjectProps {
     public static deepClone(obj: any) {
-       return clone(obj);
+        return clone(obj);
     }
+
 
     public static async updateAsync<T extends Record<string, any>>(crt: T, opt: {
         onProperty: (key: keyof T) => Promise<any>
@@ -18,11 +19,11 @@ export class ObjectProps {
     }
 
     public static async patchAsync<T extends Record<string, any>>(crt: T, changes: Partial<T>, opt?:
-        {
-            onSinglePropertyChange?: (key: keyof T, value: any) => Promise<any>,
-            onProperty?: (key: keyof T, value: any) => Promise<any>,
-            onAnyPropertyChange?: (next: T) => Promise<T>,
-        }) {
+    {
+        onSinglePropertyChange?: (key: keyof T, value: any) => Promise<any>,
+        onProperty?: (key: keyof T, value: any) => Promise<any>,
+        onAnyPropertyChange?: (next: T) => Promise<T>,
+    }) {
         const prev = clone(crt);
         const next = {...prev, ...changes};
         let isDirty = false;

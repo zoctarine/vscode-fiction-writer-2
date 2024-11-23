@@ -14,8 +14,14 @@ export class FwItemHierarchyBuilder implements IBuilder<{ items: Map<string, FwI
         const makeVPath = (path: string, order: number[]) => `[${path}:${order.join('.')}]`;
 
         for (const [_, item] of result) {
+            // reset parents and children
+            item.children = [];
+            item.parent = undefined;
+
+            // add possible virtual folders to a separate list
             if (item.info.order && item.info.order.length > 0 &&
-                item.info.subType === FwSubType.ProjectFile) {
+                item.info.subType === FwSubType.ProjectFile ||
+                item.info.subType === FwSubType.VirtualFolder) {
                 vFolders.set(makeVPath(item.fsRef.fsDir, item.info.order), item.fsRef.fsPath);
             }
         }

@@ -7,6 +7,7 @@ import {IFileState} from './states';
 import {IStateProcessorFactory} from '../processors/IStateProcessorFactory';
 import {asPosix} from '../FwFileManager';
 import {FwItem} from '../fwFiles/FwItem';
+import {log} from '../logging';
 
 export class FwStateChangedEvent {
     files: FwFileStateChangedEvent[] = [];

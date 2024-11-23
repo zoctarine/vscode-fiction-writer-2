@@ -1,0 +1,13 @@
+{
+  "Add meta block": {
+    "prefix": "meta",
+    "body": [
+      "---",
+      "${1|title,color,icon,badge,compile,pov,characters|}:${2:value}",
+      "---",
+      "",
+      ""
+    ],
+    "description": "Add a metadata block"
+  }
+}

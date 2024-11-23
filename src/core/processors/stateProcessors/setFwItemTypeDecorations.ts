@@ -1,5 +1,5 @@
 import {IStateProcessor} from '../IProcessor';
-import {IFileState} from '../../state';
+import {applyDecorations, IFileState} from '../../state';
 import {FwSubType} from '../../fwFiles';
 import {FaIcons} from '../../decorations';
 import {log} from '../../logging';
@@ -21,10 +21,11 @@ export class SetFwItemTypeDecorations implements IStateProcessor<IFileState> {
             [FwSubType.OtherFile, 'file']
         ]);
 
-        state.decorations = {
-            ...state.decorations,
-            icon: icons.get(state.fwItem?.info?.subType!) ?? FaIcons.folder,
-        };
+        state.decorations = applyDecorations(
+            state.decorations,
+            {icon: icons.get(state.fwItem?.info?.subType!) ?? FaIcons.folder});
+
+
         return;
     }
 }

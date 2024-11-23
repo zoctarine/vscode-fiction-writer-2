@@ -59,9 +59,21 @@ class Logger extends DisposeManager {
         }
         return this;
     }
+
+    public for(name: string = 'log') {
+        return {
+            trace: (message: string, ...args: any[]) => this.trace(`[${name}] ${message}`, ...args),
+            debug: (message: string, ...args: any[]) => this.debug(`[${name}] ${message}`, ...args),
+            info: (message: string, ...args: any[]) => this.info(`[${name}] ${message}`, ...args),
+            warn: (message: string, ...args: any[]) => this.warn(`[${name}] ${message}`, ...args),
+            error: (message: string, ...args: any[]) => this.error(`[${name}] ${message}`, ...args),
+            tmp: (...args: any[]) => this.tmp(`[${name}]`, ...args),
+        };
+    }
 }
 
 export const log = new Logger();
+
 
 class UserNotifier {
     info(text: string) {
@@ -69,9 +81,9 @@ class UserNotifier {
         log.info("UserMessage", text);
     }
 
-    warn(text: string) {
+    warn(text: string, ...data: any[]) {
         vscode.window.showWarningMessage(text);
-        log.info("UserMessage", text);
+        log.warn("UserMessage", text, ...data);
     }
 }
 export const notifier = new UserNotifier();

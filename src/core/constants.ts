@@ -12,6 +12,8 @@ export const FictionWriter = {
     files: {
         split: `${Files}.split`,
         combine: `${Files}.combine`,
+        extract: `${Files}.extract`,
+        extractMultiple: `${Files}.extractMultiple`,
     },
     views: {
         projectExplorer: {

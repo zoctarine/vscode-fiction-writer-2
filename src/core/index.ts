@@ -1,18 +1,19 @@
 import vscode from 'vscode';
 import {DisposeManager} from './disposable';
 import {IFileState, StateManager} from './state';
-import {FwPermission, Permissions, SimpleSuffixOrderParser} from './fwFiles';
+import {FwItemBuilder} from './fwFiles';
 import {ProjectsOptions} from '../modules/projectExplorer/projectsOptions';
 import {ContextManager} from './contextManager';
 import {IStateProcessorFactory} from './processors/IStateProcessorFactory';
 import {ActiveDocumentMonitor} from './activeDocumentMonitor';
-import {log, notifier} from './logging';
+import {log} from './logging';
 import {registerMarkdownFormatters} from './markdown';
 import {addCommand} from './commandExtensions';
 import {FictionWriter} from './constants';
-import {retryAsync} from './lib/retry';
 import {FwFileManager} from './FwFileManager';
 import {FileWorkerClient} from '../worker/FileWorkerClient';
+import {SplitActiveFile} from '../modules/projectExplorer/commands/SplitActiveFile';
+import {ExtractFile, ExtractFileType} from '../modules/projectExplorer/commands/ExtractFile';
 
 export * from './FwFileManager';
 export * from './commandExtensions';
@@ -33,6 +34,7 @@ export class CoreModule extends DisposeManager {
     contextManager: ContextManager;
     projectsOptions = new ProjectsOptions();
     activeDocumentMonitor: ActiveDocumentMonitor;
+    fwItemBuilder: FwItemBuilder = new FwItemBuilder();
 
     constructor(context: vscode.ExtensionContext,
                 public fileWorkerClient: FileWorkerClient,
@@ -52,57 +54,50 @@ export class CoreModule extends DisposeManager {
             this.activeDocumentMonitor,
             registerMarkdownFormatters(),
             this.fileManager.onFilesChanged(files => {
-                log.debug("filesChanged", files.size);
+                log.debug("fileManager: filesChanged", files.size);
                 return this.stateManager.reload(files, false);
             }),
 
             this.fileManager.onFilesReloaded(files => {
-                log.debug("filesReloaded", files.size);
+                log.debug("fileManager: filesReloaded", files.size);
                 return this.stateManager.reload(files);
             }),
 
             this.stateManager.onFilesStateChanged(e => {
-                log.debug("StateFileChanged", e.files.length);
+                log.debug("stateManager: filesChanged", e.files.length);
             }),
 
 
             addCommand(FictionWriter.files.split, async () => {
-                // const editor = vscode.window.activeTextEditor;
-                // const doc = editor?.document;
-                // if (!doc) return;
-                // const fwItem = this.stateManager.get(doc.uri.fsPath)?.fwItem;
-                // if (!fwItem) return;
-                // if (!Permissions.check(fwItem?.ref, FwPermission.Write)) return;
-                // let newName = 'new';
-                // if (editor?.selection) {
-                //     if (editor?.selection.isEmpty) {
-                //         const orderParser = new SimpleSuffixOrderParser();
-                //         const parsed = orderParser.parse(fwItem.ref.name.namePart ?? '');
-                //         parsed.mainOrder = parsed.mainOrder !== undefined ? parsed.mainOrder + 1 : parsed.mainOrder;
-                //         newName = orderParser.serialize(parsed);
-                //     } else {
-                //         newName = editor.document.getText(editor.selection);
-                //     }
-                // }
-                //
-                // let splitName = `${fwItem.ref.name.orderPart}${newName}${fwItem.ref.ext}`;
-                //
-                // const newPath = await retryAsync(async (retry) => {
-                //     if (retry > 0) {
-                //         splitName = `${fwItem.ref.name.full} ${retry}${fwItem.ref.ext}`;
-                //     }
-                //     return await this.fileManager.splitFile(fwItem.ref.fsPath,
-                //         editor.selection.start.line,
-                //         editor.selection.start.character,
-                //         splitName);
-                // });
-                //
-                // if (newPath) {
-                //     await vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(newPath));
-                //
-                // } else {
-                //     notifier.warn("File cannot be split");
-                // }
+               return new SplitActiveFile(
+                    this.fileManager,
+                    this.stateManager,
+                    this.fwItemBuilder
+                ).runAsync(
+                    vscode.window.activeTextEditor,
+                );
+            }),
+
+            addCommand(FictionWriter.files.extract, async () => {
+                return new ExtractFile(
+                    this.fileManager,
+                    this.stateManager,
+                    this.fwItemBuilder,
+                    ExtractFileType.Single
+                ).runAsync(
+                    vscode.window.activeTextEditor,
+                );
+            }),
+
+            addCommand(FictionWriter.files.extractMultiple, async () => {
+                return new ExtractFile(
+                    this.fileManager,
+                    this.stateManager,
+                    this.fwItemBuilder,
+                    ExtractFileType.Multiple
+                ).runAsync(
+                    vscode.window.activeTextEditor,
+                );
             }),
         );
     }

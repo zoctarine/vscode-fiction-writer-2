@@ -1,6 +1,6 @@
 export * from './fileName/IFwInfoParser';
-export * from './fileName/FsRefParser';
-export * from './fileName/FwInfoParser';
+export * from './fileName/PathScurryToFsRef';
+export * from './fileName/FsRefToFwInfo';
 
 export {IOrderOptions} from './order/IOrderOptions';
 export {IOrderParser} from './order/IOrderParser';

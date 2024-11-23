@@ -616,6 +616,16 @@
           "command": "fictionWriter.files.split",
           "group": "FictionWriter@1",
           "when": "editorLangId == fwmarkdown"
+        },
+        {
+          "command": "fictionWriter.files.extract",
+          "group": "FictionWriter@2",
+          "when": "editorLangId == fwmarkdown"
+        },
+        {
+          "command": "fictionWriter.files.extractMultiple",
+          "group": "FictionWriter@3",
+          "when": "editorLangId == fwmarkdown"
         }
       ],
       "fictionWriter.editor": [
@@ -915,6 +925,18 @@
       {
         "command": "fictionWriter.files.combine",
         "title": "Combine files",
+        "category": "FictionWriter",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "fictionWriter.files.extract",
+        "title": "Extract file...",
+        "category": "FictionWriter",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "fictionWriter.files.extractMultiple",
+        "title": "Extract files",
         "category": "FictionWriter",
         "icon": "$(edit)"
       },
@@ -1230,13 +1252,6 @@
         "category": "Markdown Fiction Writer"
       }
     ],
-    "keybindings": [
-      {
-        "command": "fictionWriter.files.split",
-        "key": "alt+f alt+k",
-        "mac": "cmd+f cmd+k"
-      }
-    ],
     "customEditors": [
       {
         "viewType": "fictionWriter.editors.proseMirror",
@@ -1361,6 +1376,12 @@
         "injectTo": [
           "text.html.markdown"
         ]
+      }
+    ],
+    "snippets": [
+      {
+        "language": "fwmarkdown",
+        "path": "./snippets/fwmarkdown.json"
       }
     ]
   },

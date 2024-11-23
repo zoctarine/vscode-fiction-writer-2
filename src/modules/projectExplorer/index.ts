@@ -3,12 +3,17 @@ import {Disposable} from "vscode";
 
 import {ProjectExplorerTreeDataProvider} from "./projectExplorerTreeDataProvider";
 import {ProjectsOptions} from "./projectsOptions";
-import {DisposeManager} from "../../core";
+import {ArrayTools, DisposeManager} from "../../core";
 import {addCommand, CoreModule, FictionWriter, log} from '../../core';
 import {ProjectExplorerDecorationProvider} from './projectExplorerDecorationProvider';
 import {ProjectNode} from './models/projectNode';
-import * as commands from './commands';
-import {IFileState} from '../../core/state';
+import {DeleteNode} from './commands/DeleteNode';
+import {RenameNode} from './commands/RenameNode';
+import {AddToProject} from './commands/AddToProject';
+import {ExcludeFromProject} from './commands/ExcludeFromProject';
+import {CombineFiles} from './commands/CombineFiles';
+import {RevealInExplorer} from './commands/RevealInExplorer';
+import {AddChildFolder} from './commands/AddChildFolder';
 
 export class ProjectsModule extends DisposeManager {
     active = false;
@@ -21,6 +26,7 @@ export class ProjectsModule extends DisposeManager {
     }
 
     activate(): void {
+
         this.projectExplorerDataProvider = new ProjectExplorerTreeDataProvider(
             this.options,
             this.core.fileManager, this.core.contextManager, this.core.stateManager);
@@ -50,14 +56,24 @@ export class ProjectsModule extends DisposeManager {
             addCommand(FictionWriter.views.projectExplorer.newFile, (node: ProjectNode) => {
                 this.projectExplorerDataProvider?.addFile(node);
             }),
-            addCommand(FictionWriter.views.projectExplorer.newFolder, (node: ProjectNode) => {
-                this.projectExplorerDataProvider?.addFolder(node);
+            addCommand(FictionWriter.views.projectExplorer.newFolder, async (node: ProjectNode) => {
+                const newName = await new AddChildFolder(this.core.fileManager).runAsync(node.data?.fwItem);
+                if (newName) {
+                    this.projectExplorerDataProvider?.onNextRefresh(() => {
+                        this.projectExplorerDataProvider?.reveal(newName, false);
+                    });
+                }
             }),
-            addCommand(FictionWriter.views.projectExplorer.rename, (node: ProjectNode) => {
-                this.projectExplorerDataProvider?.rename(node);
+            addCommand(FictionWriter.views.projectExplorer.rename, async (node: ProjectNode) => {
+                const newName = await new RenameNode(this.core.fileManager, this.core.fwItemBuilder).runAsync(node);
+                if (newName) {
+                    this.projectExplorerDataProvider?.onNextRefresh(() => {
+                        this.projectExplorerDataProvider?.reveal(newName, true);
+                    });
+                }
             }),
-            addCommand(FictionWriter.views.projectExplorer.trash, (node: ProjectNode) => {
-                this.projectExplorerDataProvider?.delete(node);
+            addCommand(FictionWriter.views.projectExplorer.trash, async (node: ProjectNode) => {
+                return new DeleteNode(this.core.fileManager).runAsync(node);
             }),
             addCommand(FictionWriter.views.projectExplorer.toggleVirtualFolder, (node: ProjectNode) => {
                 this.projectExplorerDataProvider?.toggleVirtualFolder(node);
@@ -83,48 +99,42 @@ export class ProjectsModule extends DisposeManager {
                 this.projectExplorerDataProvider?.filter("projectFiles");
             }),
 
-            addCommand(FictionWriter.explorer.revealInProjectsView, (uri: vscode.Uri) => {
-                return this.projectExplorerDataProvider?.reveal(uri.fsPath, true);
-            }),
+            addCommand(FictionWriter.explorer.revealInProjectsView, (uri: vscode.Uri) =>
+                this.projectExplorerDataProvider?.reveal(uri.fsPath, true)),
 
-            addCommand(FictionWriter.views.projectExplorer.revealInExplorer, (node: ProjectNode) => {
+            addCommand(FictionWriter.views.projectExplorer.revealInExplorer, (node: ProjectNode) =>
+                new RevealInExplorer().runAsync(node?.data.fwItem)),
 
-                return commands.revealInExplorer(node);
-            }),
+            addCommand(FictionWriter.views.projectExplorer.addToProject, (node: ProjectNode) =>
+                new AddToProject(this.core.fileManager).runAsync(
+                    ArrayTools.firstNotEmpty(
+                        this.projectExplorerDataProvider?.getSelectedNodes(),
+                        [node?.data?.fwItem])
+                )
+            ),
 
-            addCommand(FictionWriter.views.projectExplorer.addToProject, (node: ProjectNode) => {
-                const state = this.core.stateManager.get(node.id);
-                log.tmp(node.id)
-                return commands.addToProject(state?.fwItem);
-            }),
+            addCommand(FictionWriter.views.projectExplorer.excludeFromProject, (node: ProjectNode) =>
+                new ExcludeFromProject(this.core.fileManager).runAsync(
+                    ArrayTools.firstNotEmpty(
+                        this.projectExplorerDataProvider?.getSelectedNodes(),
+                        [node?.data?.fwItem])
+                )),
 
-            addCommand(FictionWriter.views.projectExplorer.excludeFromProject, (node: ProjectNode) => {
-                if (this.projectExplorerDataProvider){
-                    let items = node.data.fwItem ? [node.data.fwItem] : [];
-                    if (this.projectExplorerDataProvider.selectedItems.length > 1){
-                        items = this.projectExplorerDataProvider.selectedItems;
-                    }
-                 return commands.excludeFromProject(...items);
-                }
-            }),
-
-            addCommand(FictionWriter.files.combine, (node: ProjectNode) => {
-                if (this.projectExplorerDataProvider){
-                    let items = node.data.fwItem ? [node.data.fwItem] : [];
-                    if (this.projectExplorerDataProvider.selectedItems.length > 1){
-                        items = this.projectExplorerDataProvider.selectedItems;
-                    }
-                    return commands.combineFiles(...items);
-                }
-            }),
+            addCommand(FictionWriter.files.combine, (node: ProjectNode) =>
+                new CombineFiles(this.core.fileManager).runAsync(
+                    ArrayTools.firstNotEmpty(
+                        this.projectExplorerDataProvider?.getSelectedNodes(),
+                        [node?.data?.fwItem])
+                )),
 
             addCommand(FictionWriter.views.projectExplorer.debug.stateDump, (node: ProjectNode) => {
                 log.debug("ProjectExplorer", {
                     node,
-                    state:this.core.stateManager.get(node.id)
+                    state: this.core.stateManager.get(node.id)
                 });
             })
-        );
+        )
+        ;
     };
 
     deactivate(): void {

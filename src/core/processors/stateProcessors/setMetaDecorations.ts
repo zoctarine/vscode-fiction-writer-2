@@ -6,7 +6,6 @@ import {CoreColors} from '../../decorations';
 export class SetMetaDecorations implements IStateProcessor<IFileState> {
     async process(state: IFileState) {
         if (!state.metadata) return;
-
         const metaDecorations = {
             icon: state.metadata?.icon,
             color: state.metadata?.compile === 'exclude'
@@ -15,9 +14,12 @@ export class SetMetaDecorations implements IStateProcessor<IFileState> {
                     : undefined,
             description: state.metadata?.title,
             badge: this.generateAbbreviation(state.metadata?.badge?.toString()),
-            highlightColor: undefined,
         };
-        applyDecorations(state.metadataDecorations, metaDecorations);
+        state.metadataDecorations = applyDecorations(state.metadataDecorations, metaDecorations);
+
+        if (state.metadata?.compile === 'exclude') {
+            state.decorations = applyDecorations(state.decorations, {badge: `~`});
+        }
     }
 
     private generateAbbreviation(word: string): string | undefined {

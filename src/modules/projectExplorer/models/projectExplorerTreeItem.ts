@@ -30,8 +30,7 @@ export class ProjectExplorerTreeItem extends vscode.TreeItem {
                 : vscode.TreeItemCollapsibleState.Collapsed
             : vscode.TreeItemCollapsibleState.None;
 
-        let name = data.fwItem?.info?.name ?? '';
-        if (node.data.fwItem?.info?.control !== FwControl.Active) name = data.fwItem?.fsRef?.fsName ?? '';
+        let name = data.fwItem?.fsRef.fsBaseName ?? '';
 
         this.label = {
             label: name.length > 0 ? name : 'unnamed',

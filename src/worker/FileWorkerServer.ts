@@ -20,6 +20,8 @@ import {ObjectProps} from '../core/lib'; // Don't wnt any dependency to vscode
 export class FileWorkerServer {
     private _acceptsEvents = true;
     private _fwBuilder = new FwItemBuilder();
+    private _hierarchyBuilder = new FwItemHierarchyBuilder();
+
     private _files = new Map<string, FwItem>();
     private _lastPostTime: number = new Date(0, 0, 0).getTime();
 
@@ -51,28 +53,24 @@ export class FileWorkerServer {
         this._changes.clear();
         if (changes.length === 0) return;
 
-        let onlyContentChanges = true;
-        for (const change of changes) {
-            if (change[1] !== FileChangeAction.Modified) onlyContentChanges = false;
-
-            if (change[1] === FileChangeAction.Deleted) {
-                this._files.delete(change[0]);
-            }
-            try {
-                const pc = await fwPath.getSelfAsync(change[0]);
-                const item = await this._fwBuilder.buildAsync({path: pc, rootFolderPaths: this._rootFolders});
-                this._files.set(change[0], item);
-            } catch (err) {
-                this._files.delete(change[0]);
-            }
+        // If at least on file has structural change, reload all
+        if (changes.find(c => c[1] !== FileChangeAction.Modified)) {
+            await this._reloadAll();
+            return;
         }
 
-       /* onlyContentChanges
-            ? this.post(new WorkerMsgFilesChanged(changes
-                .map(c => this._files.get(c[0]))
-                .filter(c => c !== undefined)
-            ))
-            : */this.post(new WorkerMsgFilesReload(ObjectProps.deepClone(this._files)));
+        try {
+            for (const [path, action] of changes) {
+                const pc = await fwPath.getOneAsync(path);
+                const item = await this._fwBuilder.buildAsync({path: pc, rootFolderPaths: this._rootFolders});
+                this._files.set(path, item);
+            }
+        } finally {
+            this._files = this._hierarchyBuilder.build({items: this._files});
+            this.post(new WorkerMsgFilesChanged(ObjectProps.deepClone(
+                new Map<string, FwItem>(changes.map(f => [f[0], this._files.get(f[0])!]))
+            )));
+        }
     }
 
     start(e: ClientMsgStart) {
@@ -100,7 +98,7 @@ export class FileWorkerServer {
         try {
             this._changes.clear();
             if (!this._rootFolders || !this._rootFolders.length) {
-                this.post(new WorkerMsgFilesReload(new Map<string,FwItem>()));
+                this.post(new WorkerMsgFilesReload(new Map<string, FwItem>()));
                 return;
             }
             this._files = new Map<string, FwItem>();
@@ -120,8 +118,7 @@ export class FileWorkerServer {
                 }
                 finishedOperations = this._files.size;
             }
-            const hierarchyBuilder = new FwItemHierarchyBuilder();
-            this._files = hierarchyBuilder.build({items: this._files});
+            this._files = this._hierarchyBuilder.build({items: this._files});
 
             this.visitAll([...this._files.values()][0], '', (node: any, depth: string) => {
                 if (!node) return;
@@ -134,7 +131,7 @@ export class FileWorkerServer {
                 console.log(depth + t);
             });
 
-            this.post(new WorkerMsgJobProgress("", finishedOperations,finishedOperations));
+            this.post(new WorkerMsgJobProgress("", finishedOperations, finishedOperations));
             this.post(new WorkerMsgFilesReload(ObjectProps.deepClone(this._files)));
             return;
         } finally {

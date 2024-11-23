@@ -42,7 +42,7 @@ export interface IFsRef {
     /**
      * If the file exists on the fileSystem
      */
-    readonly fsExists: boolean;
+    fsExists: boolean;
 
     readonly fsModifiedDate: number | undefined;
 }

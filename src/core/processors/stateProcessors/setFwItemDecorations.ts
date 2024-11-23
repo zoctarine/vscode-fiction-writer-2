@@ -1,5 +1,5 @@
 import {IStateProcessor} from '../IProcessor';
-import {IDecorationState, IFileState} from '../../state';
+import {applyDecorations, IDecorationState, IFileState} from '../../state';
 import {FwControl, FwSubType} from '../../fwFiles';
 import {log} from '../../logging';
 import {CoreColors} from '../../decorations';
@@ -25,9 +25,7 @@ export class SetFwItemDecorations implements IStateProcessor<IFileState> {
             newData.badge = '-';
         }
 
-        state.decorations = {
-            ...state.decorations,
-            ...newData
-        };
+        state.decorations = applyDecorations(state.decorations, newData);
+
     }
 }

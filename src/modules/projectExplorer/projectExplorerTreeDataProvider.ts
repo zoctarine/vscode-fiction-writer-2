@@ -1,22 +1,19 @@
 import * as vscode from 'vscode';
-import {InputBoxValidationSeverity, l10n, TreeItemCheckboxState} from 'vscode';
+import {InputBoxValidationSeverity, TreeItemCheckboxState} from 'vscode';
 import * as path from 'path';
 import {
-    DefaultOrderParser,
     DisposeManager,
     FactorySwitch,
     FictionWriter,
-    FwEmpty,
-    FwEmptyVirtualFolder,
+    FwControl,
     FwFileManager,
-
-    FwInfo, FwItemBuilder,
+    FwInfo,
     FwPermission,
     FwProjectFileItem,
-    FwRootItem,
     FwSubType,
-    FwVirtualFolderItem, IFwInfo,
-    log, notifier,
+    FwVirtualFolderItem,
+    log,
+    notifier,
     Permissions,
     TreeStructure
 } from "../../core";
@@ -25,7 +22,6 @@ import {ProjectExplorerTreeItem} from './models/projectExplorerTreeItem';
 import {ProjectsOptions} from './projectsOptions';
 import {IDecorationState, IFileState, StateManager} from '../../core/state';
 import {AllFilesFilter, IFileFilter, OnlyProjectFilesFilter} from './models/filters';
-import {FaIcons} from '../../core/decorations';
 import rfdc from 'rfdc';
 import {ProjectNode, ProjectNodeList} from './models/projectNode';
 import {ObjectProps} from '../../core/lib';
@@ -35,7 +31,7 @@ import {ProjectNodeContextBuilder} from './models/IProjectNodeContext';
 import {Context} from '../../core/lib/context';
 import {retry} from '../../core/lib/retry';
 import {fwPath} from '../../core/FwPath';
-import {FwItem, FwItemEmpty, FwItemRoot} from '../../core/fwFiles/FwItem';
+import {FwItem, FwItemRoot} from '../../core/fwFiles/FwItem';
 
 
 const clone = rfdc();
@@ -66,9 +62,6 @@ export class ProjectExplorerTreeDataProvider
         syncEditor: false
     };
     public selectedItems: FwItem[] = [];
-
-    // TODO: inject it
-    private _fwItemBuilder = new FwItemBuilder();
 
     private _viewModel: IProjectTreeViewModel = {
         compileCommit: false,
@@ -106,10 +99,9 @@ export class ProjectExplorerTreeDataProvider
             this._treeView,
             this._onDidChangeTreeData,
             this._options.fileDescriptionMetadataKey.onChanged(v => {
-                log.tmp("fileDescriptionMetadataKey", v)
                 return this.refresh();
             }),
-            this._stateManager.onFilesStateChanged(() => {
+            this._stateManager.onFilesStateChanged((e) => {
                 this.refresh(); // TODO: Improve this, to not overlap with onFilesChanged
             }),
             this._treeView.onDidCollapseElement((e) => {
@@ -180,9 +172,10 @@ export class ProjectExplorerTreeDataProvider
         const tree = new TreeStructure<IFileState>(new ProjectNode('root', {fwItem: new FwItemRoot()}));
         const workspaces: ProjectNode[] = [];
 
-        states.sort((a, b)=> a?.fwItem?.parent?.localeCompare(b?.fwItem?.parent ??'') ?? 0);
+        // order files by parent, so we include the full hierarchy
+        states.sort((a, b) => a?.fwItem?.parent?.localeCompare(b?.fwItem?.parent ?? '') ?? 0);
         for (const state of states) {
-             if (!state.fwItem?.fsRef) continue;
+            if (!state.fwItem?.fsRef) continue;
             const current = state.fwItem.fsRef.fsPath;
             const parent = state.fwItem.parent;
 
@@ -261,6 +254,10 @@ export class ProjectExplorerTreeDataProvider
         item.contextValue = Context.serialize(
             new ProjectNodeContextBuilder().build({node, ctx: this._ctx}));
 
+        if (element.data.fwItem?.info.control === FwControl.Active){
+
+            item.label = element.data.fwItem?.info.orderBy;
+        }
         return item;
     }
 
@@ -334,125 +331,6 @@ export class ProjectExplorerTreeDataProvider
         // }
     }
 
-    public async addFolder(node: ProjectNode) {
-        node = node ?? this._treeView.selection[0];
-        // TODO: get parent folder if this is not folder...
-        const ref = node.data.fwItem?.fsRef;
-        if (!ref) return;
-        const makeFinalPath = (value: string) => fwPath.join(ref.fsPath, value);
-        const baseName = 'Chapter';
-        // TODO: get proper folder name, maybe based on ordering,1-2-3... SimpleSuffixOrderParser
-        let folderName = retry<string>((cnt) => {
-            if (!fwPath.exists(makeFinalPath('Chapter' + (cnt + 1)))) {
-                return baseName + (cnt + 1);
-            }
-        }) ?? baseName;
-        if (Permissions.check( node.data.fwItem?.info, FwPermission.AddChildren)) {
-            // TODO: add retry?
-            const value = await vscode.window.showInputBox({
-                title: `Add folder`,
-                prompt: `Folder name:`,
-                valueSelection: [0, folderName.length],
-                value: folderName,
-                validateInput: async (value: string) => {
-                    if (!value || value === '') {
-                        return {
-                            message: "Value must be a valid name",
-                            severity: InputBoxValidationSeverity.Error
-                        };
-                    }
-
-                    if (fwPath.exists(makeFinalPath(value))) {
-                        return {
-                            message: "The folder name already exists",
-                            severity: InputBoxValidationSeverity.Error
-                        };
-                    }
-                }
-            });
-            if (value) {
-                const fsPath = path.posix.join(ref.fsPath, value);
-                const created = await this._fileManager.createFolder(fsPath);
-                if (!created) {
-                    notifier.warn(`Could not create folder: ${value}`);
-                }
-            }
-        }
-    }
-
-    public async rename({data: {fwItem}}: ProjectNode) {
-        // if (fwItem) {
-        //     const {info} = fwItem;
-        //     const startIndex = ref.name.orderPart?.length ?? 0;
-        //     let endIndex = (startIndex > 0 ? startIndex - 1 : startIndex) + (ref.name.namePart?.length ?? 0);
-        //     const getFwChanges = async (value: string) => {
-        //         const parser = new FwFileNameParser(new DefaultOrderParser());
-        //         let newFile = await parser.parse(value);
-        //         const messages = [];
-        //         if (newFile.name.orderPart !== ref.name.orderPart) {
-        //             messages.push("the file order segment");
-        //         }
-        //         if (newFile.fsExt !== ref.fsExt) {
-        //             messages.push(`the file type`);
-        //         } else if (newFile.ext !== ref.ext) {
-        //             messages.push(`the FictionWriter extended extension`);
-        //         }
-        //
-        //         return messages;
-        //     };
-        //
-        //     const value = await vscode.window.showInputBox({
-        //         title: `Rename ${ref.name}`,
-        //         prompt: `New file name:`,
-        //         valueSelection: [startIndex, endIndex],
-        //         value: ref.fsName,
-        //         validateInput: async (value: string) => {
-        //
-        //             if (!value || value === '') {
-        //                 return {
-        //                     message: "Value must be a valid filename",
-        //                     severity: InputBoxValidationSeverity.Error
-        //                 };
-        //             }
-        //             const messages = await getFwChanges(value);
-        //
-        //             if (messages.length > 0) {
-        //                 let last = messages.pop();
-        //                 if (messages.length > 0) last = ` and ${last}`;
-        //                 return {
-        //                     message: `Warning: You changed ${messages.join(', ')}${last}`,
-        //                     severity: InputBoxValidationSeverity.Warning
-        //                 };
-        //             }
-        //         }
-        //     });
-        //     if (value) {
-        //         let doRename = true;
-        //         if ((await getFwChanges(value)).length > 0) {
-        //             doRename = await vscode.window.showWarningMessage("Are you sure?",
-        //                 {
-        //                     modal: true,
-        //                     detail: `Renaming\n\n'${ref.fsName}'\n\nto:\n\n ${value}\n\n may result in FictionWriter handling the file differently.\n\nJust make sure you are OK with this change.`,
-        //                 },
-        //                 "OK") === 'OK';
-        //         }
-        //         if (doRename) {
-        //             await this._fileManager.renameFile(
-        //                 ref.fsPath,
-        //                 path.posix.join(ref.fsDir, value)).then(() => {
-        //             }).catch(err => log.warn(err));
-        //         }
-        //     }
-        // }
-    }
-
-    public delete(node: ProjectNode): void {
-        // node = node ?? this._treeView.selection[0];
-        //
-        // if (node) {
-        //     this._fileManager.deleteFile(node.id);
-        // }
-    }
 
     // private _addNewChild(node: ProjectNode | undefined, type: FwSubType = FwSubType.ProjectFile): void {
     //     if (!node) return;
@@ -644,8 +522,26 @@ export class ProjectExplorerTreeDataProvider
         const fwItems = this._stateManager.trackedFiles.filter(a => a !== undefined);
         this._treeStructure.clear();
         this.buildHierarchy(fwItems)
-            .then(() => this._onDidChangeTreeData.fire(),
+            .then(() => {
+                    while (this._nextRefreshQueue.length > 0) {
+                        const f = this._nextRefreshQueue.shift();
+                        if (f) {
+                            try {
+                                f();
+                            } catch (e) {
+                                log.error("Error while executing nextRefreshTick", e);
+                            }
+                        }
+                    }
+                    this._onDidChangeTreeData.fire();
+                },
                 (err) => log.error("Error while building hierarchy", err));
+    }
+
+    private _nextRefreshQueue: (() => void)[] = [];
+
+    public onNextRefresh(action: () => void) {
+        this._nextRefreshQueue.push(action);
     }
 
     public commit(): void {
@@ -746,7 +642,14 @@ export class ProjectExplorerTreeDataProvider
         this._onDidChangeTreeData.fire();
     }
 
-    public retrieveSelection(): string[] {
+    public getSelectedNodes(): FwItem[] | undefined {
+        if (this.selectedItems.length > 1) {
+            return this.selectedItems;
+        }
+        return [];
+    }
+
+    public getCheckedNodes(): string[] {
         const result = this._treeStructure.dfsList(this._treeStructure.root,
                 (a, b) => a.data.fwItem!.info!.name > b.data.fwItem!.info!.name ? 1 : -1)
             .filter(n => n.checked === true &&

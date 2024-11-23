@@ -13,15 +13,16 @@ import {IFwInfoParser, IOrderParser} from '../index';
 import {FwType} from '../../FwType';
 import {fwPath} from '../../../FwPath';
 import fs from 'node:fs';
+import {FwControl} from '../../FwControl';
 
-export class FwInfoParser implements IFwInfoParser {
+export class FsRefToFwInfo implements IFwInfoParser {
     private _fileExtensions = ['.md', '.txt'];
 
     constructor(private _orderParser: IOrderParser) {
 
     }
 
-    async parseAsync(ref: IFsRef, opt: { rootFolderPaths: string[] }) {
+    parse(ref: IFsRef, opt: { rootFolderPaths: string[] }) {
         if (!ref) return new FwEmpty();
         if (!opt.rootFolderPaths) return new FwEmpty();
 
@@ -41,18 +42,26 @@ export class FwInfoParser implements IFwInfoParser {
             .default(() => new FwOtherFileItem())
             .create();
 
-        result.name = orderedName.name;
-        result.order = orderedName.order;
-        result.data = parsed.data;
+        if (result.control === FwControl.Active) {
+            result.name = orderedName.name;
+            result.order = orderedName.order;
+            result.data = parsed.data;
+        } else {
+            result.name = ref.fsBaseName;
+            result.order = [];
+            result.data = [];
+        }
+
+        result.orderBy = parsed.name;
 
         return result;
     }
 
-    async serializeAsync(parsed: FwInfo, opt?: {
+    serialize(parsed: FwInfo, opt?: {
         rootFolderPaths: string[];
         fsDir: string,
         fsExt: string
-    } | undefined): Promise<IFsRef> {
+    } | undefined): IFsRef {
 
         let fsName = this._orderParser.serialize(parsed);
         if (parsed.projectTag.length > 0) {
@@ -67,12 +76,8 @@ export class FwInfoParser implements IFwInfoParser {
         const fsExt = opt?.fsExt ?? '';
         const fsBaseName = `${fsName}${fsExt}`;
         const fsPath = fwPath.join(fsDir, fsBaseName);
-        let fsExists = true;
-        try {
-            const stat = await fs.promises.stat(fsPath);
-        } catch {
-            fsExists = false;
-        }
+        const fsExists = !!fs.statSync(fsPath, {throwIfNoEntry: false});
+
         return {
             fsBaseName,
             fsDir,

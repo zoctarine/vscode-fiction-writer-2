@@ -36,6 +36,8 @@ export class StatusBarMessage extends DisposeManager {
 
 }
 
+const l = log.for('FileWorkerClient');
+
 export class FileWorkerClient extends DisposeManager {
     w: Worker | undefined;
     private _onFilesChanged = new vscode.EventEmitter<Map<string, FwItem>>();
@@ -54,7 +56,7 @@ export class FileWorkerClient extends DisposeManager {
 
         this.w
             .on('message', (message: IWorkerMessage) => {
-                log.debug(`FileWorker event`, message.type);
+                l.trace(`worker.on.message`, message.type);
 
                 switch (message.type) {
                     case WorkerMsg.start:
@@ -122,11 +124,16 @@ export class FileWorkerClient extends DisposeManager {
     }
 
     sendWorkspaceFilesChanged(paths: string[]) {
-        this.w?.postMessage(new ClientMsgRootFoldersChanged(paths));
+        this._post(new ClientMsgRootFoldersChanged(paths));
     }
 
     sendFileChanged(path: string, action: FileChangeAction) {
-        this.w?.postMessage(new ClientMsgFileChanged(path, action));
+        this._post(new ClientMsgFileChanged(path, action));
+    }
+
+    private _post(msg: any){
+        l.trace("worker.post.message", msg);
+        this.w?.postMessage(msg);
     }
 
     stopWorker() {

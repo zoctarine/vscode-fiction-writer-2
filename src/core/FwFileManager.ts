@@ -22,12 +22,12 @@ export class FwFileManager extends DisposeManager {
         // We listen to all file changes, and filter on the handler. Might change later
         const watcher = vscode.workspace.createFileSystemWatcher('**/*');
         this.manageDisposable(
-            watcher.onDidChange((f) => this._handleEvent(f, FileChangeAction.Modified)),
-            watcher.onDidCreate((f) => this._handleEvent(f, FileChangeAction.Created)),
-            watcher.onDidDelete((f) => this._handleEvent(f, FileChangeAction.Deleted)),
+            watcher.onDidChange((f) => this._handlerFsWatcherEvent(f, FileChangeAction.Modified)),
+            watcher.onDidCreate((f) => this._handlerFsWatcherEvent(f, FileChangeAction.Created)),
+            watcher.onDidDelete((f) => this._handlerFsWatcherEvent(f, FileChangeAction.Deleted)),
 
-            this._fileWorkerClient.onFilesChanged(e => this._processFileChanges(e)),
-            this._fileWorkerClient.onFilesReloaded(e => this._processFileReloaded(e)),
+            this._fileWorkerClient.onFilesChanged(e => this._handleOnWorkerFilesChanged(e)),
+            this._fileWorkerClient.onFilesReloaded(e => this._handlerWorkerOnFileReload(e)),
 
             watcher,
 
@@ -35,25 +35,25 @@ export class FwFileManager extends DisposeManager {
             this._onFilesReloaded);
     }
 
-    private _handleEvent(e: vscode.Uri, action: FileChangeAction) {
+    private _handlerFsWatcherEvent(e: vscode.Uri, action: FileChangeAction) {
         if (this._silentUpdates) return;
 
         this._fileWorkerClient.sendFileChanged(e.fsPath, action);
     }
 
-    private async _processFileReloaded(fwFiles: Map<string, FwItem>) {
-        log.debug("Reloading files :", fwFiles.size);
+    private async _handlerWorkerOnFileReload(fwFiles: Map<string, FwItem>) {
+        log.debug("FileManager.onWorkerFileReload:", fwFiles.size);
         if (this._silentUpdates) return;
         if (fwFiles.size === 0) return;
 
         this._onFilesReloaded.fire(fwFiles);
     }
 
-    private async _processFileChanges(fwFiles: Map<string, FwItem>) {
-        log.debug("Files changed:", fwFiles.size);
+    private async _handleOnWorkerFilesChanged(fwFiles: Map<string, FwItem>) {
+        log.debug("FileManager.onWorkerFileChanges:", fwFiles.size);
         if (this._silentUpdates) return;
         if (fwFiles.size === 0) return;
-
+        log.debug("files", Array.from(fwFiles.values()).map(f => f.parent));
         this._onFilesChanged.fire(fwFiles);
     }
 
@@ -85,10 +85,12 @@ export class FwFileManager extends DisposeManager {
         });
     }
 
-    public async batchRenameFiles(renameMap: { oldPath: string, newPath: string }[]) {
+    public async batchRenameFiles(renameMap: Map<string, string>) {
         this._silentUpdates = true;
-        renameMap.sort((a, b) => a.oldPath > b.oldPath ? 1 : a.oldPath === b.oldPath ? 0 : -1);
-        for (const {oldPath, newPath} of renameMap) {
+        const renames = Array.from(renameMap.entries()).map(([oldPath, newPath]) =>({oldPath, newPath}));
+
+        renames.sort((a, b) => a.oldPath > b.oldPath ? 1 : a.oldPath === b.oldPath ? 0 : -1);
+        for (const {oldPath, newPath} of renames) {
             try {
                 await this.renameFile(oldPath, newPath);
             } catch (err) {
@@ -101,25 +103,12 @@ export class FwFileManager extends DisposeManager {
         this.onFilesChanged.bind(await this.loadFiles());
     }
 
-    public deleteFile(fsPath: string): Thenable<void> {
+    public async delete(fsPath: string): Promise<void> {
         const uri = vscode.Uri.parse(fsPath);
-        if (this._options.rootFoldersEnabled.value) {
-            const trashFolder = this._options.rootFolderNames.trash;
-            const workspace = vscode.workspace.getWorkspaceFolder(uri);
-            if (workspace) {
-                const trashPath = path.posix.join(workspace.uri.fsPath, trashFolder);
-                if (!fwPath.exists(trashPath)) {
-                    fs.mkdirSync(trashPath);
-                }
-                const file = path.posix.basename(fsPath);
-                const trashUri = vscode.Uri.parse(path.posix.join(trashPath, file));
-                return vscode.workspace.fs.rename(uri, trashUri, {overwrite: true}).then(() => {
-                    return;
-                });
-            }
-        }
-
-        return Promise.resolve();
+        await vscode.workspace.fs.delete(uri,{
+            recursive: true,
+            useTrash: true,
+        });
     }
 
     public async updateFile(fsPath: string, newContent: string, save: boolean = true): Promise<void> {
@@ -137,27 +126,23 @@ export class FwFileManager extends DisposeManager {
         }
     }
 
-    public async splitFile(fsPath: string, breakLine: number, breakCharacter: number, newName: string): Promise<string | undefined> {
+    public async splitFile(fsPath: string, breakLine: number, breakCharacter: number, newFsPath: string): Promise<string | undefined> {
         const doc = await this._open(fsPath);
         if (!doc) return undefined;
-        const parsed = fwPath.parse(fsPath);
-
         const edit = new vscode.WorkspaceEdit();
         const splitPoint = new vscode.Range(breakLine, breakCharacter, doc.lineCount, 0);
         const splitContent = doc.getText(splitPoint);
-        let newPath = fwPath.join(parsed.dir, newName);
-        const newFile = await this.createFile(newPath, splitContent);
+        const newFile = await this.createFile(newFsPath, splitContent);
         if (newFile) {
             edit.delete(doc.uri, splitPoint);
             if (await vscode.workspace.applyEdit(edit)) {
                 doc.save();
             }
-            return newPath;
+            return newFsPath;
         }
 
         return undefined;
     }
-
 
     public async createFile(fsPath: string, content: string): Promise<boolean> {
         const uri = vscode.Uri.parse(fsPath);
@@ -166,6 +151,24 @@ export class FwFileManager extends DisposeManager {
         }
         await vscode.workspace.fs.writeFile(uri, Buffer.from(content, 'utf8'));
         return true;
+    }
+
+    public async batchCreateFiles(fileMap: Map<string, string>):Promise<string[]> {
+        this._silentUpdates = true;
+        const createdFiles:string[] = [];
+        for (const [fsPath, content] of fileMap) {
+            try {
+                const newFile = await this.createFile(fsPath, content);
+                if (newFile) createdFiles.push(fsPath);
+            } catch (err) {
+                console.error(err);
+                vscode.window.showErrorMessage(`Error creating file: ${fsPath}`);
+                break;
+            }
+        }
+        this._silentUpdates = false;
+        this.onFilesChanged.bind(await this.loadFiles());
+        return createdFiles;
     }
 
     public async createFolder(fsPath: string): Promise<boolean> {

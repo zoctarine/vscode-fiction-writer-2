@@ -24,7 +24,7 @@ class CompileModule extends DisposeManager {
             }),
 
             addCommand(FictionWriter.views.projectExplorer.compile.commit, async () => {
-                const files = this._projectsModule?.projectExplorerDataProvider?.retrieveSelection();
+                const files = this._projectsModule?.projectExplorerDataProvider?.getCheckedNodes();
                 if (!files || !files.length) {
                     return;
                 }
