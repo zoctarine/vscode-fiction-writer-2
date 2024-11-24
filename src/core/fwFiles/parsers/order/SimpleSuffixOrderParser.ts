@@ -20,6 +20,14 @@ export class SimpleSuffixOrderParser implements IOrderParser {
     }
 
     serialize(input: IFwOrderedName): string {
-        return `${input.name ?? ''}${input.order ?? ''}`;
+        const order = (input.order ?? []).pop();
+        const name = input.name.length > 0 && !input.name.endsWith(' ')
+            ? input.name + ' '
+        : input.name;
+        return `${name ?? ''}${order ?? ''}`;
+    }
+
+    computeNextOrderFor(orderedNames: string[], baseOrder: number[]): number {
+        throw new Error('Method not implemented.');
     }
 }

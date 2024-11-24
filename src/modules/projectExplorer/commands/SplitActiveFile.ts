@@ -8,9 +8,7 @@ import {
     Permissions, retryAsync,
     SimpleSuffixOrderParser
 } from '../../../core';
-import {ProjectNode} from '../models/projectNode';
 import vscode, {TextDocument} from 'vscode';
-import {FwItem} from '../../../core/fwFiles/FwItem';
 import {StateManager} from '../../../core/state';
 
 /**

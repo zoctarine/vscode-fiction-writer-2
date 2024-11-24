@@ -12,7 +12,7 @@ import {FsContentEmpty} from '../IFsContent';
 import {Path} from 'glob';
 import {FsPathToFsRef} from '../parsers/fileName/FsPathToFsRef';
 
-export class FwItemBuilder implements IAsyncBuilder<{ path: Path }, FwItem> {
+export class FwItemBuilder implements IAsyncBuilder<{ path: Path | string, isFile?:boolean, isFolder?:boolean}, FwItem> {
     constructor(
         private _loadText = new LoadTextFile(),
         private _extractMeta = new ExtractMeta(),
@@ -24,9 +24,17 @@ export class FwItemBuilder implements IAsyncBuilder<{ path: Path }, FwItem> {
     ) {
     }
 
-    public async buildAsync(input: { path: Path, rootFolderPaths?: string[] }): Promise<FwItem> {
+    public async buildAsync(input: { path: Path | string, rootFolderPaths?: string[], isFile?:boolean, isFolder?:boolean}): Promise<FwItem> {
+        let fsPath: string;
+        let path = input.path as Path;
 
-        const fsPath = input.path.fullpath();
+        // TODO: build this better
+        const isPathScurry = path.fullpath !== undefined;
+
+        fsPath = isPathScurry
+            ? path.fullpath()
+            : input.path as string;
+
         if (fsPath.length === 0) {
             return new FwItem(new FsRefEmpty(), new FsContentEmpty(), new FwEmpty());
         }
@@ -35,14 +43,15 @@ export class FwItemBuilder implements IAsyncBuilder<{ path: Path }, FwItem> {
             return new FwItem(new FsRefEmpty(), new FsContentEmpty(), new FwRootItem());
         }
 
-        const fsRef = await this.pathScurryToFsRef.parseAsync(input.path);
+        const fsRef = isPathScurry
+            ? await this.pathScurryToFsRef.parseAsync(path)
+            : this.fsPathToFsRef.parse(fsPath, input);
+
         const info = this.fsRefToFwInfo.parse(fsRef, {rootFolderPaths: input.rootFolderPaths ?? []});
 
         const fullText = (Permissions.check(info, FwPermission.Read))
             ? await this._loadText.runAsync({fsRef})
             : undefined;
-
-        console.log(info, Permissions.check(info, FwPermission.Read));
 
         const sections = this._extractMeta.run(fullText);
         const fsContent = {

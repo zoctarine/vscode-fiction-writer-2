@@ -129,8 +129,8 @@ export class ProjectsModule extends DisposeManager {
 
             addCommand(FictionWriter.views.projectExplorer.debug.stateDump, (node: ProjectNode) => {
                 log.debug("ProjectExplorer", {
-                    node,
-                    state: this.core.stateManager.get(node.id)
+                    // node,
+                    state: this.core.stateManager.get(node.id)?.fwItem
                 });
             })
         )

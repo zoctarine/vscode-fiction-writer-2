@@ -13,7 +13,8 @@ import {FictionWriter} from './constants';
 import {FwFileManager} from './FwFileManager';
 import {FileWorkerClient} from '../worker/FileWorkerClient';
 import {SplitActiveFile} from '../modules/projectExplorer/commands/SplitActiveFile';
-import {ExtractFile, ExtractFileType} from '../modules/projectExplorer/commands/ExtractFile';
+import {ExtractFile} from '../modules/projectExplorer/commands/ExtractFile';
+import {ExtractFiles} from '../modules/projectExplorer/commands/ExtractFiles';
 
 export * from './FwFileManager';
 export * from './commandExtensions';
@@ -82,19 +83,17 @@ export class CoreModule extends DisposeManager {
                 return new ExtractFile(
                     this.fileManager,
                     this.stateManager,
-                    this.fwItemBuilder,
-                    ExtractFileType.Single
+                    this.fwItemBuilder
                 ).runAsync(
                     vscode.window.activeTextEditor,
                 );
             }),
 
             addCommand(FictionWriter.files.extractMultiple, async () => {
-                return new ExtractFile(
+                return new ExtractFiles(
                     this.fileManager,
                     this.stateManager,
-                    this.fwItemBuilder,
-                    ExtractFileType.Multiple
+                    this.fwItemBuilder
                 ).runAsync(
                     vscode.window.activeTextEditor,
                 );

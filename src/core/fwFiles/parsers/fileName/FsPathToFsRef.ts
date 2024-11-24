@@ -8,7 +8,7 @@ export class FsPathToFsRef implements IParser<string, any, IFsRef> {
     constructor() {
     }
 
-    parse(fsPath: string): IFsRef {
+    parse(fsPath: string, opt?:{isFile?:boolean, isFolder?:boolean}): IFsRef {
         const parsed = fwPath.parse(fsPath);
         const stat = fs.statSync(fsPath, {throwIfNoEntry: false});
         return {
@@ -17,8 +17,8 @@ export class FsPathToFsRef implements IParser<string, any, IFsRef> {
             fsName: parsed.name,
             fsDir: parsed.dir,
             fsPath: fsPath,
-            fsIsFile: stat?.isFile() ?? false,
-            fsIsFolder: stat?.isDirectory() ?? false,
+            fsIsFile: stat?.isFile() ?? opt?.isFile ?? false,
+            fsIsFolder: stat?.isDirectory() ?? opt?.isFolder ?? false,
             fsExists: !!stat,
             fsModifiedDate: stat?.mtimeMs
         };

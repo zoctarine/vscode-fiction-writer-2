@@ -73,6 +73,9 @@ export class FwFileManager extends DisposeManager {
     }
 
     public renameFile(oldPath: string, newPath: string): Promise<void> {
+        this._ensureInWorkspace(oldPath);
+        this._ensureInWorkspace(newPath);
+
         return new Promise((resolve, reject) => {
             if (!fwPath.exists(oldPath) || fwPath.exists(newPath)) {
                 notifier.warn(`Could not rename file ${oldPath} to ${newPath}`);
@@ -145,13 +148,17 @@ export class FwFileManager extends DisposeManager {
     }
 
     public async createFile(fsPath: string, content: string): Promise<boolean> {
+        this._ensureInWorkspace(fsPath);
+
         const uri = vscode.Uri.parse(fsPath);
+
         if (fs.existsSync(fsPath)) {
             return false;
         }
         await vscode.workspace.fs.writeFile(uri, Buffer.from(content, 'utf8'));
         return true;
     }
+
 
     public async batchCreateFiles(fileMap: Map<string, string>):Promise<string[]> {
         this._silentUpdates = true;
@@ -172,6 +179,7 @@ export class FwFileManager extends DisposeManager {
     }
 
     public async createFolder(fsPath: string): Promise<boolean> {
+        this._ensureInWorkspace(fsPath);
         try {
             const uri = vscode.Uri.parse(fsPath);
             if (fs.existsSync(fsPath)) {
@@ -188,6 +196,12 @@ export class FwFileManager extends DisposeManager {
 
     private async _open(fsPath: string): Promise<vscode.TextDocument | undefined> {
         return vscode.workspace.openTextDocument(vscode.Uri.parse(fsPath));
+    }
+
+    private _ensureInWorkspace(fsPath: string) {
+        if (vscode.workspace.asRelativePath(fsPath) === fsPath){
+            throw new Error('Could not create file as it is outside of current workspace');
+        }
     }
 }
 

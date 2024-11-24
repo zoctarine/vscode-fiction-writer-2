@@ -1,6 +1,7 @@
 import {FwControl} from './FwControl';
 import {FwSubType} from './FwSubType';
 import {IFwInfo} from './FwInfo';
+import {FwItem} from './FwItem';
 
 export enum FwPermission {
     None = 0,
@@ -16,6 +17,7 @@ export enum FwPermission {
     Morph = 1 << 10,
     Compile = 1 << 11,
     AddChildren = 1 << 12,
+    AddSiblings = 1 << 13,
 }
 
 const key = (control: FwControl, subType: FwSubType) => `${control}_${subType}`;
@@ -42,7 +44,8 @@ export class Permissions {
             FwPermission.Move |
             FwPermission.Delete |
             FwPermission.Compile |
-            FwPermission.AddChildren,
+            FwPermission.AddChildren |
+            FwPermission.AddSiblings
         );
 
         Permissions._add(
@@ -56,7 +59,8 @@ export class Permissions {
             FwPermission.OpenEditor |
             FwPermission.RemoveFromProject |
             FwPermission.Morph |
-            FwPermission.Compile
+            FwPermission.Compile |
+            FwPermission.AddSiblings
         );
 
         Permissions._add(
@@ -70,7 +74,9 @@ export class Permissions {
             FwPermission.OpenEditor |
             FwPermission.RemoveFromProject |
             FwPermission.Morph |
-            FwPermission.Compile);
+            FwPermission.Compile |
+            FwPermission.AddSiblings
+        );
 
         Permissions._add(
             FwControl.Active, FwSubType.EmptyVirtualFolder,
@@ -86,7 +92,8 @@ export class Permissions {
             FwPermission.Delete |
             FwPermission.OpenEditor |
             FwPermission.AddToProject |
-            FwPermission.Compile
+            FwPermission.Compile |
+            FwPermission.AddSiblings
         );
 
         Permissions._add(
@@ -94,7 +101,9 @@ export class Permissions {
             FwPermission.Rename |
             FwPermission.Move |
             FwPermission.Delete |
-            FwPermission.OpenEditor);
+            FwPermission.OpenEditor |
+            FwPermission.AddSiblings
+        );
     }
 
     static get(item?: IFwInfo): FwPermission {
@@ -110,8 +119,10 @@ export class Permissions {
         return (a & b) === b;
     }
 
-    static check(item?: IFwInfo, permission?: FwPermission): boolean {
+    static check(item?: IFwInfo | FwItem, permission?: FwPermission): boolean {
         if (!permission) return false;
+
+        if (item instanceof FwItem) item = item.info;
 
         const allowed = Permissions.get(item);
 

@@ -620,12 +620,12 @@
         {
           "command": "fictionWriter.files.extract",
           "group": "FictionWriter@2",
-          "when": "editorLangId == fwmarkdown"
+          "when": "editorLangId == fwmarkdown && editorHasSelection"
         },
         {
           "command": "fictionWriter.files.extractMultiple",
           "group": "FictionWriter@3",
-          "when": "editorLangId == fwmarkdown"
+          "when": "editorLangId == fwmarkdown && editorHasSelection"
         }
       ],
       "fictionWriter.editor": [
@@ -930,13 +930,13 @@
       },
       {
         "command": "fictionWriter.files.extract",
-        "title": "Extract file...",
+        "title": "Extract...",
         "category": "FictionWriter",
         "icon": "$(edit)"
       },
       {
         "command": "fictionWriter.files.extractMultiple",
-        "title": "Extract files",
+        "title": "Extract inidivdual lines...",
         "category": "FictionWriter",
         "icon": "$(edit)"
       },

@@ -41,6 +41,9 @@ export class FwInfo implements IFwInfo {
     order: number[] = [];
     projectTag: string = '';
     data: string[] = [];
+
+    displayName:string='';
+    displayExt:string='';
     orderBy: string = '';
 
     constructor() {
@@ -54,6 +57,7 @@ export class FwInfo implements IFwInfo {
         sub.control = instance.control;
         sub.subType = instance.subType;
         sub.projectTag = instance.projectTag;
+
         Object.setPrototypeOf(sub, Object.getPrototypeOf(instance));
     }
 }

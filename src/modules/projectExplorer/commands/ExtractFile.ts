@@ -11,25 +11,21 @@ import {
 } from '../../../core';
 import {ProjectNode} from '../models/projectNode';
 import vscode, {TextDocument} from 'vscode';
-import {FwItem} from '../../../core/fwFiles/FwItem';
+import {FwItem, FwItemCloneBuilder, FwItemTools} from '../../../core/fwFiles/FwItem';
 import {StateManager} from '../../../core/state';
 import {fwPath} from '../../../core/FwPath';
+import {FwItemOption, fwFilenameInput, fwItemPicker} from '../../../core/inputs';
 
 /**
  * Reveals a file item in the VSCode Explorer view
  */
 const l = log.for("ExtractFile");
-export enum ExtractFileType {
-    Single = 'single',
-    Multiple = 'multiple',
-}
 
 export class ExtractFile implements IAsyncCommand<vscode.TextEditor, void> {
 
     constructor(private _fileManager: FwFileManager,
                 private _stateManager: StateManager,
-                private _fwItemBuilder: FwItemBuilder,
-                private _extractTypes: ExtractFileType) {
+                private _fwItemBuilder: FwItemBuilder) {
     }
 
     async runAsync(editor?: vscode.TextEditor): Promise<void> {
@@ -43,57 +39,44 @@ export class ExtractFile implements IAsyncCommand<vscode.TextEditor, void> {
 
         if (!editor?.selection || editor.selection.isEmpty) return;
 
-        const fileNames:string[] = [];
+        const lines: string[] = [];
         const edit = new vscode.WorkspaceEdit();
         const selections = editor.selections.map(selection => {
             for (let line = selection.start.line; line <= selection.end.line; line++) {
-                const lineText = doc.lineAt(line).text;
+                const lineText = doc.lineAt(line).text
+                    .substring(selection.start.character, selection.end.character+1);
+
                 if (lineText.length > 0) {
-                    fileNames.push(lineText);
+                    lines.push(lineText);
                 }
             }
-
             edit.delete(doc.uri, selection);
         });
         if (selections.length === 0) return;
 
-        const originalOrder = [...newInfo.order];
-        const parser = this._fwItemBuilder.fsRefToFwInfo;
-        const fileMap = new Map<string, string>();
+        const content = lines.reduce((acc, f) => acc + f, "");
+        const builder = new FwItemCloneBuilder(fwItem, this._fwItemBuilder);
 
-        if (this._extractTypes === ExtractFileType.Single){
-            newInfo.name = newInfo.name + " 1";
-            const newRef = parser.serialize(newInfo, {
-                rootFolderPaths: [],
-                fsDir: fwItem.fsRef.fsDir,
-                fsExt: fwItem.fsRef.fsExt
-            });
-            fileMap.set(newRef.fsPath, fileNames.reduce((acc, f) => acc + f, ""));
+        const extracted = await builder
+            .setFilename(fwPath.toFilename(lines.join(' ')))
+            .incrementFileOrder()
+            .clone();
+        const nextPath = await builder.incrementFileOrder().clone();
+        const nextOrdered = await builder.incrementFilename().clone();
+        let selectedItem = await fwItemPicker([
+            new FwItemOption(extracted, 'from selection'),
+            new FwItemOption(nextPath, 'As sibling with same name'),
+            new FwItemOption(nextOrdered, 'As duplicate')
+        ]);
+        if (!selectedItem) {
+            return;
         }
-
-        // TODO: extract these to methods, or commands
-        // make sure edits are not deleted if file not created
-        // make also numbering with suffix for each created file
-        if (this._extractTypes === ExtractFileType.Multiple) {
-            for (let line = 0; line < fileNames.length; line++) {
-                newInfo.name = fwPath.toFilename(fileNames[line]);
-                newInfo.order = [...originalOrder, line + 1];
-                const newRef = parser.serialize(newInfo, {
-                    rootFolderPaths: [],
-                    fsDir: fwItem.fsRef.fsDir,
-                    fsExt: fwItem.fsRef.fsExt
-                });
-
-                if (newRef) fileMap.set(newRef.fsPath, fileNames[line]);
-                fileMap.set(newRef.fsPath, fileNames[line]);
-            }
-        }
-
-        l.trace("FileNames", [...fileMap.keys()]);
-
-        const createdFiles = await this._fileManager.batchCreateFiles(fileMap);
-        if (createdFiles.length !== fileMap.size) {
-            notifier.warn("Could not create all files");
+        const fileName = await fwFilenameInput(selectedItem);
+        if (!fileName) return;
+        const newItem = await builder.setBasename(fileName).clone();
+        const createdFile = await this._fileManager.createFile(newItem.fsRef.fsPath, content);
+        if (!createdFile) {
+            notifier.warn("Could not create all file");
         }
 
         if (await vscode.workspace.applyEdit(edit)) {

@@ -60,7 +60,7 @@ export class FileWorkerClient extends DisposeManager {
 
                 switch (message.type) {
                     case WorkerMsg.start:
-                        vscode.window.showInformationMessage(`Worker started`);
+                        log.info(`File indexer started`);
                         break;
 
                     case WorkerMsg.filesChanged:
@@ -131,7 +131,7 @@ export class FileWorkerClient extends DisposeManager {
         this._post(new ClientMsgFileChanged(path, action));
     }
 
-    private _post(msg: any){
+    private _post(msg: any) {
         l.trace("worker.post.message", msg);
         this.w?.postMessage(msg);
     }

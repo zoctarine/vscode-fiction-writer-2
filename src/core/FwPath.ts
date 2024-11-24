@@ -28,8 +28,8 @@ export class FwPath {
     }
 
 
-    public isValidName(name: string): boolean {
-        if (!name) return false;
+    public isValidName(name?: string): boolean {
+        if (!name || name.length === 0) return false;
         if (path.posix.basename(name) !== name) return false;
 
         return true;

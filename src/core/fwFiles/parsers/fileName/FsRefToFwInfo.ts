@@ -18,7 +18,7 @@ import {FwControl} from '../../FwControl';
 export class FsRefToFwInfo implements IFwInfoParser {
     private _fileExtensions = ['.md', '.txt'];
 
-    constructor(private _orderParser: IOrderParser) {
+    constructor(public orderParser: IOrderParser) {
 
     }
 
@@ -29,7 +29,7 @@ export class FsRefToFwInfo implements IFwInfoParser {
         const {rootFolderPaths} = opt;
 
         const parsed = this._parse(ref.fsBaseName);
-        const orderedName = this._orderParser.parse(parsed.name);
+        const orderedName = this.orderParser.parse(parsed.name);
 
         const isWorkspaceFolder = ref.fsIsFolder && rootFolderPaths.includes(ref.fsPath);
         const isTextFile = ref.fsIsFile && this._fileExtensions.includes(ref.fsExt);
@@ -46,8 +46,12 @@ export class FsRefToFwInfo implements IFwInfoParser {
             result.name = orderedName.name;
             result.order = orderedName.order;
             result.data = parsed.data;
+            result.displayName = parsed.name;
+            result.displayExt = `${parsed.projectTag}${ref.fsExt}`;
         } else {
             result.name = ref.fsBaseName;
+            result.displayName = ref.fsName;
+            result.displayExt = ref.fsExt;
             result.order = [];
             result.data = [];
         }
@@ -63,7 +67,7 @@ export class FsRefToFwInfo implements IFwInfoParser {
         fsExt: string
     } | undefined): IFsRef {
 
-        let fsName = this._orderParser.serialize(parsed);
+        let fsName = this.orderParser.serialize(parsed);
         if (parsed.projectTag.length > 0) {
             fsName += `.${parsed.projectTag}`;
         }
