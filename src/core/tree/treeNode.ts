@@ -1,4 +1,4 @@
-import {FwSubType} from '../fwFiles';
+import {FwPermission, FwSubType, Permissions} from '../fwFiles';
 
 export class TreeNode<T> {
     public id: string;
@@ -7,7 +7,7 @@ export class TreeNode<T> {
     public children: TreeNode<T>[] = [];
     public visible = true;
     public selected = false;
-    public checked: boolean|undefined = undefined;
+    public checked: boolean | undefined = undefined;
     public highlighted = false;
 
     constructor(id: string, data: T) {
@@ -23,12 +23,16 @@ export class TreeNode<T> {
         return this.parent === undefined;
     }
 
-    public acceptsChild(child: TreeNode<T>): boolean{
+    public acceptsChild(child: TreeNode<T>): boolean {
         return true;
     }
 
     public get acceptsChildren(): boolean {
         return true;
+    }
+
+    public get acceptsVirtualChildren(): boolean {
+        return false;
     }
 
     public get canMove(): boolean {

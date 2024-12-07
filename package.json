@@ -546,6 +546,13 @@
           "fontCharacter": "\\f15c"
         }
       },
+      "fa-reply": {
+        "description": "reply",
+        "default": {
+          "fontPath": "./media/webfonts/fa-solid-900.woff2",
+          "fontCharacter": "\\f104"
+        }
+      },
       "fa-copy": {
         "description": "copy",
         "default": {
@@ -603,6 +610,12 @@
         }
       }
     },
+    "submenus": [
+      {
+        "id": "fictionWriter.explorer.view",
+        "label": "View"
+      }
+    ],
     "menus": {
       "explorer/context": [
         {
@@ -627,6 +640,7 @@
           "group": "FictionWriter@3",
           "when": "editorLangId == fwmarkdown && editorHasSelection"
         }
+
       ],
       "fictionWriter.editor": [
       ],
@@ -662,79 +676,97 @@
       ],
       "view/title": [
         {
+          "command": "fictionWriter.views.projectExplorer.view.tree",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.projectView != tree"
+        },
+        {
+          "command": "fictionWriter.views.projectExplorer.view.list",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.projectView != list"
+        },
+        {
+          "command": "fictionWriter.views.projectExplorer.navigation.back",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.back",
+          "group": "navigation@10"
+        },
+        {
           "command": "fictionWriter.views.projectExplorer.filters.allFiles",
           "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.filter == projectFiles",
-          "group": "navigation"
+          "group": "navigation@20"
         },
         {
           "command": "fictionWriter.views.projectExplorer.filters.projectFiles",
           "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.filter == allFiles",
-          "group": "navigation"
+          "group": "navigation@20"
         },
         {
           "command": "fictionWriter.views.projectExplorer.show.decoration1",
           "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.decoration == decoration1",
-          "group": "navigation"
+          "group": "navigation@30"
         },
         {
           "command": "fictionWriter.views.projectExplorer.show.decoration2",
           "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.decoration == decoration2",
-          "group": "navigation"
+          "group": "navigation@30"
         },
         {
           "command": "fictionWriter.views.projectExplorer.show.decoration3",
           "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.decoration == decoration3",
-          "group": "navigation"
+          "group": "navigation@30"
         },
         {
           "command": "fictionWriter.views.projectExplorer.show.decoration4",
           "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.decoration == decoration4",
-          "group": "navigation"
+          "group": "navigation@30"
+        },
+        {
+          "command": "fictionWriter.views.projectExplorer.show.decoration5",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.decoration == decoration5",
+          "group": "navigation@30"
         },
         {
           "command": "fictionWriter.views.projectExplorer.sync.on",
           "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.sync == off",
-          "group": "navigation"
+          "group": "navigation@120"
         },
         {
           "command": "fictionWriter.views.projectExplorer.sync.off",
           "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.sync == on",
-          "group": "navigation"
+          "group": "navigation@120"
         },
         {
           "command": "fictionWriter.views.projectExplorer.newFile",
           "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.newFile",
-          "group": "navigation"
+          "group": "navigation@40"
         },
         {
           "command": "fictionWriter.views.projectExplorer.newFolder",
           "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.newFolder",
-          "group": "navigation"
+          "group": "navigation@50"
         },
         {
           "command": "fictionWriter.views.projectExplorer.reorder.start",
           "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.orderStart",
-          "group": "navigation"
+          "group": "navigation@60"
         },
         {
           "command": "fictionWriter.views.projectExplorer.reorder.discard",
           "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.orderDiscard",
-          "group": "navigation"
+          "group": "navigation@70"
         },
         {
           "command": "fictionWriter.views.projectExplorer.reorder.commit",
           "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.orderCommit",
-          "group": "navigation"
+          "group": "navigation@80"
         },
         {
           "command": "fictionWriter.views.projectExplorer.compile.discard",
           "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.compileDiscard",
-          "group": "navigation"
+          "group": "navigation@90"
         },
         {
           "command": "fictionWriter.views.projectExplorer.compile.commit",
           "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.compileCommit",
-          "group": "navigation"
+          "group": "navigation@100"
         },
         {
           "command": "fictionWriter.views.wordFrequency.refresh",
@@ -759,12 +791,12 @@
         {
           "command": "fictionWriter.views.metadata.filters.setFilter",
           "when": "view == fictionWriter.views.metadata.filters && fictionWriter.views.metadata.hasFilter == false",
-          "group": "navigation"
+          "group": "navigation@20"
         },
         {
           "command": "fictionWriter.views.metadata.filters.removeFilter",
           "when": "view == fictionWriter.views.metadata.filters && fictionWriter.views.metadata.hasFilter == true",
-          "group": "navigation"
+          "group": "navigation@20"
         },
         {
           "command": "fictionWriter.views.metadata.filters.linkWithFileView.off",
@@ -777,7 +809,48 @@
           "group": "navigation"
         }
       ],
+      "fictionWriter.explorer.view": [
+        {
+          "command": "fictionWriter.views.projectExplorer.show.order.on",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.showOrder == off",
+          "group": "01_fictionWriter_show@1"
+        },
+        {
+          "command": "fictionWriter.views.projectExplorer.show.order.off",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.showOrder == on",
+          "group": "01_fictionWriter_show@1"
+        },
+        {
+          "command": "fictionWriter.views.projectExplorer.show.extension.on",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.showExtension == off",
+          "group": "01_fictionWriter_show@2"
+        },
+        {
+          "command": "fictionWriter.views.projectExplorer.show.extension.off",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.showExtension == on",
+          "group": "01_fictionWriter_show@2"
+        },
+        {
+          "command": "fictionWriter.views.projectExplorer.view.treeHere",
+          "when": "view == fictionWriter.views.projectExplorer ",
+          "group": "01_fictionWriter_show@3"
+        },
+        {
+          "command": "fictionWriter.views.projectExplorer.view.listHere",
+          "when": "view == fictionWriter.views.projectExplorer ",
+          "group": "01_fictionWriter_show@3"
+        }
+      ],
       "view/item/context": [
+        {
+          "submenu": "fictionWriter.explorer.view",
+          "group": "99_fictionWriter_view@1"
+        },
+        {
+          "command": "fictionWriter.views.projectExplorer.open",
+          "when": "view == fictionWriter.views.projectExplorer && viewItem =~ /\\bopen\\b/ && !listMultiSelection",
+          "group": "inline"
+        },
         {
           "command": "fictionWriter.views.projectExplorer.debug.stateDump",
           "when": "view == fictionWriter.views.projectExplorer && viewItem =~ /\\bdebug\\b/ && !listMultiSelection",
@@ -787,6 +860,11 @@
           "command": "fictionWriter.views.projectExplorer.addToProject",
           "when": "view == fictionWriter.views.projectExplorer && viewItem =~ /\\binclude\\b/",
           "group": "1_fictionWriter_project@1"
+        },
+        {
+          "command": "fictionWriter.views.projectExplorer.addToProject",
+          "when": "view == fictionWriter.views.projectExplorer && viewItem =~ /\\binclude\\b/",
+          "group": "inline"
         },
         {
           "command": "fictionWriter.views.projectExplorer.excludeFromProject",
@@ -936,7 +1014,7 @@
       },
       {
         "command": "fictionWriter.files.extractMultiple",
-        "title": "Extract inidivdual lines...",
+        "title": "Extract to multiple files...",
         "category": "FictionWriter",
         "icon": "$(edit)"
       },
@@ -945,6 +1023,12 @@
         "title": "Reveal in FictionWriter",
         "category": "FictionWriter",
         "icon": "$(edit)"
+      },
+      {
+        "command": "fictionWriter.views.projectExplorer.open",
+        "title": "Edit",
+        "icon": "$(pencil)",
+        "category": "Markdown Fiction Writer"
       },
       {
         "command": "fictionWriter.editors.proseMirror.openInProseMirror",
@@ -965,6 +1049,12 @@
         "icon": "$(fa-pen)"
       },
       {
+        "command": "fictionWriter.views.projectExplorer.navigation.back",
+        "title": "Back",
+        "icon": "$(arrow-left)",
+        "category": "Markdown Fiction Writer"
+      },
+      {
         "command": "fictionWriter.views.projectExplorer.changeFormatting",
         "title": "Change Formatting...",
         "icon": "$(format)",
@@ -973,13 +1063,13 @@
       {
         "command": "fictionWriter.views.projectExplorer.addToProject",
         "title": "Add to FictionWriter Project",
-        "icon": "$(sync)",
+        "icon": "$(add)",
         "category": "Markdown Fiction Writer"
       },
       {
         "command": "fictionWriter.views.projectExplorer.excludeFromProject",
         "title": "Exclude From FictionWriter Project...",
-        "icon": "$(sync)",
+        "icon": "$(remove)",
         "category": "Markdown Fiction Writer"
       },
       {
@@ -1062,27 +1152,81 @@
       },
       {
         "command": "fictionWriter.views.projectExplorer.show.decoration1",
-        "title": "Deocartins: Show all. Click to change",
+        "title": "Show all. Click to change",
         "category": "FictionWriter",
         "icon": "$(symbol-text)"
       },
       {
         "command": "fictionWriter.views.projectExplorer.show.decoration2",
-        "title": "Deocartins: Show only metadata. Click to change",
+        "title": "Show only metadata. Click to change",
         "category": "FictionWriter",
         "icon": "$(tag)"
       },
       {
         "command": "fictionWriter.views.projectExplorer.show.decoration3",
-        "title": "Deocartins: Show only targets. Click to change",
+        "title": "Show only targets. Click to change",
         "category": "FictionWriter",
         "icon": "$(target)"
       },
       {
         "command": "fictionWriter.views.projectExplorer.show.decoration4",
-        "title": "Deocartins: No decorations. Click to change",
+        "title": "Last Modified Date",
+        "category": "FictionWriter",
+        "icon": "$(calendar)"
+      },
+      {
+        "command": "fictionWriter.views.projectExplorer.show.decoration5",
+        "title": "No decorations. Click to change",
         "category": "FictionWriter",
         "icon": "$(eye-closed)"
+      },
+      {
+        "command": "fictionWriter.views.projectExplorer.show.order.on",
+        "title": "Show order",
+        "category": "FictionWriter",
+        "icon": "$(eye-closed)"
+      },
+      {
+        "command": "fictionWriter.views.projectExplorer.show.order.off",
+        "title": "Hide order",
+        "category": "FictionWriter",
+        "icon": "$(eye-closed)"
+      },
+      {
+        "command": "fictionWriter.views.projectExplorer.show.extension.on",
+        "title": "Show extension",
+        "category": "FictionWriter",
+        "icon": "$(eye-closed)"
+      },
+      {
+        "command": "fictionWriter.views.projectExplorer.show.extension.off",
+        "title": "Hide extension",
+        "category": "FictionWriter",
+        "icon": "$(eye-closed)"
+      },
+      {
+        "command": "fictionWriter.views.projectExplorer.view.tree",
+        "title": "Tree View",
+        "category": "FictionWriter",
+        "icon": "$(list-tree)"
+      },
+      {
+        "command": "fictionWriter.views.projectExplorer.view.treeHere",
+        "title": "Tree View (here)",
+        "category": "FictionWriter",
+        "icon": "$(list-tree)"
+      },
+      {
+        "command": "fictionWriter.views.projectExplorer.view.list",
+        "title": "List View",
+        "category": "FictionWriter",
+        "icon": "$(list-flat)"
+      },
+      {
+        "command": "fictionWriter.views.projectExplorer.view.listHere",
+        "title": "List View (here)",
+        "category": "FictionWriter",
+        "icon": "$(list-flat)"
       },
       {
         "command": "fictionWriter.views.projectExplorer.compile.startHere",

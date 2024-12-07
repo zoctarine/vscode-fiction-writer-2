@@ -1,5 +1,5 @@
 import {
-    DefaultOrderParser,
+    PrefixOrderParser,
     FwFileManager,
     FwItemBuilder,
     FwPermission,
@@ -32,7 +32,7 @@ export class ExcludeFromProject implements IAsyncCommand<FwItem[], void> {
                 continue;
             }
 
-            const op = new DefaultOrderParser();
+            const op = new PrefixOrderParser();
             const oldName = item.info.name;
             const parsed = fwPath.parse(item.fsRef.fsPath);
             const newName = parsed.name.replace(/\.fw$/i, '');

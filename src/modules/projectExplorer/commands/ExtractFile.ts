@@ -1,17 +1,15 @@
 import {
-    DefaultOrderParser,
+    PrefixOrderParser,
     FwFileManager, FwItemBuilder,
     FwPermission,
     FwSubType,
     FwType,
     IAsyncCommand, IFsRef, log,
     notifier, ObjectProps,
-    Permissions, retryAsync,
-    SimpleSuffixOrderParser
+    Permissions
 } from '../../../core';
-import {ProjectNode} from '../models/projectNode';
-import vscode, {TextDocument} from 'vscode';
-import {FwItem, FwItemCloneBuilder, FwItemTools} from '../../../core/fwFiles/FwItem';
+import vscode from 'vscode';
+import {FwItemCloneBuilder} from '../../../core/fwFiles/FwItem';
 import {StateManager} from '../../../core/state';
 import {fwPath} from '../../../core/FwPath';
 import {FwItemOption, fwFilenameInput, fwItemPicker} from '../../../core/inputs';
@@ -39,30 +37,22 @@ export class ExtractFile implements IAsyncCommand<vscode.TextEditor, void> {
 
         if (!editor?.selection || editor.selection.isEmpty) return;
 
-        const lines: string[] = [];
         const edit = new vscode.WorkspaceEdit();
-        const selections = editor.selections.map(selection => {
-            for (let line = selection.start.line; line <= selection.end.line; line++) {
-                const lineText = doc.lineAt(line).text
-                    .substring(selection.start.character, selection.end.character+1);
-
-                if (lineText.length > 0) {
-                    lines.push(lineText);
-                }
-            }
+        const lines = editor.selections.map(selection => {
             edit.delete(doc.uri, selection);
+            return doc.getText(selection);
         });
-        if (selections.length === 0) return;
+        if (lines.length === 0) return;
 
         const content = lines.reduce((acc, f) => acc + f, "");
         const builder = new FwItemCloneBuilder(fwItem, this._fwItemBuilder);
 
         const extracted = await builder
             .setFilename(fwPath.toFilename(lines.join(' ')))
-            .incrementFileOrder()
+            .incrementMainOrder()
             .clone();
-        const nextPath = await builder.incrementFileOrder().clone();
-        const nextOrdered = await builder.incrementFilename().clone();
+        const nextPath = await builder.incrementMainOrder().clone();
+        const nextOrdered = await builder.incrementSubOrder().clone();
         let selectedItem = await fwItemPicker([
             new FwItemOption(extracted, 'from selection'),
             new FwItemOption(nextPath, 'As sibling with same name'),

@@ -1,4 +1,5 @@
-export interface IProjectTreeViewModel {
+export interface IProjectViewContext {
+    // Title menu
     decoration: string | undefined;
     newFile: boolean;
     newFolder: boolean;
@@ -13,4 +14,10 @@ export interface IProjectTreeViewModel {
     orderUp: boolean;
     orderDown: boolean;
     refresh: boolean;
+    back: boolean;
+
+    // Context Menu
+    showExtension: string;
+    showOrder: string;
+    projectView: string | undefined;
 }

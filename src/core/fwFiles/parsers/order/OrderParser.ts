@@ -1,36 +1,41 @@
-import {IOrderParser} from './IOrderParser';
-import {defaultOrderOptions, IOrderOptions} from './IOrderOptions';
+import {IOrderParser,} from './IOrderParser';
 import {IFwOrderedName} from '../../IFwOrderedName';
+import {defaultOrderOptions, IOrderOptions} from './IOrderOptions';
 
-export class DefaultOrderParser implements IOrderParser {
-    orderRegex = /^(\d+\.)*(\d+)(?: )/i;
+export abstract class OrderParser implements IOrderParser {
+    protected options: IOrderOptions;
+
+    protected constructor(protected orderRegex: RegExp, options: Partial<IOrderOptions> = {}) {
+        this.options = {...defaultOrderOptions, ...options};
+    }
 
     parse(orderedName: string, options: Partial<IOrderOptions> = {}): IFwOrderedName {
-        const opt = {...defaultOrderOptions, ...options};
+        const opt = {...this.options, ...options};
         let namePart = orderedName;
         let orderPart = '';
+        let gluePart = '';
         let orderList: number[] = [];
         const matches = orderedName.match(this.orderRegex);
-        if (matches) {
-            orderPart = matches[0];
-            orderList = orderPart.split(opt.separator).map(o => {
+        if (matches?.groups) {
+            const {order, name, glue} = matches.groups;
+            gluePart = glue ?? '';
+            orderPart = order ?? '';
+            orderList = orderPart?.split(opt.separator).map(o => {
                 const order = parseInt(o, 10);
                 return Number.isNaN(order) ? 0 : order;
-            });
-            namePart = orderedName.substring(orderPart.length);
+            }) ?? [];
+            namePart = name ?? '';
         }
 
         return {
             name: namePart,
-            order: orderList
+            order: orderList,
+            glue: gluePart,
+            sep: opt.separator
         };
     }
 
-    serialize(parsed: IFwOrderedName, options?: IOrderOptions): string {
-        const order = [...parsed.order ?? []];
-
-        return `${order.join('.')} ${parsed.name ?? ''}`;
-    }
+    abstract serialize(parsed: IFwOrderedName, options?: Partial<IOrderOptions>): string;
 
     computeNextOrderFor(orderedNames: string[], parentOrder: number[]): number {
         parentOrder ??= [];

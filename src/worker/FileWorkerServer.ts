@@ -128,7 +128,7 @@ export class FileWorkerServer {
                 } else if (node.info.subType === FwSubType.Folder) {
                     t = `${t}/`;
                 }
-                console.log(depth + t);
+                // console.log(depth + t);
             });
 
             this.post(new WorkerMsgJobProgress("", finishedOperations, finishedOperations));

@@ -76,6 +76,7 @@ export class FwPath {
                 ignore: ['**/.vscode/**', '**/node_modules/**'],
                 realpath: true,
                 withFileTypes: true,
+                stat: true,
             });
     }
 

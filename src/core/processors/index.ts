@@ -10,6 +10,7 @@ export {SetMetadata} from './stateProcessors/setMetadata';
 export {SetOrderDecorations} from './stateProcessors/setOrderDecorations';
 export {SetMetaDecorations} from './stateProcessors/setMetaDecorations';
 export {SetFwItemDecorations} from './stateProcessors/setFwItemDecorations';
+export {SetDateTimeDecorations} from './stateProcessors/setDateTimeDecorations';
 export {SetTextStatisticsDecorations} from './stateProcessors/setTextStatisticsDecorations';
 export {SetFwItemTypeDecorations} from './stateProcessors/setFwItemTypeDecorations';
 export {SetSecurityPermissions} from './stateProcessors/setSecurityPermissions';

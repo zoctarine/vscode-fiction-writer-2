@@ -1,7 +1,6 @@
-import {FwControl, FwPermission, FwType, Permissions, TreeNode} from '../../../core';
+import {FwPermission, FwSubType, Permissions, TreeNode} from '../../../core';
 import {IFileState} from '../../../core/state';
 import {Collections} from '../../../core/lib/collections';
-import {IProjectNodeContext} from './IProjectNodeContext';
 
 export class ProjectNodeList implements Collections<ProjectNode> {
     public items: ProjectNode[] = [];
@@ -36,8 +35,51 @@ export class ProjectNode extends TreeNode<IFileState> {
         return true;
     }
 
+    public acceptsType(childSubType: FwSubType): boolean {
+        const info = this.data?.fwItem?.info;
+        if (!info) return false;
+
+        switch (childSubType) {
+            case FwSubType.Unknown:
+                return false;
+            case FwSubType.Root:
+                return false;
+            case FwSubType.RootFolder:
+                return false;
+            case FwSubType.ProjectFile:
+                return Permissions.check(info, FwPermission.AddChildFile) ||
+                    Permissions.check(info, FwPermission.AddVirtualChild);
+            case FwSubType.Folder:
+                return Permissions.check(info, FwPermission.AddChildFolder) ||
+                    Permissions.check(info, FwPermission.AddChildFile);
+            case FwSubType.VirtualFolder:
+                return Permissions.check(info, FwPermission.AddChildFile) ||
+                    Permissions.check(info, FwPermission.AddVirtualChild | FwPermission.AddSiblings);
+            case FwSubType.EmptyVirtualFolder:
+                return Permissions.check(info, FwPermission.AddVirtualChild | FwPermission.AddSiblings);
+            case FwSubType.WorkspaceFolder:
+                return Permissions.check(info, FwPermission.AddChildFolder) ||
+                    Permissions.check(info, FwPermission.AddChildFile);
+            case FwSubType.Filter:
+                return false;
+            case FwSubType.FilterRoot:
+                return false;
+            case FwSubType.TextFile:
+                return Permissions.check(info, FwPermission.AddChildFile);
+            case FwSubType.OtherFile:
+                return Permissions.check(info, FwPermission.AddChildFile);
+        }
+
+        return true;
+    }
+
     override get acceptsChildren(): boolean {
-        return Permissions.check(this.data.fwItem?.info, FwPermission.AddChildren);
+        return Permissions.check(this.data.fwItem?.info, FwPermission.AddChildFolder) ||
+            Permissions.check(this.data.fwItem?.info, FwPermission.AddChildFile);
+    }
+
+    override get acceptsVirtualChildren(): boolean {
+        return Permissions.check(this.data.fwItem?.info, FwPermission.AddVirtualChild);
     }
 
     override get canMove(): boolean {
@@ -51,4 +93,18 @@ export class ProjectNode extends TreeNode<IFileState> {
     override get canDelete(): boolean {
         return Permissions.check(this.data.fwItem?.info, FwPermission.Delete);
     }
+}
+
+
+export class BackProjectNode extends ProjectNode{
+    constructor() {
+        super('back', {});
+    }
+
+    override acceptsChild(child: TreeNode<IFileState>): boolean { return false;}
+    override get acceptsChildren(): boolean  { return false;}
+    override get acceptsVirtualChildren(): boolean  { return false;}
+    override get canMove(): boolean  { return false;}
+    override get canEdit(): boolean  { return false;}
+    override get canDelete(): boolean  { return false;}
 }

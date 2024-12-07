@@ -3,7 +3,7 @@ import {LoadTextFile} from '../commands/LoadTextFile';
 import {ExtractMeta} from '../commands/ExtractMeta';
 import {ComputeHash} from '../commands/ComputeHash';
 import {AnalyzeText} from '../commands/AnalyzeText';
-import {DefaultOrderParser, FsRefToFwInfo, PathScurryToFsRef} from '../parsers';
+import {PrefixOrderParser, FsRefToFwInfo, PathScurryToFsRef, SuffixOrderParser} from '../parsers';
 import {FwItem} from '../FwItem';
 import {FwPermission, Permissions} from '../FwPermission';
 import {FwEmpty, FwRootItem} from '../FwInfo';
@@ -20,7 +20,8 @@ export class FwItemBuilder implements IAsyncBuilder<{ path: Path | string, isFil
         private _analyzeText = new AnalyzeText(),
         public fsPathToFsRef = new FsPathToFsRef(),
         public pathScurryToFsRef = new PathScurryToFsRef(),
-        public fsRefToFwInfo = new FsRefToFwInfo(new DefaultOrderParser())
+        public fsRefToFwInfo = new FsRefToFwInfo(new PrefixOrderParser(), new SuffixOrderParser()),
+
     ) {
     }
 

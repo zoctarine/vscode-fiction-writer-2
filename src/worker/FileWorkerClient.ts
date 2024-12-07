@@ -89,6 +89,7 @@ export class FileWorkerClient extends DisposeManager {
                 }
             })
             .on('error', (error) => {
+                console.error(error);
                 vscode.window.showErrorMessage(`Worker error: ${error.message}`);
             })
             .on('exit', (code) => {

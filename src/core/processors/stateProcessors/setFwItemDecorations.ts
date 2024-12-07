@@ -17,8 +17,8 @@ export class SetFwItemDecorations implements IStateProcessor<IFileState> {
         } else if (state.fwItem.info?.control === FwControl.Possible) {
             newData.color = CoreColors.inactive;
             newData.highlightColor = CoreColors.inactive;
-
-            newData.badge = '+';
+            // TODO(A): suppressed by + command icon
+            // newData.badge = '+';
         } else if (state.fwItem?.info?.subType === FwSubType.OtherFile) {
             newData.color = CoreColors.inactive;
             newData.highlightColor = CoreColors.inactive;

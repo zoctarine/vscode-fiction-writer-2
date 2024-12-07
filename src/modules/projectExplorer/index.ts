@@ -3,17 +3,18 @@ import {Disposable} from "vscode";
 
 import {ProjectExplorerTreeDataProvider} from "./projectExplorerTreeDataProvider";
 import {ProjectsOptions} from "./projectsOptions";
-import {ArrayTools, DisposeManager} from "../../core";
-import {addCommand, CoreModule, FictionWriter, log} from '../../core';
+import {addCommand, ArrayTools, CoreModule, DisposeManager, FictionWriter, log, notifier} from "../../core";
 import {ProjectExplorerDecorationProvider} from './projectExplorerDecorationProvider';
 import {ProjectNode} from './models/projectNode';
-import {DeleteNode} from './commands/DeleteNode';
+import {DeleteFiles} from './commands/DeleteFiles';
 import {RenameNode} from './commands/RenameNode';
 import {AddToProject} from './commands/AddToProject';
 import {ExcludeFromProject} from './commands/ExcludeFromProject';
 import {CombineFiles} from './commands/CombineFiles';
 import {RevealInExplorer} from './commands/RevealInExplorer';
 import {AddChildFolder} from './commands/AddChildFolder';
+import {AddChildFile} from './commands/AddChildFile';
+import {ProjectView} from './models/IProjectContext';
 
 export class ProjectsModule extends DisposeManager {
     active = false;
@@ -47,33 +48,78 @@ export class ProjectsModule extends DisposeManager {
             addCommand(FictionWriter.views.projectExplorer.show.decoration4, () => {
                 this.projectExplorerDataProvider?.showNextFor('decoration4');
             }),
+            addCommand(FictionWriter.views.projectExplorer.show.decoration5, () => {
+                this.projectExplorerDataProvider?.showNextFor('decoration5');
+            }),
+            addCommand(FictionWriter.views.projectExplorer.navigation.back, () => {
+                this.projectExplorerDataProvider?.goBack();
+            }),
+            addCommand(FictionWriter.views.projectExplorer.navigation.forward, (node) => {
+                this.projectExplorerDataProvider?.goForward(node);
+            }),
+            addCommand(FictionWriter.views.projectExplorer.open, (node) => {
+                return vscode.commands.executeCommand("vscode.open", vscode.Uri.parse(node.id));
+            }),
+
+            addCommand(FictionWriter.views.projectExplorer.view.tree, () => {
+                this.projectExplorerDataProvider?.setView(ProjectView.tree, undefined);
+            }),
+            addCommand(FictionWriter.views.projectExplorer.view.treeHere, (node) => {
+                this.projectExplorerDataProvider?.setView(ProjectView.tree, node);
+            }),
+            addCommand(FictionWriter.views.projectExplorer.view.list, (node) => {
+                this.projectExplorerDataProvider?.setView(ProjectView.list, node);
+            }),
+            addCommand(FictionWriter.views.projectExplorer.view.listHere, (node) => {
+                this.projectExplorerDataProvider?.setView(ProjectView.list, node);
+            }),
+
+            addCommand(FictionWriter.views.projectExplorer.show.extension, () => {
+            }),
+            addCommand(FictionWriter.views.projectExplorer.show.order, () => {
+            }),
             addCommand(FictionWriter.views.projectExplorer.sync.on, () => {
                 this.projectExplorerDataProvider?.syncWithActiveEditorOn();
             }),
             addCommand(FictionWriter.views.projectExplorer.sync.off, () => {
                 this.projectExplorerDataProvider?.syncWithActiveEditorOff();
             }),
-            addCommand(FictionWriter.views.projectExplorer.newFile, (node: ProjectNode) => {
-                this.projectExplorerDataProvider?.addFile(node);
+            addCommand(FictionWriter.views.projectExplorer.newFile, async (node: ProjectNode) => {
+                const newName = await new AddChildFile(
+                    this.core.fileManager,
+                    this.core.fwItemFactory)
+                    .runAsync(node.data?.fwItem);
+                if (newName) {
+                    notifier.info(`Created ${newName}`);
+                    vscode.commands.executeCommand("vscode.open", vscode.Uri.parse(newName));
+                    this.projectExplorerDataProvider?.onNextRefresh(async () => {
+                        return await this.projectExplorerDataProvider?.reveal(newName, false) ?? true;
+                    });
+                } else {
+                    notifier.warn(`Could not new file`);
+                }
             }),
             addCommand(FictionWriter.views.projectExplorer.newFolder, async (node: ProjectNode) => {
                 const newName = await new AddChildFolder(this.core.fileManager).runAsync(node.data?.fwItem);
                 if (newName) {
-                    this.projectExplorerDataProvider?.onNextRefresh(() => {
-                        this.projectExplorerDataProvider?.reveal(newName, false);
+                    this.projectExplorerDataProvider?.onNextRefresh(async () => {
+                        return await this.projectExplorerDataProvider?.reveal(newName, false) ?? true;
                     });
                 }
             }),
             addCommand(FictionWriter.views.projectExplorer.rename, async (node: ProjectNode) => {
                 const newName = await new RenameNode(this.core.fileManager, this.core.fwItemBuilder).runAsync(node);
                 if (newName) {
-                    this.projectExplorerDataProvider?.onNextRefresh(() => {
-                        this.projectExplorerDataProvider?.reveal(newName, true);
+                    this.projectExplorerDataProvider?.onNextRefresh(async () => {
+                        return (await this.projectExplorerDataProvider?.reveal(newName, true)) ?? true;
                     });
                 }
             }),
             addCommand(FictionWriter.views.projectExplorer.trash, async (node: ProjectNode) => {
-                return new DeleteNode(this.core.fileManager).runAsync(node);
+                return new DeleteFiles(this.core.fileManager).runAsync(
+                    ArrayTools.firstNotEmpty(
+                        this.projectExplorerDataProvider?.getSelectedNodes(),
+                        [node?.data?.fwItem]));
             }),
             addCommand(FictionWriter.views.projectExplorer.toggleVirtualFolder, (node: ProjectNode) => {
                 this.projectExplorerDataProvider?.toggleVirtualFolder(node);

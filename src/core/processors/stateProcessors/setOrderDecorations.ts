@@ -1,6 +1,6 @@
 import {IStateProcessor} from '../IProcessor';
 import {IDecorationState, IFileState} from '../../state';
-import {FwPermission, Permissions} from '../../fwFiles';
+import {FwControl, FwPermission, Permissions} from '../../fwFiles';
 import {CoreColors} from '../../decorations';
 
 export class SetOrderDecorations implements IStateProcessor<IFileState> {
@@ -9,10 +9,10 @@ export class SetOrderDecorations implements IStateProcessor<IFileState> {
 
         const decorations: Partial<IDecorationState> = canSort
             ? {
-                description: ` `
+                description: ` ... ${state.fwItem?.info?.mainOrder.order?.slice(-1) ?? 0}`,
             }
             : {
-                color: CoreColors.inactive
+                color: CoreColors.inactive,
             };
 
         state.orderDecorations = {

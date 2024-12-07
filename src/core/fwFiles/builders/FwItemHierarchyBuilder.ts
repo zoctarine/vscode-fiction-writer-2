@@ -19,18 +19,18 @@ export class FwItemHierarchyBuilder implements IBuilder<{ items: Map<string, FwI
             item.parent = undefined;
 
             // add possible virtual folders to a separate list
-            if (item.info.order && item.info.order.length > 0 &&
+            if (item.info.mainOrder.order && item.info.mainOrder.order.length > 0 &&
                 item.info.subType === FwSubType.ProjectFile ||
                 item.info.subType === FwSubType.VirtualFolder) {
-                vFolders.set(makeVPath(item.fsRef.fsDir, item.info.order), item.fsRef.fsPath);
+                vFolders.set(makeVPath(item.fsRef.fsDir, item.info.mainOrder.order), item.fsRef.fsPath);
             }
         }
 
         for (const [_, item] of result) {
             let parent = result.get(item.fsRef.fsDir);
 
-            if (item.info.order.length > 1) {
-                const vPath = makeVPath(item.fsRef.fsDir, item.info.order.slice(0, -1));
+            if (item.info.mainOrder.order.length > 1) {
+                const vPath = makeVPath(item.fsRef.fsDir, item.info.mainOrder.order.slice(0, -1));
                 const vFolderPath = vFolders.get(vPath);
                 if (vFolderPath) {
                     const vParent = result.get(vFolderPath);

@@ -1,14 +1,16 @@
-import vscode from 'vscode';
-import {FictionWriter, FwControl, FwPermission, FwSubType, FwType, Permissions} from '../../../core';
+import vscode, {ThemeIcon} from 'vscode';
+import {FictionWriter, FwPermission, FwSubType, FwType, Permissions} from '../../../core';
 import {applyDecorations, IDecorationState, IFileState} from '../../../core/state';
 import {ProjectNode} from './projectNode';
 import {IProjectContext} from './IProjectContext';
+import {FaIcons} from '../../../core/decorations';
 
 export interface IProjectExplorerItemOptions {
     decorationsSelector: (state: IFileState) => (IDecorationState | undefined)[];
     contextBuilder?: (state: IFileState) => Partial<IProjectContext>;
     expanded?: boolean;
 }
+
 
 export class ProjectExplorerTreeItem extends vscode.TreeItem {
     color?: string;
@@ -30,8 +32,7 @@ export class ProjectExplorerTreeItem extends vscode.TreeItem {
                 : vscode.TreeItemCollapsibleState.Collapsed
             : vscode.TreeItemCollapsibleState.None;
 
-        let name = data.fwItem?.fsRef.fsBaseName ?? '';
-
+        let name = data.fwItem?.info?.displayName ?? '';
         this.label = {
             label: name.length > 0 ? name : 'unnamed',
             highlights: node.highlighted ? [[0, name.length]] : []
@@ -46,12 +47,13 @@ export class ProjectExplorerTreeItem extends vscode.TreeItem {
         this.contextValue = Permissions.getSerialized(node.data.fwItem?.info);
 
         this.tooltip = new vscode.MarkdownString([
-            `$(${icon}) **${data.fwItem?.fsRef?.fsName}**\n\n`,
+            `$(${icon}) **${data.fwItem?.info.name}** ${data.fwItem?.info.displayExt}\n\n`,
             `- **Type:** ${typeToProjectType(nodeType)}`,
-            `- **Order:** *${data.fwItem?.info?.order}*`,
-            `- ***Full Name:*** ${data.fwItem?.fsRef?.fsBaseName}**\n\n`,
+            `- **Order:** *${data.fwItem?.info?.mainOrder.order}*`,
+            `- ***Full Name:*** *${data.fwItem?.fsRef?.fsBaseName}*\n\n`,
             `- ***Full Path:*** *${data.fwItem?.fsRef?.fsPath}*`,
             `- ***ViewItem:*** *${this.contextValue}*`,
+            `- ***Modified:*** *${data.fwItem?.info?.modified}*`,
             `- ***ID:*** *${node.id}*`
         ].join('\n\n'), true);
 
@@ -96,3 +98,32 @@ function typeToProjectType(type: FwSubType): string {
 }
 
 
+export class ProjectExplorerListItem extends ProjectExplorerTreeItem {
+    constructor(node: ProjectNode, options: Partial<IProjectExplorerItemOptions> = {}) {
+        super(node, options);
+        this.collapsibleState = vscode.TreeItemCollapsibleState.None;
+
+        if (node.data.fwItem?.info.type === FwType.Folder) {
+            this.label = {
+                label: `[${(this.label as any).label}]`,
+            };
+            this.command = {
+                title: 'Forward',
+                command: FictionWriter.views.projectExplorer.navigation.forward,
+                arguments: [node]
+            };
+        }
+    }
+}
+
+
+export class ProjectExplorerBackItem extends vscode.TreeItem {
+    constructor() {
+        super("..");
+        this.iconPath = new ThemeIcon(FaIcons.reply);
+        this.command = {
+            title: '...',
+            command: FictionWriter.views.projectExplorer.navigation.back,
+        };
+    }
+}

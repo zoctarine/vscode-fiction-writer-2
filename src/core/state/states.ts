@@ -32,5 +32,6 @@ export interface IFileState {
     writeTargets?: IWriteTargetsState
     writeTargetsDecorations?: IDecorationState
     orderDecorations?: IDecorationState
+    datetimeDecorations?: IDecorationState
     contentHash?: string;
 }

@@ -21,7 +21,7 @@ import {
     SetOrderDecorations,
     SetSecurityDecorations,
     RestrictPermissionsFromMeta,
-    SetMetaDecorations
+    SetMetaDecorations, SetDateTimeDecorations
 } from './core/processors';
 
 
@@ -39,6 +39,7 @@ export function activate(context: vscode.ExtensionContext) {
             crateStateProcessor: () => new ChainedProcessor()
                 .add(new SetFwItemTypeDecorations())
                 .add(new SetFwItemDecorations)
+                .add(new SetDateTimeDecorations)
 
                 .add(new SetMetadata())
                 .add(new SetMetaDecorations())

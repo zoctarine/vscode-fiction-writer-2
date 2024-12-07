@@ -10,7 +10,7 @@ export class AddChildFolder implements IAsyncCommand<FwItem, string|undefined> {
     async runAsync(item?: FwItem) : Promise<string | undefined> {
         if (!item?.fsRef) return;
 
-        if (!Permissions.check(item.info, FwPermission.AddChildren) ||
+        if (!Permissions.check(item.info, FwPermission.AddChildFolder) ||
             !item.fsRef.fsIsFolder) {
             return;
         }

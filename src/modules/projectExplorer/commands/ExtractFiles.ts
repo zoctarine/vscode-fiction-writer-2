@@ -1,5 +1,5 @@
 import {
-    DefaultOrderParser,
+    PrefixOrderParser,
     FwFileManager, FwItemBuilder,
     FwPermission,
     FwSubType,
@@ -7,13 +7,14 @@ import {
     IAsyncCommand, IFsRef, log,
     notifier, ObjectProps,
     Permissions, retryAsync,
-    SimpleSuffixOrderParser
+    SuffixOrderParser
 } from '../../../core';
 import {ProjectNode} from '../models/projectNode';
 import vscode, {TextDocument} from 'vscode';
 import {FwItem} from '../../../core/fwFiles/FwItem';
 import {StateManager} from '../../../core/state';
 import {fwPath} from '../../../core/FwPath';
+import {typeRampBaseLineHeight} from '@vscode/webview-ui-toolkit/dist/design-tokens';
 
 /**
  * Reveals a file item in the VSCode Explorer view
@@ -37,26 +38,49 @@ export class ExtractFiles implements IAsyncCommand<vscode.TextEditor, void> {
         const newInfo = ObjectProps.deepClone(fwItem.info);
 
         // get next order from existing children
-        const nextChildOrder = this._fwItemBuilder.fsRefToFwInfo.orderParser.computeNextOrderFor(
+        const nextChildOrder = this._fwItemBuilder.fsRefToFwInfo.mainOrderParser.computeNextOrderFor(
             fwItem.children?.map(c => fwPath.parse(c).name) ?? [],
-            fwItem.info.order
+            fwItem.info.mainOrder.order
         );
 
         if (!editor?.selection || editor.selection.isEmpty) return;
 
+        const optOneFilePerLine = "One file for each selected line(separated by single break)";
+        const optOneFilePerParagraph = "One file for each MD paragraph (separated by double break)";
+        const optOneFilePerSelection = "One file for selection block (if multiple cursor was used when making selection)";
+        const opt = await vscode.window.showQuickPick(
+            [optOneFilePerLine, optOneFilePerParagraph, optOneFilePerSelection],
+            {
+                title: "Select how you want to split the selection"
+            }
+        );
+
+        if (!opt) return;
+
         const selectedLines: string[] = [];
         const edit = new vscode.WorkspaceEdit();
-        const selections = editor.selections.map(selection => {
-            for (let line = selection.start.line; line <= selection.end.line; line++) {
-                const lineText = doc.lineAt(line).text;
-                if (lineText.length > 0) {
-                    selectedLines.push(lineText);
-                }
+        editor.selections.map(selection => {
+            switch (opt) {
+                case optOneFilePerLine:
+                    for (let line = selection.start.line; line <= selection.end.line; line++) {
+                        const lineText = doc.lineAt(line).text;
+                        if (lineText.length > 0) {
+                            selectedLines.push(lineText);
+                        }
+                    }
+                    break;
+                case optOneFilePerParagraph:
+                    selectedLines.push(...doc.getText(selection).split(/\n{2,}/));
+                    break;
+                case optOneFilePerSelection:
+                    selectedLines.push(doc.getText(selection));
+                    break;
             }
+
 
             edit.delete(doc.uri, selection);
         });
-        if (selections.length === 0) return;
+        if (selectedLines.length === 0) return;
 
         const originalOrder = [...newInfo.order];
         const parser = this._fwItemBuilder.fsRefToFwInfo;

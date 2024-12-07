@@ -214,7 +214,9 @@ export class StateManager extends DisposeManager {
         return [...this._fileStates.values()].map(s => s.state?.getState());
     }
 
-    get(fsPath: string): IFileState | undefined {
+    get(fsPath?: string): IFileState | undefined {
+        if (!fsPath) return undefined;
+
         const item = this._fileStates.get(fsPath);
         if (item) {
             return {...item.state.getState()};

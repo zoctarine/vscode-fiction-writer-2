@@ -1,37 +1,39 @@
 import * as vscode from 'vscode';
-import {InputBoxValidationSeverity, TreeItemCheckboxState} from 'vscode';
-import * as path from 'path';
+import {TreeItemCheckboxState} from 'vscode';
 import {
     DisposeManager,
     FactorySwitch,
     FictionWriter,
-    FwControl,
     FwFileManager,
     FwInfo,
     FwPermission,
     FwProjectFileItem,
     FwSubType,
+    FwType,
     FwVirtualFolderItem,
     log,
-    notifier,
     Permissions,
+    TreeNode,
     TreeStructure
 } from "../../core";
 import {ContextManager} from '../../core/contextManager';
-import {ProjectExplorerTreeItem} from './models/projectExplorerTreeItem';
+import {
+    ProjectExplorerBackItem,
+    ProjectExplorerListItem,
+    ProjectExplorerTreeItem
+} from './models/projectExplorerTreeItem';
 import {ProjectsOptions} from './projectsOptions';
 import {IDecorationState, IFileState, StateManager} from '../../core/state';
 import {AllFilesFilter, IFileFilter, OnlyProjectFilesFilter} from './models/filters';
 import rfdc from 'rfdc';
-import {ProjectNode, ProjectNodeList} from './models/projectNode';
+import {BackProjectNode, ProjectNode, ProjectNodeList} from './models/projectNode';
 import {ObjectProps} from '../../core/lib';
-import {IProjectContext} from './models/IProjectContext';
-import {IProjectTreeViewModel} from './models/IProjectTreeViewModel';
-import {ProjectNodeContextBuilder} from './models/IProjectNodeContext';
+import {IProjectContext, ProjectView} from './models/IProjectContext';
+import {IProjectViewContext} from './models/IProjectViewContext';
 import {Context} from '../../core/lib/context';
-import {retry} from '../../core/lib/retry';
-import {fwPath} from '../../core/FwPath';
 import {FwItem, FwItemRoot} from '../../core/fwFiles/FwItem';
+import {ProjectNodeViewContextBuilder} from './models/ProjectNodeViewContextBuilder';
+import {ProjectViewContextBuilder} from './models/ProjecViewContextBuilder';
 
 
 const clone = rfdc();
@@ -53,17 +55,22 @@ export class ProjectExplorerTreeDataProvider
     // We want to use an array as the event type, but the API for this is currently being finalized. Until it's finalized, use any.
     public onDidChangeTreeData: vscode.Event<any> = this._onDidChangeTreeData.event;
     public _treeStructure: TreeStructure<IFileState>;
+    private _navigationRoot: TreeNode<IFileState> | undefined;
     private _fileFilter: IFileFilter = OnlyProjectFilesFilter;
     private _ctx: IProjectContext = {
         decoration: 'decoration1',
         filter: 'projectFiles',
         is: undefined,
         multiselect: undefined,
-        syncEditor: false
+        syncEditor: false,
+        showExtension: false,
+        showOrder: false,
+        projectView: ProjectView.tree,
+        navigationRoot: undefined,
     };
     public selectedItems: FwItem[] = [];
 
-    private _viewModel: IProjectTreeViewModel = {
+    private _viewModel: IProjectViewContext = {
         compileCommit: false,
         compileDiscard: false,
         compileStart: false,
@@ -77,7 +84,11 @@ export class ProjectExplorerTreeDataProvider
         orderStart: false,
         orderUp: false,
         refresh: false,
-        sync: ''
+        sync: '',
+        showExtension: '',
+        showOrder: '',
+        back: false,
+        projectView: undefined,
     };
 
     constructor(
@@ -92,7 +103,6 @@ export class ProjectExplorerTreeDataProvider
             canSelectMany: true,
             dragAndDropController: this,
             manageCheckboxStateManually: true,
-
         });
 
         this.manageDisposable(
@@ -133,7 +143,13 @@ export class ProjectExplorerTreeDataProvider
         );
 
         this.loadCtx()
-            .then(() => this._fileFilter = this._ctx.filter === 'projectFiles' ? OnlyProjectFilesFilter : AllFilesFilter)
+            .then(() => {
+                this._fileFilter = this._ctx.filter === 'projectFiles' ? OnlyProjectFilesFilter : AllFilesFilter;
+                if (this._ctx.navigationRoot) {
+                    this._setNavigationRoot(this._treeStructure.getNode(this._ctx.navigationRoot));
+                }
+            })
+
             .then(() => this.refresh());
     }
 
@@ -144,14 +160,14 @@ export class ProjectExplorerTreeDataProvider
                 workspaces.push(node);
             } else if (node.children?.length > 0) {
                 for (const child of node.children) {
-                    collectWorkspaces(child, workspaces);
+                    collectWorkspaces(child as ProjectNode, workspaces);
                 }
             }
 
         };
 
         const root = this._treeStructure.root;
-        collectWorkspaces(root, workspaces);
+        collectWorkspaces(root as ProjectNode, workspaces);
 
         root.children.forEach((child) => {
             this._treeStructure.detach(child);
@@ -164,7 +180,7 @@ export class ProjectExplorerTreeDataProvider
     private printTree(node: ProjectNode, indent: string) {
         log.tmp(indent + node.id);
         for (const child of node.children) {
-            this.printTree(child, indent + "  ");
+            this.printTree(child as ProjectNode, indent + "  ");
         }
     }
 
@@ -191,7 +207,7 @@ export class ProjectExplorerTreeDataProvider
             currentNode.data = state;
             currentNode.visible = this._fileFilter.check(state.fwItem?.info);
             if (currentNode.data.fwItem?.info.subType === FwSubType.WorkspaceFolder) {
-                workspaces.push(currentNode);
+                workspaces.push(currentNode as ProjectNode);
             }
         }
 
@@ -203,24 +219,45 @@ export class ProjectExplorerTreeDataProvider
     }
 
     public getParent(element: ProjectNode): ProjectNode | undefined {
-        return element.parent;
+        return element.parent as ProjectNode | undefined;
     }
 
     public getChildren(element: ProjectNode): ProjectNode[] {
+        if (this._ctx.projectView === ProjectView.list) {
+            if (this._navigationRoot) {
+                element = this._navigationRoot as ProjectNode;
+            } else if (element) {
+                return [];
+            }
+        }
+
+        const root = this._navigationRoot ?? this._treeStructure.getRoot();
 
         const children = (element
                 ? this._treeStructure.getNode(element.id)?.children
-                : this._treeStructure.getRoot().children)
+                : root.children)
             ?? [];
 
-        return new ProjectNodeList(children)
+        const result = new ProjectNodeList(children as ProjectNode[])
             .filter()
             .sort()
             .items;
+
+        if (this._ctx.projectView === ProjectView.list) {
+            if (this._navigationRoot && this._navigationRoot.id!== 'root') {
+                result.unshift(new BackProjectNode());
+            }
+        }
+        return result;
     }
 
 
     public getTreeItem(element: ProjectNode): vscode.TreeItem {
+        if (element.id === 'back') {
+            const back = new ProjectExplorerBackItem();
+            return back;
+        }
+
         const node = this._treeStructure.getNode(element.id);
         if (!node) return {};
 
@@ -239,7 +276,10 @@ export class ProjectExplorerTreeDataProvider
                     ? node.data.securityDecorations
                     : {};
 
-        const item = new ProjectExplorerTreeItem(node, {
+        const itemType = this._ctx.projectView === ProjectView.list
+            ? ProjectExplorerListItem : ProjectExplorerTreeItem;
+
+        const item = new itemType(node as ProjectNode, {
             expanded: this._contextManager.get("tree_expanded_" + element.id, false),
             contextBuilder: () => ({}),
             decorationsSelector: (s) =>
@@ -247,17 +287,14 @@ export class ProjectExplorerTreeDataProvider
                     .case(this._ctx.decoration === 'decoration1', () => [s.writeTargetsDecorations, s.metadataDecorations, overwrittenMetaDecoration, additionalDecoration])
                     .case(this._ctx.decoration === 'decoration2', () => [s.metadataDecorations, overwrittenMetaDecoration, additionalDecoration])
                     .case(this._ctx.decoration === 'decoration3', () => [s.textStatisticsDecorations, s.writeTargetsDecorations, additionalDecoration])
-                    .case(this._ctx.decoration === 'decoration4', () => [additionalDecoration])
+                    .case(this._ctx.decoration === 'decoration4', () => [s.datetimeDecorations, additionalDecoration])
+                    .case(this._ctx.decoration === 'decoration5', () => [additionalDecoration])
                     .create()
         });
 
         item.contextValue = Context.serialize(
-            new ProjectNodeContextBuilder().build({node, ctx: this._ctx}));
+            new ProjectNodeViewContextBuilder().build({node: node as ProjectNode, ctx: this._ctx}));
 
-        if (element.data.fwItem?.info.control === FwControl.Active){
-
-            item.label = element.data.fwItem?.info.orderBy;
-        }
         return item;
     }
 
@@ -443,7 +480,7 @@ export class ProjectExplorerTreeDataProvider
         //         list.push(`${e.id} ${e.order}`);
         //         if (item) {
         //             item.item.order = e.order;
-        //         } else {
+        //         } else {k
         //             console.log(`Cannot find ${e.id}`);
         //         }
         //     });
@@ -488,7 +525,7 @@ export class ProjectExplorerTreeDataProvider
     }
 
     public showNextFor(decoration: string) {
-        const decorations = ['decoration1', 'decoration2', 'decoration3', 'decoration4'];
+        const decorations = ['decoration1', 'decoration2', 'decoration3', 'decoration4', 'decoration5'];
         const crt = decorations.indexOf(decoration);
         let next = 0;
         if (crt >= 0) {
@@ -519,18 +556,24 @@ export class ProjectExplorerTreeDataProvider
 
 
     public refresh() {
+        log.tmp("REFRESHING")
         const fwItems = this._stateManager.trackedFiles.filter(a => a !== undefined);
         this._treeStructure.clear();
         this.buildHierarchy(fwItems)
             .then(() => {
                     while (this._nextRefreshQueue.length > 0) {
-                        const f = this._nextRefreshQueue.shift();
+                        const f = this._nextRefreshQueue[0];
                         if (f) {
                             try {
-                                f();
+                                const success = f();
+                                if (success) {
+                                    this._nextRefreshQueue.shift();
+                                }
                             } catch (e) {
                                 log.error("Error while executing nextRefreshTick", e);
                             }
+                        } else {
+                            this._nextRefreshQueue.shift();
                         }
                     }
                     this._onDidChangeTreeData.fire();
@@ -538,9 +581,9 @@ export class ProjectExplorerTreeDataProvider
                 (err) => log.error("Error while building hierarchy", err));
     }
 
-    private _nextRefreshQueue: (() => void)[] = [];
+    private _nextRefreshQueue: (() => boolean | Promise<boolean>)[] = [];
 
-    public onNextRefresh(action: () => void) {
+    public onNextRefresh(action: () => boolean | Promise<boolean>) {
         this._nextRefreshQueue.push(action);
     }
 
@@ -579,7 +622,7 @@ export class ProjectExplorerTreeDataProvider
         this.reveal(e.document.uri.fsPath);
     }
 
-    public async reveal(fsPath: string, force = false) {
+    public async reveal(fsPath: string, force = false): Promise<boolean> {
         const element = this._treeStructure.getNode(fsPath);
 
         if (element) {
@@ -598,11 +641,11 @@ export class ProjectExplorerTreeDataProvider
             }
 
             if (element.visible) {
-                await this._treeView.reveal(element, revealOptions);
+                await this._treeView.reveal(element as ProjectNode, revealOptions);
             } else {
                 await this.filter(AllFilesFilter);
                 // revealOptions.focus = true;
-                await this._treeView.reveal(element, revealOptions);
+                await this._treeView.reveal(element as ProjectNode, revealOptions);
             }
 
             // TODO: decide if need to highlight
@@ -616,7 +659,10 @@ export class ProjectExplorerTreeDataProvider
             //         }, 1000);
             //     }, 100);
             // }
+            return true;
         }
+
+        return false;
     }
 
     public async startCompile(e: ProjectNode) {
@@ -670,6 +716,12 @@ export class ProjectExplorerTreeDataProvider
         this._onDidChangeTreeData.fire();
     }
 
+    public async setView(view: ProjectView, node?: ProjectNode) {
+        await this.setCtx({projectView: view}, true);
+        this._setNavigationRoot(node);
+        this._onDidChangeTreeData.fire();
+    }
+
     public async filter(filter: string | IFileFilter) {
 
         if (typeof filter === 'string') {
@@ -703,9 +755,47 @@ export class ProjectExplorerTreeDataProvider
                 return Promise.resolve(this._contextManager.get(`${FictionWriter.views.projectExplorer.ctx}.${key}`, this._ctx[key]));
             },
         });
-
         await this.setCtx(this._ctx);
     }
+
+    public async changeContext(value: Partial<IProjectContext>, persist: boolean = false) {
+        await this.setCtx(value, persist);
+        this.refresh();
+    }
+
+    public async goBack() {
+        if (this._navigationRoot) {
+            this._setNavigationRoot(this._navigationRoot.parent);
+            return this._onDidChangeTreeData.fire();
+        }
+    }
+
+    public async goForward(node: ProjectNode) {
+        this._setNavigationRoot(node);
+        if (Permissions.check(node.data?.fwItem?.info, FwPermission.OpenEditor)) {
+            vscode.commands.executeCommand('vscode.open',
+                vscode.Uri.parse(node.data.fwItem!.fsRef!.fsPath));
+        }
+
+        return this._onDidChangeTreeData.fire();
+    }
+
+    private _setNavigationRoot(node?: TreeNode<IFileState>) {
+       if (node?.data?.fwItem?.info?.type === FwType.Folder) {
+            this._navigationRoot = node;
+        } else {
+            this._navigationRoot = node?.parent;
+        }
+
+        log.tmp("Navitation root", this._navigationRoot?.id);
+        this.setCtx({navigationRoot: this._navigationRoot?.id}, true);
+
+
+        this._treeView.title =
+            !this._navigationRoot || this._navigationRoot === this._treeStructure.root
+                ? "Project" : this._navigationRoot?.data?.fwItem?.info?.displayName;
+    }
+
 
     private async setCtx(value: Partial<IProjectContext>, persist: boolean = false) {
 
@@ -717,59 +807,11 @@ export class ProjectExplorerTreeDataProvider
             }
         });
 
-        let vmChanges: Partial<IProjectTreeViewModel> = {};
-        switch (this._ctx.is) {
-            case "ordering":
-                vmChanges = {
-                    decoration: undefined,
-                    filter: undefined,
-                    compileStart: undefined,
-                    compileCommit: undefined,
-                    compileDiscard: undefined,
-                    newFile: undefined,
-                    newFolder: undefined,
-                    orderStart: undefined,
-                    orderCommit: true,
-                    orderDiscard: true,
-                    refresh: undefined,
-                    sync: undefined
-                };
-                break;
-            case "compiling":
-                vmChanges = {
-                    decoration: undefined,
-                    filter: undefined,
-                    compileStart: undefined,
-                    compileCommit: true,
-                    compileDiscard: true,
-                    newFile: undefined,
-                    newFolder: undefined,
-                    orderStart: undefined,
-                    orderCommit: undefined,
-                    orderDiscard: undefined,
-                    refresh: undefined,
-                    sync: undefined
-                };
-                break;
-            default :
-                vmChanges = {
-                    decoration: this._ctx.decoration,
-                    filter: this._ctx.filter,
-                    compileStart: true,
-                    compileCommit: undefined,
-                    compileDiscard: undefined,
-                    newFile: true,
-                    newFolder: true,
-                    orderStart: true,
-                    orderCommit: undefined,
-                    orderDiscard: undefined,
-                    refresh: true,
-                    sync: this._ctx.syncEditor ? 'on' : 'off'
-                };
-                break;
-        }
+        let vmChanges = new ProjectViewContextBuilder().build({ctx: this._ctx});
+
         await ObjectProps.patchAsync(this._viewModel, vmChanges, {
-            onSinglePropertyChange: async (key, value) => await vscode.commands.executeCommand('setContext', `${FictionWriter.views.projectExplorer.ctx}.${key}`, value)
+            onSinglePropertyChange: async (key, value) =>
+                await vscode.commands.executeCommand('setContext', `${FictionWriter.views.projectExplorer.ctx}.${key}`, value)
         });
     }
 

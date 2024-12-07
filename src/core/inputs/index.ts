@@ -29,7 +29,7 @@ const getFwChanges = async (currentPath: string, nextPath: string) => {
     });
 
     const messages = [];
-    if (nextInfo.order.join(".") !== info.order.join(".")) {
+    if (nextInfo.mainOrder.order.join(".") !== info.mainOrder.order.join(".")) {
         messages.push("the file order segment");
     }
     if (nextRef.fsExt !== ref.fsExt) {

@@ -106,12 +106,23 @@ export class FwFileManager extends DisposeManager {
         this.onFilesChanged.bind(await this.loadFiles());
     }
 
-    public async delete(fsPath: string): Promise<void> {
-        const uri = vscode.Uri.parse(fsPath);
-        await vscode.workspace.fs.delete(uri,{
-            recursive: true,
-            useTrash: true,
-        });
+    public async delete(fsPaths: string[]): Promise<any[]|undefined> {
+        this._silentUpdates = true;
+        const errors = [];
+        for (const fsPath of fsPaths) {
+            try {
+                const uri = vscode.Uri.parse(fsPath);
+                await vscode.workspace.fs.delete(uri, {
+                    recursive: true,
+                    useTrash: true,
+                });
+            } catch (err) {
+                errors.push({fsPath, err});
+            }
+        }
+        this._silentUpdates = false;
+        this.onFilesChanged.bind(await this.loadFiles());
+        return errors;
     }
 
     public async updateFile(fsPath: string, newContent: string, save: boolean = true): Promise<void> {

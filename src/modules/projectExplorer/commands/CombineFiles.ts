@@ -6,7 +6,7 @@ import {
     IAsyncCommand,
     notifier,
     Permissions,
-    SimpleSuffixOrderParser
+    SuffixOrderParser
 } from '../../../core';
 import {ProjectNode} from '../models/projectNode';
 import vscode, {QuickPickItemKind} from 'vscode';
@@ -57,7 +57,7 @@ export class CombineFiles implements IAsyncCommand<FwItem[], void> {
             await this._fileManager.createFile(mergePath, mergedText);
             for (const item of items) {
                 if (item.fsRef.fsPath !== mergePath) {
-                    await this._fileManager.delete(item.fsRef.fsPath);
+                    await this._fileManager.delete([item.fsRef.fsPath]);
                 }
             }
             notifier.info("Files combined successfully!");

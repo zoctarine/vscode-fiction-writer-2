@@ -15,6 +15,7 @@ import {FileWorkerClient} from '../worker/FileWorkerClient';
 import {SplitActiveFile} from '../modules/projectExplorer/commands/SplitActiveFile';
 import {ExtractFile} from '../modules/projectExplorer/commands/ExtractFile';
 import {ExtractFiles} from '../modules/projectExplorer/commands/ExtractFiles';
+import {FwItemFactory} from './FwItemFactory';
 
 export * from './FwFileManager';
 export * from './commandExtensions';
@@ -28,6 +29,7 @@ export * from './nonce';
 export * from './fwFiles';
 export * from './tree';
 export * from './lib';
+export * from './FwItemFactory';
 
 export class CoreModule extends DisposeManager {
     stateManager: StateManager;
@@ -36,6 +38,7 @@ export class CoreModule extends DisposeManager {
     projectsOptions = new ProjectsOptions();
     activeDocumentMonitor: ActiveDocumentMonitor;
     fwItemBuilder: FwItemBuilder = new FwItemBuilder();
+    fwItemFactory: FwItemFactory;
 
     constructor(context: vscode.ExtensionContext,
                 public fileWorkerClient: FileWorkerClient,
@@ -43,6 +46,7 @@ export class CoreModule extends DisposeManager {
         super();
         this.stateManager = new StateManager(this.processorFactory);
         this.fileManager = new FwFileManager(this.projectsOptions, this.fileWorkerClient);
+        this.fwItemFactory = new FwItemFactory(this.stateManager, this.fwItemBuilder);
         this.contextManager = new ContextManager(context);
         this.activeDocumentMonitor = new ActiveDocumentMonitor();
 
@@ -73,7 +77,7 @@ export class CoreModule extends DisposeManager {
                return new SplitActiveFile(
                     this.fileManager,
                     this.stateManager,
-                    this.fwItemBuilder
+                    this.fwItemFactory
                 ).runAsync(
                     vscode.window.activeTextEditor,
                 );

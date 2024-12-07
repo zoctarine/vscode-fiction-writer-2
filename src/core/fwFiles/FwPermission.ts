@@ -16,8 +16,10 @@ export enum FwPermission {
     RemoveFromProject = 1 << 9,
     Morph = 1 << 10,
     Compile = 1 << 11,
-    AddChildren = 1 << 12,
-    AddSiblings = 1 << 13,
+    AddChildFolder = 1 << 12,
+    AddChildFile = 1 << 13,
+    AddVirtualChild = 1 << 14,
+    AddSiblings = 1 << 15,
 }
 
 const key = (control: FwControl, subType: FwSubType) => `${control}_${subType}`;
@@ -35,7 +37,8 @@ export class Permissions {
             FwControl.Never, FwSubType.WorkspaceFolder,
             FwPermission.None |
             FwPermission.Compile |
-            FwPermission.AddChildren,
+            FwPermission.AddChildFolder |
+            FwPermission.AddChildFile
         );
 
         Permissions._add(
@@ -44,7 +47,8 @@ export class Permissions {
             FwPermission.Move |
             FwPermission.Delete |
             FwPermission.Compile |
-            FwPermission.AddChildren |
+            FwPermission.AddChildFolder |
+            FwPermission.AddChildFile |
             FwPermission.AddSiblings
         );
 
@@ -75,7 +79,8 @@ export class Permissions {
             FwPermission.RemoveFromProject |
             FwPermission.Morph |
             FwPermission.Compile |
-            FwPermission.AddSiblings
+            FwPermission.AddSiblings |
+            FwPermission.AddVirtualChild
         );
 
         Permissions._add(

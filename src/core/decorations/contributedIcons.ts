@@ -10,6 +10,7 @@ export const FaIcons = {
     trashCan: 'fa-trash-can',
     filter: 'fa-filter',
     link: 'fa-link',
+    reply: 'fa-reply',
     magnifyingGlass: 'fa-magnifying-glass',
     faFileArrowDown: 'fa-file-arrow-down'
 };

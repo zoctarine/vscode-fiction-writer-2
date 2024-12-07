@@ -1,8 +1,8 @@
 import {FwSubType} from './FwSubType';
 import {FwType} from './FwType';
 import {FwControl} from './FwControl';
-import {IFwOrderedName} from './IFwOrderedName';
-import {DefaultOrderParser} from './parsers';
+import {IFwOrder, IFwOrderedName} from './IFwOrderedName';
+import {PrefixOrderParser} from './parsers';
 import {FwPermission, Permissions} from './FwPermission';
 
 /**
@@ -15,7 +15,8 @@ export interface IFwInfo {
     control: FwControl;
 
     name: string;
-    order: number[];
+    mainOrder: IFwOrder;
+    subOrder: IFwOrder;
     /**
      * If the filename contains the projectTag, then it is returned here.
      * If it is missing, the file does not belong to the project
@@ -38,13 +39,24 @@ export class FwInfo implements IFwInfo {
     control: FwControl = FwControl.Unknown;
 
     name: string = '';
-    order: number[] = [];
+    mainOrder: IFwOrder = {
+        glue: '',
+        sep: '',
+        order: []
+    };
+    subOrder: IFwOrder = {
+        glue: '',
+        sep: '',
+        order: []
+    };
     projectTag: string = '';
     data: string[] = [];
 
     displayName:string='';
     displayExt:string='';
     orderBy: string = '';
+
+    modified: string = '';
 
     constructor() {
     }
@@ -79,25 +91,6 @@ export class FwVirtualFolderItem extends FwInfo {
         this.subType = FwSubType.VirtualFolder;
         this.control = FwControl.Active;
         this.projectTag = 'fw';
-    }
-}
-
-export class FwEmptyVirtualFolder extends FwInfo {
-    constructor() {
-        super();
-        this.type = FwType.Folder;
-        this.subType = FwSubType.EmptyVirtualFolder;
-        this.control = FwControl.Active;
-        this.projectTag = 'fw';
-    }
-
-    public static create(parent: IFwInfo | undefined, order: number): FwEmptyVirtualFolder {
-        // TODO: inject provider
-        const result = new FwEmptyVirtualFolder();
-        result.order = [order, ...parent?.order ?? []];
-        result.name = "empty";
-
-        return result;
     }
 }
 
