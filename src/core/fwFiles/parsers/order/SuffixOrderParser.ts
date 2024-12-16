@@ -1,6 +1,8 @@
-import {IFwOrderedName} from '../../IFwOrderedName';
+import {EmptyFwOrder, IFwOrder} from '../../IFwOrder';
 import {IOrderOptions} from './IOrderOptions';
 import {OrderParser} from './OrderParser';
+import {IParserOptions} from '../../../lib';
+import {ITokens} from './IOrderParser';
 
 export class SuffixOrderParser extends OrderParser {
     constructor(options: Partial<IOrderOptions> = {}) {
@@ -9,10 +11,17 @@ export class SuffixOrderParser extends OrderParser {
             options);
     }
 
-    serialize(parsed: IFwOrderedName, options: Partial<IOrderOptions> = {}): string {
-        const opt = {...this.options, ...options};
-        const order = [...parsed.order ?? []];
+    serialize(input: ITokens<IFwOrder>, opt?: IParserOptions<string,  ITokens<IFwOrder>>): string {
+        input.unparsed ??= '';
+        input.parsed ??= new EmptyFwOrder();
+        const order = input.parsed.order.map((o, idx) =>{
+            let token = o.toString();
+            if (input.parsed.padding.length >= idx){
+                token = token.padStart(input.parsed.padding[idx], '0');
+            }
+            return token;
+        });
 
-        return `${parsed.name ?? ''}${parsed.glue}${order.join(parsed.sep)}`;
+        return `${input.unparsed}${input.parsed.glue}${order.join(input?.parsed?.sep ?? '')}`;
     }
 }

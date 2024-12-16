@@ -4,7 +4,7 @@ import {IParser} from '../../../lib';
 import fs from 'node:fs';
 
 
-export class FsPathToFsRef implements IParser<string, any, IFsRef> {
+export class FsPathToFsRef implements IParser<string, IFsRef> {
     constructor() {
     }
 

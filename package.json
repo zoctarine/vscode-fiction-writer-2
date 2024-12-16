@@ -677,11 +677,43 @@
       "view/title": [
         {
           "command": "fictionWriter.views.projectExplorer.view.tree",
-          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.projectView != tree"
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.projectView != tree",
+          "group": "1_fictionWriter@1"
         },
         {
           "command": "fictionWriter.views.projectExplorer.view.list",
-          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.projectView != list"
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.projectView != list",
+          "group": "1_fictionWriter@1"
+        },
+        {
+          "command": "fictionWriter.views.projectExplorer.show.order.on",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.showOrder == off",
+          "group": "2_fictionWriter@1"
+        },
+        {
+          "command": "fictionWriter.views.projectExplorer.show.order.off",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.showOrder == on",
+          "group": "2_fictionWriter@1"
+        },
+        {
+          "command": "fictionWriter.views.projectExplorer.show.extension.on",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.showExtension == off",
+          "group": "2_fictionWriter@2"
+        },
+        {
+          "command": "fictionWriter.views.projectExplorer.show.extension.off",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.showExtension == on",
+          "group": "2_fictionWriter@2"
+        },
+        {
+          "command": "fictionWriter.views.projectExplorer.sync.on",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.sync == off",
+          "group": "3_fictionWriter@1"
+        },
+        {
+          "command": "fictionWriter.views.projectExplorer.sync.off",
+          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.sync == on",
+          "group": "3_fictionWriter@1"
         },
         {
           "command": "fictionWriter.views.projectExplorer.navigation.back",
@@ -722,16 +754,6 @@
           "command": "fictionWriter.views.projectExplorer.show.decoration5",
           "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.decoration == decoration5",
           "group": "navigation@30"
-        },
-        {
-          "command": "fictionWriter.views.projectExplorer.sync.on",
-          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.sync == off",
-          "group": "navigation@120"
-        },
-        {
-          "command": "fictionWriter.views.projectExplorer.sync.off",
-          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.sync == on",
-          "group": "navigation@120"
         },
         {
           "command": "fictionWriter.views.projectExplorer.newFile",
@@ -810,26 +832,6 @@
         }
       ],
       "fictionWriter.explorer.view": [
-        {
-          "command": "fictionWriter.views.projectExplorer.show.order.on",
-          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.showOrder == off",
-          "group": "01_fictionWriter_show@1"
-        },
-        {
-          "command": "fictionWriter.views.projectExplorer.show.order.off",
-          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.showOrder == on",
-          "group": "01_fictionWriter_show@1"
-        },
-        {
-          "command": "fictionWriter.views.projectExplorer.show.extension.on",
-          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.showExtension == off",
-          "group": "01_fictionWriter_show@2"
-        },
-        {
-          "command": "fictionWriter.views.projectExplorer.show.extension.off",
-          "when": "view == fictionWriter.views.projectExplorer && fictionWriter.views.projectExplorer.ctx.showExtension == on",
-          "group": "01_fictionWriter_show@2"
-        },
         {
           "command": "fictionWriter.views.projectExplorer.view.treeHere",
           "when": "view == fictionWriter.views.projectExplorer ",
@@ -1259,15 +1261,15 @@
       },
       {
         "command": "fictionWriter.views.projectExplorer.filters.allFiles",
-        "title": "A: Show/hide all files",
+        "title": "Show all files",
         "category": "Markdown Fiction Writer",
-        "icon": "$(filter)"
+        "icon": "$(eye-closed)"
       },
       {
         "command": "fictionWriter.views.projectExplorer.filters.projectFiles",
-        "title": "A: Show/hide all files",
+        "title": "Hide non project files",
         "category": "Markdown Fiction Writer",
-        "icon": "$(filter-filled)"
+        "icon": "$(eye)"
       },
       {
         "command": "fictionWriter.views.wordFrequency.refresh",
@@ -1535,6 +1537,7 @@
     "watch": "npm-run-all -p watch:*",
     "watch:esbuild": "node esbuild.js --watch",
     "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
+    "start": "npm run compile && code --extensionDevelopmentPath=$(pwd) --inspect-extensions=9229 --disable-extensions",
     "package": "npm run check-types && npm run lint && node esbuild.js --production",
     "compile-tests": "tsc -p . --outDir out",
     "watch-tests": "tsc -p . -w --outDir out",

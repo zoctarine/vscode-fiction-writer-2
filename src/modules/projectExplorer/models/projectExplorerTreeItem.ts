@@ -6,6 +6,7 @@ import {IProjectContext} from './IProjectContext';
 import {FaIcons} from '../../../core/decorations';
 
 export interface IProjectExplorerItemOptions {
+    labelSelector: (segments:any) => string;
     decorationsSelector: (state: IFileState) => (IDecorationState | undefined)[];
     contextBuilder?: (state: IFileState) => Partial<IProjectContext>;
     expanded?: boolean;
@@ -32,7 +33,12 @@ export class ProjectExplorerTreeItem extends vscode.TreeItem {
                 : vscode.TreeItemCollapsibleState.Collapsed
             : vscode.TreeItemCollapsibleState.None;
 
-        let name = data.fwItem?.info?.displayName ?? '';
+        let name = data.fwItem?.info?.displayName[0] ?? '';
+
+        if (options && options.labelSelector) {
+            name = options.labelSelector(data.fwItem?.info);
+        }
+
         this.label = {
             label: name.length > 0 ? name : 'unnamed',
             highlights: node.highlighted ? [[0, name.length]] : []

@@ -36,13 +36,15 @@ export class ExcludeFromProject implements IAsyncCommand<FwItem[], void> {
             const oldName = item.info.name;
             const parsed = fwPath.parse(item.fsRef.fsPath);
             const newName = parsed.name.replace(/\.fw$/i, '');
-            const orderedName = op.parse(newName);
+            let unparsed = '';
+            const orderedName = op.parse(newName, {onParse: (parsed) => {
+                }});
 
             const options: string[] = [];
             options.push(`${newName}${parsed.ext}`);
 
-            if (orderedName.order && orderedName.order.length > 0) {
-                options.push(`${orderedName.name}${parsed.ext}`);
+            if (orderedName?.parsed.order && orderedName.parsed.order.length > 0) {
+                options.push(`${unparsed}${parsed.ext}`);
             }
             options.push(optionSkip);
             const value = await vscode.window.showWarningMessage(

@@ -21,8 +21,14 @@ export interface IWriteTargetsState {
 export interface ISecurityState {
     permissions?: FwPermission;
 }
+export interface INameSegments {
+    order: string;
+    name: string;
+    ext: string;
+}
 export interface IFileState {
     fwItem?: FwItem,
+    name?: INameSegments,
     security?: ISecurityState,
     securityDecorations?: IDecorationState,
     decorations?: IDecorationState,

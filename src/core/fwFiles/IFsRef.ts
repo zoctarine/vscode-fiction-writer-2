@@ -1,4 +1,3 @@
-import {IFwOrderedName} from './IFwOrderedName';
 import {IFsContent} from './IFsContent';
 
 /**

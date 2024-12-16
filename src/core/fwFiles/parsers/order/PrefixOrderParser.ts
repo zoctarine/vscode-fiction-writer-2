@@ -1,19 +1,28 @@
 import {IOrderOptions} from './IOrderOptions';
-import {IFwOrderedName} from '../../IFwOrderedName';
+import {EmptyFwOrder, IFwOrder} from '../../IFwOrder';
 import {OrderParser} from './OrderParser';
+import {IParserOptions} from '../../../lib';
+import {ITokens} from './IOrderParser';
 
 export class PrefixOrderParser extends OrderParser {
     constructor(options: Partial<IOrderOptions> = {}) {
         super(
-            /^(?<order>(\d+\.)*(\d+\.?))(?<glue>[ \-_]?)(?<name>.*?)$/i,
+            /^(?<order>(\d+\.)*(\d+))(?<glue>[. \-_]+)(?<name>.*?)$/i,
             options
         );
     }
 
-    serialize(parsed: IFwOrderedName, options: Partial<IOrderOptions> = {}): string {
-        const opt = {...this.options, ...options};
-        const order = [...parsed.order ?? []];
+    serialize(input:  ITokens<IFwOrder>, opt?: IParserOptions<string,  ITokens<IFwOrder>>): string {
+        input.unparsed ??= '';
+        input.parsed ??= new EmptyFwOrder();
+        const order = input.parsed.order.map((o, idx) =>{
+            let token = o.toString();
+            if (input.parsed.padding.length >= idx){
+                token = token.padStart(input.parsed.padding[idx], '0');
+            }
+            return token;
+        });
 
-        return `${order.join(parsed.sep)}${parsed.glue}${parsed.name ?? ''}`;
+        return `${order.join(input.parsed.sep)}${input.parsed.glue}${input.unparsed}`;
     }
 }

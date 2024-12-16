@@ -1,62 +1,22 @@
-import {IStateProcessor} from '../processors';
-import {IFwOrderedName, IOrderOptions} from '../fwFiles';
 
-export interface IParser<T, TOpt, TOut> {
-    parse(unparsed: T, opt?: Partial<TOpt>): TOut,
+export interface IParserOptions<TIn, TOut> {
+    onParse?: (parsed: TOut) => void;
+    onSerialize?: (serialized: TIn) => void;
 
-    serialize(parsed: TOut, opt?: TOpt): T
+    [key: string]: any;
 }
 
-export interface IAsyncParser<T, TOpt, TOut> {
-    parseAsync(unparsed: T, opt?: Partial<TOpt>): Promise<TOut>,
-
-    serializeAsync(parsed: TOut, opt?: TOpt): Promise<T>
+export interface IParser<T, TOut> {
+    parse(unparsed: T, opt?: IParserOptions<T, TOut>): TOut,
+    serialize(parsed: TOut, opt?: IParserOptions<T, TOut>): T
 }
 
-export interface ParseResult<TIn, TOut> {
-    unparsed: TIn;
-    parsed: TOut | undefined;
+export interface IAsyncParser<T, TOut> {
+    parseAsync(unparsed: T, opt?: Partial<IParserOptions<T, TOut>>): Promise<TOut>,
+    serializeAsync(parsed: TOut, opt?: Partial<IParserOptions<T, TOut>>): Promise<T>
 }
 
-
-export class FwFilenameProcessor {
-    private _parsers: {
-        parser: IParser<any, any, any>,
-        next: (value: any, ctx: any) => any,
-        prev: (value: any, ctx: any) => any
-    }[] = [];
-
-    constructor() {
-    }
-
-    add<T, TOut>(parser: IParser<T, any, TOut>,
-                 next: (value: TOut, ctx: any) => T,
-                 prev: (value: T, ctx: any) => TOut,
-    ): FwFilenameProcessor {
-        this._parsers.push({
-            parser, next, prev
-        });
-
-        return this;
-    }
-
-    parse(unparsed: any, ctx: any): string {
-        let current = unparsed;
-        for (const {parser, next} of this._parsers) {
-            const parsed = parser.parse(current);
-            current = next(parsed, ctx);
-        }
-        return current;
-    }
-
-    serialize(parsed: any, ctx:any): any {
-        let current = parsed;
-        let parsers = [...this._parsers].reverse();
-        let result = '';
-        for (const {parser, prev} of parsers) {
-            result = prev(current, ctx);
-            current = parser.serialize(result);
-        }
-        return current;
-    }
+export interface IStringParser<TOut> extends IParser<string, TOut>{
 }
+
+export interface IAsyncStringParser<TOut> extends IAsyncParser<string, TOut> {}

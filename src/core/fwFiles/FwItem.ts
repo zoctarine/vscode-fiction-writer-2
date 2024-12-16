@@ -94,7 +94,13 @@ export class FwItemCloneBuilder {
     }
 
     setSubOrder(order: number[]): FwItemCloneBuilder {
+        // TODO: Defaults?
+        if (this._cloned.info.subOrder.order?.length === 0) {
+            this._cloned.info.subOrder.glue = ' ';
+            this._cloned.info.subOrder.sep = '.';
+        }
         this._cloned.info.subOrder.order = order;
+
         this._cloned.fsRef = this._fwItemBuilder.fsRefToFwInfo.serialize(this._cloned.info, {
             rootFolderPaths: [],
             fsExt: this._cloned.fsRef.fsExt,

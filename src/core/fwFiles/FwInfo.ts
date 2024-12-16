@@ -1,9 +1,9 @@
 import {FwSubType} from './FwSubType';
 import {FwType} from './FwType';
 import {FwControl} from './FwControl';
-import {IFwOrder, IFwOrderedName} from './IFwOrderedName';
-import {PrefixOrderParser} from './parsers';
+import {IFwOrder} from './IFwOrder';
 import {FwPermission, Permissions} from './FwPermission';
+import {IFwExtension} from './parsers/fileName/FwExtensionParser';
 
 /**
  * A full name could look like:
@@ -17,15 +17,7 @@ export interface IFwInfo {
     name: string;
     mainOrder: IFwOrder;
     subOrder: IFwOrder;
-    /**
-     * If the filename contains the projectTag, then it is returned here.
-     * If it is missing, the file does not belong to the project
-     */
-    projectTag: string;
-    /**
-     * Optional data, extracted from filename
-     */
-    data: string[];
+    extension: IFwExtension;
 
     orderBy: string;
 }
@@ -42,17 +34,22 @@ export class FwInfo implements IFwInfo {
     mainOrder: IFwOrder = {
         glue: '',
         sep: '',
-        order: []
+        order: [],
+        padding: []
     };
     subOrder: IFwOrder = {
         glue: '',
         sep: '',
-        order: []
+        order: [],
+        padding: []
     };
-    projectTag: string = '';
-    data: string[] = [];
-
-    displayName:string='';
+    extension: IFwExtension = {
+        projectTag: '',
+        data: [],
+        glue: '',
+    };
+    displayName:string = '';
+    displayOrder:string='';
     displayExt:string='';
     orderBy: string = '';
 
@@ -68,7 +65,9 @@ export class FwInfo implements IFwInfo {
         sub.type = instance.type;
         sub.control = instance.control;
         sub.subType = instance.subType;
-        sub.projectTag = instance.projectTag;
+        sub.extension.projectTag = instance.extension.projectTag;
+        sub.extension.data = instance.extension.data;
+        sub.extension.glue = instance.extension.glue;
 
         Object.setPrototypeOf(sub, Object.getPrototypeOf(instance));
     }
@@ -90,7 +89,7 @@ export class FwVirtualFolderItem extends FwInfo {
         this.type = FwType.Folder;
         this.subType = FwSubType.VirtualFolder;
         this.control = FwControl.Active;
-        this.projectTag = 'fw';
+        this.extension.projectTag = 'fw';
     }
 }
 
@@ -127,7 +126,7 @@ export class FwProjectFileItem extends FwInfo {
         this.type = FwType.File;
         this.subType = FwSubType.ProjectFile;
         this.control = FwControl.Active;
-        this.projectTag = 'fw';
+        this.extension.projectTag = 'fw';
     }
 }
 

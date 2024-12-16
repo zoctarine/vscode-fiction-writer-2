@@ -74,9 +74,17 @@ export class ProjectsModule extends DisposeManager {
                 this.projectExplorerDataProvider?.setView(ProjectView.list, node);
             }),
 
-            addCommand(FictionWriter.views.projectExplorer.show.extension, () => {
+            addCommand(FictionWriter.views.projectExplorer.show.extension.on, () => {
+                this.projectExplorerDataProvider?.updateCtx({showExtension: true});
             }),
-            addCommand(FictionWriter.views.projectExplorer.show.order, () => {
+            addCommand(FictionWriter.views.projectExplorer.show.extension.off, () => {
+                this.projectExplorerDataProvider?.updateCtx({showExtension: false});
+            }),
+            addCommand(FictionWriter.views.projectExplorer.show.order.on, () => {
+                this.projectExplorerDataProvider?.updateCtx({showOrder: true});
+            }),
+            addCommand(FictionWriter.views.projectExplorer.show.order.off, () => {
+                this.projectExplorerDataProvider?.updateCtx({showOrder: false});
             }),
             addCommand(FictionWriter.views.projectExplorer.sync.on, () => {
                 this.projectExplorerDataProvider?.syncWithActiveEditorOn();

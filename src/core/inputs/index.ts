@@ -34,7 +34,7 @@ const getFwChanges = async (currentPath: string, nextPath: string) => {
     }
     if (nextRef.fsExt !== ref.fsExt) {
         messages.push(`the file type`);
-    } else if (nextInfo.projectTag !== info.projectTag) {
+    } else if (nextInfo.extension.projectTag !== info.extension.projectTag) {
         messages.push(`the FictionWriter extended extension`);
     }
 
@@ -99,7 +99,7 @@ export class FwItemOption implements vscode.QuickPickItem {
     constructor(item: FwItem, description?: string) {
         this.item = item;
         if (item?.fsRef?.fsPath) {
-            this.label = item.info.displayName;
+            this.label = item.info.displayName[0];
             this.description = item.info.displayExt;
             this.fsPath = item.fsRef.fsPath;
             this.detail = description;

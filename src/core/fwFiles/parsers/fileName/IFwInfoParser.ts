@@ -5,8 +5,8 @@ import {IFwInfo} from '../../FwInfo';
 import {Path} from 'glob';
 
 
-export interface IFwInfoParser extends IParser<IFsRef, any, IFwInfo> {
+export interface IFwInfoParser extends IParser<IFsRef, IFwInfo> {
 }
 
-export interface IFsRefParser extends IAsyncParser<Path, any, IFsRef> {
+export interface IFsRefParser extends IAsyncParser<Path, IFsRef> {
 }

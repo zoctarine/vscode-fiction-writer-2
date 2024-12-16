@@ -28,7 +28,7 @@ export class FwItemFactory {
     }
 
     public async createVirtualChildItem(item: FwItem) {
-        if (!Permissions.check(item.info, FwPermission.AddVirtualChild)) return;
+        if (!Permissions.check(item.info, FwPermission.AddVirtualChild)) return undefined;
 
         const parent = this._stateManager.get(item.parent)?.fwItem;
         if (!parent) return;

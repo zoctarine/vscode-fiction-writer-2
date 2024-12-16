@@ -282,6 +282,13 @@ export class ProjectExplorerTreeDataProvider
         const item = new itemType(node as ProjectNode, {
             expanded: this._contextManager.get("tree_expanded_" + element.id, false),
             contextBuilder: () => ({}),
+            labelSelector: ({displayName, displayExt, displayOrder}) =>
+                new FactorySwitch<string>()
+                    .case(!!(this._ctx.showOrder && this._ctx.showExtension), () => `${displayOrder}${displayName}${displayExt}`)
+                    .case(!!(this._ctx.showOrder), () => `${displayOrder}${displayName}`)
+                    .case(!!(this._ctx.showExtension), () => `${displayName}${displayExt}`)
+                    .default(() => `${displayName}`)
+                    .create(),
             decorationsSelector: (s) =>
                 new FactorySwitch<(IDecorationState | undefined)[]>()
                     .case(this._ctx.decoration === 'decoration1', () => [s.writeTargetsDecorations, s.metadataDecorations, overwrittenMetaDecoration, additionalDecoration])
@@ -716,6 +723,11 @@ export class ProjectExplorerTreeDataProvider
         this._onDidChangeTreeData.fire();
     }
 
+    public async updateCtx(ctx: Partial<IProjectContext> = {}) {
+        await this.setCtx(ctx, true);
+        this._onDidChangeTreeData.fire();
+    }
+
     public async setView(view: ProjectView, node?: ProjectNode) {
         await this.setCtx({projectView: view}, true);
         this._setNavigationRoot(node);
@@ -793,7 +805,7 @@ export class ProjectExplorerTreeDataProvider
 
         this._treeView.title =
             !this._navigationRoot || this._navigationRoot === this._treeStructure.root
-                ? "Project" : this._navigationRoot?.data?.fwItem?.info?.displayName;
+                ? "Project" : this._navigationRoot?.data?.fwItem?.info?.displayName[0];
     }
 
 

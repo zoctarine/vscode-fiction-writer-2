@@ -50,8 +50,14 @@ export const FictionWriter = {
                 decoration4: `${ViewsProjectExplorer}.show.decoration4`,
                 decoration5: `${ViewsProjectExplorer}.show.decoration5`,
 
-                extension: `${ViewsProjectExplorer}.show.extension`,
-                order: `${ViewsProjectExplorer}.show.order`,
+                extension: {
+                    on: `${ViewsProjectExplorer}.show.extension.on`,
+                    off: `${ViewsProjectExplorer}.show.extension.off`,
+                },
+                order: {
+                    on: `${ViewsProjectExplorer}.show.order.on`,
+                    off: `${ViewsProjectExplorer}.show.order.off`,
+                }
             },
             sortBy:{
                 modified: `${ViewsProjectExplorer}.sortBy.modified`,
