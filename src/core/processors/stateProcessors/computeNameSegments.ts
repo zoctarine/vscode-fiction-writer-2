@@ -1,21 +1,32 @@
 import {IStateProcessor} from '../IProcessor';
 import {IFileState} from '../../state';
+import {FwControl, FwItemBuilder} from '../../fwFiles';
 
 export class ComputeNameSegments implements IStateProcessor<IFileState> {
 
+    constructor(private _fwItemBuilder: FwItemBuilder) {
+    }
+
     async process(state: IFileState) {
         if (!state.fwItem?.info) return;
+        const {info, fsRef} = state.fwItem;
 
-        if (Array.isArray(state.fwItem.info.displayName)) {
-            state.name = {
-                order: state.fwItem.info.displayName[0],
-                name: state.fwItem.info.displayName[1] + state.fwItem.info.displayName[2],
-                ext: state.fwItem.info.displayName[3] + state.fwItem.fsRef.fsExt
+        if (info.control === FwControl.Active) {
+            const {mainOrderParser, subOrderParser, fwExtensionParser} = this._fwItemBuilder.fsRefToFwInfo;
+
+            const order = mainOrderParser.serialize({parsed: info.mainOrder, unparsed: ''});
+            const name = subOrderParser.serialize({parsed: info.subOrder, unparsed: info.name});
+            const ext = fwExtensionParser.serialize({parsed: info.extension, unparsed: ''}) + fsRef.fsExt;
+
+            state.nameTokens = {
+                order,
+                name,
+                ext
             };
         } else {
-            state.name = {
+            state.nameTokens = {
                 order: '',
-                name: state.fwItem.info.displayName,
+                name: fsRef.fsBaseName,
                 ext: ''
             };
         }

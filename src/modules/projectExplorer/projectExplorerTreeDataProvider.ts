@@ -282,12 +282,13 @@ export class ProjectExplorerTreeDataProvider
         const item = new itemType(node as ProjectNode, {
             expanded: this._contextManager.get("tree_expanded_" + element.id, false),
             contextBuilder: () => ({}),
-            labelSelector: ({displayName, displayExt, displayOrder}) =>
+            labelSelector: () =>
+
                 new FactorySwitch<string>()
-                    .case(!!(this._ctx.showOrder && this._ctx.showExtension), () => `${displayOrder}${displayName}${displayExt}`)
-                    .case(!!(this._ctx.showOrder), () => `${displayOrder}${displayName}`)
-                    .case(!!(this._ctx.showExtension), () => `${displayName}${displayExt}`)
-                    .default(() => `${displayName}`)
+                    .case(!!(this._ctx.showOrder && this._ctx.showExtension), () => `${node.data.nameTokens?.order}${node.data.nameTokens?.name}${node.data.nameTokens?.ext}`)
+                    .case(!!(this._ctx.showOrder), () => `${node.data.nameTokens?.order}${node.data.nameTokens?.name}`)
+                    .case(!!(this._ctx.showExtension), () => `${node.data.nameTokens?.name}${node.data.nameTokens?.ext}`)
+                    .default(() => `${node.data.nameTokens?.name}`)
                     .create(),
             decorationsSelector: (s) =>
                 new FactorySwitch<(IDecorationState | undefined)[]>()
@@ -805,7 +806,7 @@ export class ProjectExplorerTreeDataProvider
 
         this._treeView.title =
             !this._navigationRoot || this._navigationRoot === this._treeStructure.root
-                ? "Project" : this._navigationRoot?.data?.fwItem?.info?.displayName[0];
+                ? "Project" : this._navigationRoot?.data?.fwItem?.info?.name;
     }
 
 

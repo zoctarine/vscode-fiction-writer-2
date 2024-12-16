@@ -1,7 +1,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import {CoreModule, log} from './core';
+import {CoreModule, FwItemBuilder, log} from './core';
 import {richTextEditorModule} from './modules/richTextEditor';
 import {projectsModule} from './modules/projectExplorer';
 import {textAnalysisModule} from './modules/textAnalysis';
@@ -26,19 +26,23 @@ import {
 
 
 import {FileWorkerClient} from './worker/FileWorkerClient';
+import {ComputeNameSegments} from './core/processors/stateProcessors/computeNameSegments';
 
 const fileWorkerClient = new FileWorkerClient();
 
 export function activate(context: vscode.ExtensionContext) {
     log.enabled = true;
 
+    const fwItemBuilder = new FwItemBuilder();
     const core = new CoreModule(
         context,
         fileWorkerClient,
+        fwItemBuilder,
         {
             crateStateProcessor: () => new ChainedProcessor()
                 .add(new SetFwItemTypeDecorations())
                 .add(new SetFwItemDecorations)
+                .add(new ComputeNameSegments(fwItemBuilder))
                 .add(new SetDateTimeDecorations)
 
                 .add(new SetMetadata())

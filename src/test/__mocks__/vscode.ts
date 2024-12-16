@@ -39,6 +39,7 @@ const vscode = {
     },
     window: {
         showInformationMessage: jest.fn(),
+        createOutputChannel: jest.fn(),
     },
 
 };

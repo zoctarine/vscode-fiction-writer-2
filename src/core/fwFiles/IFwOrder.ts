@@ -6,10 +6,9 @@ export interface IFwOrder {
     sep: string;
 }
 
-
 export class EmptyFwOrder implements IFwOrder{
     order: number[] = [];
     padding: number[] = [];
-    glue: string = ' ';
+    glue: string = '';
     sep: string = '.';
 }

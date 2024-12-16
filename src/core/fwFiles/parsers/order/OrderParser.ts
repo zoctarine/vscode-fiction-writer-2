@@ -2,6 +2,7 @@ import {IOrderParser, ITokens,} from './IOrderParser';
 import {IFwOrder} from '../../IFwOrder';
 import {defaultOrderOptions, IOrderOptions} from './IOrderOptions';
 import {IParserOptions} from '../../../lib';
+import {IFwExtension} from '../../IFwExtension';
 
 export abstract class OrderParser implements IOrderParser {
     protected options: IOrderOptions;
@@ -46,8 +47,7 @@ export abstract class OrderParser implements IOrderParser {
 
         return result;
     }
-
-    abstract serialize(parsed: ITokens<IFwOrder>, opt?: IParserOptions<string, ITokens<IFwOrder>>): string;
+    abstract serialize(parsed: ITokens<IFwOrder>, opt?: IParserOptions<string, ITokens<IFwOrder>> & {excludeUnparsed?:boolean}): string;
 
     computeNextOrderFor(orderedNames: string[], parentOrder: number[]): number {
         parentOrder ??= [];

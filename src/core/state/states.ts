@@ -28,7 +28,7 @@ export interface INameSegments {
 }
 export interface IFileState {
     fwItem?: FwItem,
-    name?: INameSegments,
+    nameTokens?: INameSegments,
     security?: ISecurityState,
     securityDecorations?: IDecorationState,
     decorations?: IDecorationState,

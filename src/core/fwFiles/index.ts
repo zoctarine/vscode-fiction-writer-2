@@ -8,6 +8,8 @@ export * from './IFsContent';
 export * from './IMarkdownMeta';
 export * from './IFwOrder';
 export * from './IFsRef';
+export * from './IFwExtension';
+export * from './FwItemCloneBuilder';
 
 export * from './parsers';
 export * from './builders';

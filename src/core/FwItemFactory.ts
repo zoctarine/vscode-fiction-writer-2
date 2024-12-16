@@ -3,9 +3,10 @@ import {
     FwPermission,
     Permissions,
 } from './index';
-import {FwItem, FwItemCloneBuilder} from './fwFiles/FwItem';
+import {FwItem} from './fwFiles/FwItem';
 import {StateManager} from './state';
 import {fwPath} from './FwPath';
+import {FwItemCloneBuilder} from './fwFiles/FwItemCloneBuilder';
 
 export class FwItemFactory {
     constructor(private _stateManager: StateManager,

@@ -9,10 +9,10 @@ import {
     Permissions
 } from '../../../core';
 import vscode from 'vscode';
-import {FwItemCloneBuilder} from '../../../core/fwFiles/FwItem';
 import {StateManager} from '../../../core/state';
 import {fwPath} from '../../../core/FwPath';
 import {FwItemOption, fwFilenameInput, fwItemPicker} from '../../../core/inputs';
+import {FwItemCloneBuilder} from '../../../core/fwFiles/FwItemCloneBuilder';
 
 /**
  * Reveals a file item in the VSCode Explorer view

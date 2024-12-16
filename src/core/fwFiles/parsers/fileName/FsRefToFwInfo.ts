@@ -9,13 +9,14 @@ import {
     FwWorkspaceFolderItem
 } from '../../FwInfo';
 import {IFsRef} from '../../IFsRef';
-import {IFwInfoParser, IOrderParser, PrefixOrderParser, SuffixOrderParser} from '../index';
+import {IFwInfoParser, IOrderParser} from '../index';
 import {FwType} from '../../FwType';
 import {fwPath} from '../../../FwPath';
 import fs from 'node:fs';
 import {FwControl} from '../../FwControl';
 import {EmptyFwOrder} from '../../IFwOrder';
-import {EmptyFwExtension, FwExtensionParser} from './FwExtensionParser';
+import {FwExtensionParser} from './FwExtensionParser';
+import {EmptyFwExtension} from '../../IFwExtension';
 
 export class FsRefToFwInfo implements IFwInfoParser {
     private _fileExtensions = ['.md', '.txt'];
@@ -32,8 +33,6 @@ export class FsRefToFwInfo implements IFwInfoParser {
 
         const {rootFolderPaths} = opt;
         let name = ref.fsName;
-        let displayExt = '';
-        let displayOrder = '';
 
         const fwExtParsed = this.fwExtensionParser.parse(name);
         const mainOrderParsed = this.mainOrderParser.parse(fwExtParsed.unparsed);
@@ -56,49 +55,45 @@ export class FsRefToFwInfo implements IFwInfoParser {
             result.subOrder = subOrderParsed.parsed;
             result.name = name;
             result.extension = fwExtParsed.parsed;
-            result.displayOrder = displayOrder;
-            result.displayExt = displayExt;
-            result.displayName = `${name}`;
 
         } else {
-            result.name = ref.fsBaseName;
-            result.displayName = ref.fsBaseName;
-            result.displayOrder = '';
-            result.displayExt = '';
+            result.name = ref.fsName;
             result.mainOrder = new EmptyFwOrder();
             result.subOrder = new EmptyFwOrder();
             result.extension = new EmptyFwExtension();
         }
-
-        result.orderBy = ref.fsBaseName;
-        result.modified = new Date(ref.fsModifiedDate ?? 0).toLocaleDateString();
         return result;
     }
 
     serialize(input: FwInfo, opt?: {
         rootFolderPaths: string[];
-        fsDir: string,
-        fsExt: string
+        fsDir?: string,
+        fsExt?: string,
+        fsExists?: boolean,
+        fsModifiedDate?: number,
     } | undefined): IFsRef {
 
         let fsName = input.name;
-        fsName = fsName +this.subOrderParser.serialize({
+        fsName = this.subOrderParser.serialize({
             unparsed: fsName,
             parsed: input.subOrder
         });
         fsName = this.mainOrderParser.serialize({
             unparsed: fsName,
             parsed: input.mainOrder
-        }) + fsName;
-        fsName = fsName + this.fwExtensionParser.serialize({
+        });
+        fsName = this.fwExtensionParser.serialize({
             unparsed: fsName,
-            parsed: input.extension});
+            parsed: input.extension
+        });
 
         const fsDir = opt?.fsDir ?? '';
         const fsExt = opt?.fsExt ?? '';
         const fsBaseName = `${fsName}${fsExt}`;
         const fsPath = fwPath.join(fsDir, fsBaseName);
-        const fsExists = !!fs.statSync(fsPath, {throwIfNoEntry: false});
+        const fsExists = opt?.fsExists === undefined
+            ? !!fs.statSync(fsPath, {throwIfNoEntry: false})
+            : opt.fsExists;
 
         return {
             fsBaseName,
@@ -109,7 +104,7 @@ export class FsRefToFwInfo implements IFwInfoParser {
             fsIsFolder: input.type === FwType.Folder,
             fsName,
             fsPath,
-            fsModifiedDate: Date.parse(input.modified),
+            fsModifiedDate: opt?.fsModifiedDate ?? Date.now(),
         };
     }
 }

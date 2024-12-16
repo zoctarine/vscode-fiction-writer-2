@@ -37,11 +37,11 @@ export class CoreModule extends DisposeManager {
     contextManager: ContextManager;
     projectsOptions = new ProjectsOptions();
     activeDocumentMonitor: ActiveDocumentMonitor;
-    fwItemBuilder: FwItemBuilder = new FwItemBuilder();
     fwItemFactory: FwItemFactory;
 
     constructor(context: vscode.ExtensionContext,
                 public fileWorkerClient: FileWorkerClient,
+                public fwItemBuilder: FwItemBuilder,
                 public processorFactory: IStateProcessorFactory<IFileState>) {
         super();
         this.stateManager = new StateManager(this.processorFactory);

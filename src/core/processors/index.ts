@@ -2,6 +2,7 @@
 export * from '../metadata/metadata';
 
 export {ComputeWriteTarget} from './stateProcessors/computeWriteTarget';
+export {ComputeNameSegments} from './stateProcessors/computeNameSegments';
 export {SetWriteTargetDecorations} from './stateProcessors/setWriteTargetDecorations';
 export {ChainedProcessor} from './chainedProcessor';
 export {IStateProcessor} from './IProcessor';

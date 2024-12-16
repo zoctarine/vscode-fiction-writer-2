@@ -1,24 +1,6 @@
-import {IParser, IParserOptions, IStringParser} from '../../../lib';
+import {IParserOptions, IStringParser} from '../../../lib';
 import {ITokens} from '../order';
-
-export interface IFwExtension {
-    /**
-     * If the filename contains the projectTag, then it is returned here.
-     * If it is missing, the file does not belong to the project
-     */
-    projectTag: string | undefined;
-    /**
-     * Optional data, extracted from filename
-     */
-    data: string[];
-    glue: string
-}
-
-export class EmptyFwExtension implements IFwExtension {
-    projectTag = '';
-    glue = '';
-    data = [];
-}
+import {IFwExtension} from '../../IFwExtension';
 
 export class FwExtensionParser implements IStringParser<ITokens<IFwExtension>>{
     public parse(input: string, opt?: IParserOptions<string, ITokens<IFwExtension>>) : ITokens<IFwExtension>{
@@ -53,8 +35,10 @@ export class FwExtensionParser implements IStringParser<ITokens<IFwExtension>>{
         };
     }
 
-    public serialize({parsed, unparsed}: ITokens<IFwExtension>): string {
+    public serialize({parsed, unparsed}: ITokens<IFwExtension>,
+                     opt?: IParserOptions<string, ITokens<IFwExtension>> & {excludeUnparsed?:boolean}): string {
         let serialized = unparsed ?? '';
+        if (opt?.excludeUnparsed === true) { serialized = '';}
         if (parsed) {
             if (parsed.projectTag) {serialized += `${parsed.glue}${parsed.projectTag}`;}
             if (parsed.data && parsed.data.length > 0) {serialized += `${parsed.glue}${parsed.data.join(parsed.glue)}`;}

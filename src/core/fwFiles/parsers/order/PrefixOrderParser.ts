@@ -7,13 +7,13 @@ import {ITokens} from './IOrderParser';
 export class PrefixOrderParser extends OrderParser {
     constructor(options: Partial<IOrderOptions> = {}) {
         super(
-            /^(?<order>(\d+\.)*(\d+))(?<glue>[. \-_]+)(?<name>.*?)$/i,
+            /^(?<order>(\d+\.)*(\d+))(?<glue>[. \-_]+)?(?<name>.*?)$/i,
             options
         );
     }
 
-    serialize(input:  ITokens<IFwOrder>, opt?: IParserOptions<string,  ITokens<IFwOrder>>): string {
-        input.unparsed ??= '';
+    serialize(input:  ITokens<IFwOrder>, opt?: IParserOptions<string,  ITokens<IFwOrder>> & {excludeUnparsed?:boolean}): string {
+        let unparsed = input.unparsed ??= '';
         input.parsed ??= new EmptyFwOrder();
         const order = input.parsed.order.map((o, idx) =>{
             let token = o.toString();
@@ -23,6 +23,10 @@ export class PrefixOrderParser extends OrderParser {
             return token;
         });
 
-        return `${order.join(input.parsed.sep)}${input.parsed.glue}${input.unparsed}`;
+        if (opt?.excludeUnparsed === true) {
+            unparsed = '';
+        }
+
+        return `${order.join(input.parsed.sep)}${input.parsed.glue}${unparsed}`;
     }
 }

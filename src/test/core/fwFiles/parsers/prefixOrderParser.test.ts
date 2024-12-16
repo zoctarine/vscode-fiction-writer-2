@@ -53,6 +53,30 @@ describe('PrefixOrderParser', () => {
             }
         },
         {
+            input: '1',
+            expected: {
+                unparsed: '',
+                parsed:{
+                    order:[1],
+                    padding: [1],
+                    glue: '',
+                    sep: '.'
+                }
+            }
+        },
+        {
+            input: '1.2.',
+            expected: {
+                unparsed: '',
+                parsed:{
+                    order:[1,2],
+                    padding: [1,1],
+                    glue: '.',
+                    sep: '.'
+                }
+            }
+        },
+        {
             input: '1 Something',
             expected: {
                 unparsed: 'Something',
@@ -127,11 +151,11 @@ describe('PrefixOrderParser', () => {
         {
             input: '1.2Something',
             expected: {
-                unparsed: '2Something',
+                unparsed: 'Something',
                 parsed:{
-                    order:[1],
-                    padding: [1],
-                    glue: '.',
+                    order:[1,2],
+                    padding: [1,1],
+                    glue: '',
                     sep: '.'
                 }
             }

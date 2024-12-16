@@ -11,7 +11,7 @@ export class ProjectNodeList implements Collections<ProjectNode> {
 
     sort(): Collections<ProjectNode> {
 
-        this.items.sort((a, b) => (a.data.fwItem?.info?.orderBy ?? '') > (b.data.fwItem?.info?.orderBy ?? '') ? 1 : -1);
+        this.items.sort((a, b) => (a.data.fwItem?.fsRef?.fsBaseName ?? '') > (b.data.fwItem?.fsRef?.fsBaseName ?? '') ? 1 : -1);
 
         return this;
     }

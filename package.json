@@ -640,10 +640,8 @@
           "group": "FictionWriter@3",
           "when": "editorLangId == fwmarkdown && editorHasSelection"
         }
-
       ],
-      "fictionWriter.editor": [
-      ],
+      "fictionWriter.editor": [],
       "commandPalette": [
         {
           "command": "fictionWriter.views.projectExplorer.toggleVirtualFolder",
@@ -1548,6 +1546,8 @@
     "test:jest": "tsc -p . && jest --no-coverage"
   },
   "devDependencies": {
+    "@babel/core": "^7.26.0",
+    "@babel/preset-env": "^7.26.0",
     "@types/codemirror": "^5.60.15",
     "@types/deep-equal": "^1.0.4",
     "@types/glob": "^8.1.0",
@@ -1563,6 +1563,7 @@
     "@typescript-eslint/parser": "^7.11.0",
     "@vscode/test-cli": "^0.0.9",
     "@vscode/test-electron": "^2.4.1",
+    "babel-jest": "^29.7.0",
     "chalk": "^5.3.0",
     "concurrently": "^8.2.2",
     "esbuild": "^0.21.5",

@@ -33,7 +33,7 @@ export class ProjectExplorerTreeItem extends vscode.TreeItem {
                 : vscode.TreeItemCollapsibleState.Collapsed
             : vscode.TreeItemCollapsibleState.None;
 
-        let name = data.fwItem?.info?.displayName[0] ?? '';
+        let name = data.fwItem?.info?.name ?? '';
 
         if (options && options.labelSelector) {
             name = options.labelSelector(data.fwItem?.info);
@@ -53,13 +53,13 @@ export class ProjectExplorerTreeItem extends vscode.TreeItem {
         this.contextValue = Permissions.getSerialized(node.data.fwItem?.info);
 
         this.tooltip = new vscode.MarkdownString([
-            `$(${icon}) **${data.fwItem?.info.name}** ${data.fwItem?.info.displayExt}\n\n`,
+            `$(${icon}) ${data.nameTokens?.order} **${data.nameTokens?.name}** ${data.nameTokens?.ext}\n\n`,
             `- **Type:** ${typeToProjectType(nodeType)}`,
             `- **Order:** *${data.fwItem?.info?.mainOrder.order}*`,
             `- ***Full Name:*** *${data.fwItem?.fsRef?.fsBaseName}*\n\n`,
             `- ***Full Path:*** *${data.fwItem?.fsRef?.fsPath}*`,
             `- ***ViewItem:*** *${this.contextValue}*`,
-            `- ***Modified:*** *${data.fwItem?.info?.modified}*`,
+            `- ***Modified:*** *${data.fwItem?.fsRef?.fsModifiedDate}*`,
             `- ***ID:*** *${node.id}*`
         ].join('\n\n'), true);
 

@@ -147,6 +147,18 @@ describe('SuffixOrderParser', () => {
                     sep: '.'
                 }
             }
+        },
+        {
+            input: '1',
+            expected: {
+                unparsed: '1',
+                parsed: {
+                    order: [],
+                    padding: [],
+                    glue: '',
+                    sep: '.'
+                }
+            }
         }
     ])('parse - %s', async ({input, expected}) => {
 

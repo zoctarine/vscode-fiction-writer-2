@@ -99,8 +99,8 @@ export class FwItemOption implements vscode.QuickPickItem {
     constructor(item: FwItem, description?: string) {
         this.item = item;
         if (item?.fsRef?.fsPath) {
-            this.label = item.info.displayName[0];
-            this.description = item.info.displayExt;
+            this.label = item.fsRef.fsName;
+            this.description = item.fsRef.fsExt;
             this.fsPath = item.fsRef.fsPath;
             this.detail = description;
         } else {

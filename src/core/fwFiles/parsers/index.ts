@@ -7,3 +7,5 @@ export {IOrderOptions} from './order/IOrderOptions';
 export {IOrderParser} from './order/IOrderParser';
 export {PrefixOrderParser} from './order/PrefixOrderParser';
 export {SuffixOrderParser} from './order/SuffixOrderParser';
+export {EmptyFwExtension} from '../IFwExtension';
+export {IFwExtension} from '../IFwExtension';

@@ -3,7 +3,8 @@ import {FwType} from './FwType';
 import {FwControl} from './FwControl';
 import {IFwOrder} from './IFwOrder';
 import {FwPermission, Permissions} from './FwPermission';
-import {IFwExtension} from './parsers/fileName/FwExtensionParser';
+
+import {IFwExtension} from './IFwExtension';
 
 /**
  * A full name could look like:
@@ -18,8 +19,6 @@ export interface IFwInfo {
     mainOrder: IFwOrder;
     subOrder: IFwOrder;
     extension: IFwExtension;
-
-    orderBy: string;
 }
 
 /**
@@ -48,12 +47,6 @@ export class FwInfo implements IFwInfo {
         data: [],
         glue: '',
     };
-    displayName:string = '';
-    displayOrder:string='';
-    displayExt:string='';
-    orderBy: string = '';
-
-    modified: string = '';
 
     constructor() {
     }
