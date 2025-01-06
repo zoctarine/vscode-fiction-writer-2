@@ -8,17 +8,19 @@ import {IFwExtension} from './IFwExtension';
 
 /**
  * A full name could look like:
- * {@link order} {@link name}.{@link projectTag}.{@link data}.{@link ext}
+ * {@link mainOrder}{@link name}.{@link subOrder}.{@link markers}.{@link ext}
  */
 export interface IFwInfo {
     type: FwType;
     subType: FwSubType;
     control: FwControl;
 
-    name: string;
+    location: string;
     mainOrder: IFwOrder;
+    name: string;
     subOrder: IFwOrder;
-    extension: IFwExtension;
+    markers: IFwExtension;
+    ext: string;
 }
 
 /**
@@ -29,24 +31,26 @@ export class FwInfo implements IFwInfo {
     subType: FwSubType = FwSubType.Unknown;
     control: FwControl = FwControl.Unknown;
 
-    name: string = '';
+    location: string = '';
     mainOrder: IFwOrder = {
         glue: '',
         sep: '',
         order: [],
         padding: []
     };
+    name: string = '';
     subOrder: IFwOrder = {
         glue: '',
         sep: '',
         order: [],
         padding: []
     };
-    extension: IFwExtension = {
+    markers: IFwExtension = {
         projectTag: '',
         data: [],
         glue: '',
     };
+    ext: string = '';
 
     constructor() {
     }
@@ -58,15 +62,15 @@ export class FwInfo implements IFwInfo {
         sub.type = instance.type;
         sub.control = instance.control;
         sub.subType = instance.subType;
-        sub.extension.projectTag = instance.extension.projectTag;
-        sub.extension.data = instance.extension.data;
-        sub.extension.glue = instance.extension.glue;
+        sub.markers.projectTag = instance.markers.projectTag;
+        sub.markers.data = instance.markers.data;
+        sub.markers.glue = instance.markers.glue;
 
         Object.setPrototypeOf(sub, Object.getPrototypeOf(instance));
     }
 }
 
-export class FwRootItem extends FwInfo {
+export class FwRootInfo extends FwInfo {
     constructor() {
         super();
         this.type = FwType.Folder;
@@ -76,17 +80,18 @@ export class FwRootItem extends FwInfo {
     }
 }
 
-export class FwVirtualFolderItem extends FwInfo {
+export class FwVirtualFolderInfo extends FwInfo {
     constructor() {
         super();
         this.type = FwType.Folder;
         this.subType = FwSubType.VirtualFolder;
         this.control = FwControl.Active;
-        this.extension.projectTag = 'fw';
+        this.markers.projectTag = 'fw';
+        this.markers.glue = '.';
     }
 }
 
-export class FwEmpty extends FwInfo {
+export class FwEmptyInfo extends FwInfo {
     constructor() {
         super();
         this.type = FwType.Folder;
@@ -95,7 +100,7 @@ export class FwEmpty extends FwInfo {
     }
 }
 
-export class FwFolderItem extends FwInfo {
+export class FwFolderInfo extends FwInfo {
     constructor() {
         super();
         this.type = FwType.Folder;
@@ -104,7 +109,7 @@ export class FwFolderItem extends FwInfo {
     }
 }
 
-export class FwWorkspaceFolderItem extends FwInfo {
+export class FwWorkspaceFolderInfo extends FwInfo {
     constructor() {
         super();
         this.type = FwType.Folder;
@@ -113,17 +118,17 @@ export class FwWorkspaceFolderItem extends FwInfo {
     }
 }
 
-export class FwProjectFileItem extends FwInfo {
+export class FwProjectFileInfo extends FwInfo {
     constructor() {
         super();
         this.type = FwType.File;
         this.subType = FwSubType.ProjectFile;
         this.control = FwControl.Active;
-        this.extension.projectTag = 'fw';
+        this.markers.projectTag = 'fw';
     }
 }
 
-export class FwTextFileItem extends FwInfo {
+export class FwTextFileInfo extends FwInfo {
     constructor() {
         super();
         this.type = FwType.File;

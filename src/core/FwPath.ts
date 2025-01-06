@@ -63,7 +63,7 @@ export class FwPath {
         return this.getAsync("*", fsPath);
     }
 
-    public getAllAsync(fsPath: string) {
+    public getChildrenRecursiveAsync(fsPath: string) {
         return this.getAsync("**", fsPath);
     }
 

@@ -12,7 +12,7 @@ describe('SuffixOrderParser', () => {
                 parsed: {
                     order: [],
                     padding: [],
-                    glue: '',
+                    glue: ' ',
                     sep: '.',
                 }
             }
@@ -24,7 +24,7 @@ describe('SuffixOrderParser', () => {
                 parsed: {
                     order: [],
                     padding: [],
-                    glue: '',
+                    glue: ' ',
                     sep: '.'
                 }
             }
@@ -35,7 +35,7 @@ describe('SuffixOrderParser', () => {
                 parsed: {
                     order: [],
                     padding: [],
-                    glue: '',
+                    glue: ' ',
                     sep: '.'
                 }
             }
@@ -47,7 +47,7 @@ describe('SuffixOrderParser', () => {
                 parsed: {
                     order: [],
                     padding: [],
-                    glue: '',
+                    glue: ' ',
                     sep: '.'
                 }
             }
@@ -59,7 +59,7 @@ describe('SuffixOrderParser', () => {
                 parsed: {
                     order: [],
                     padding: [],
-                    glue: '',
+                    glue: ' ',
                     sep: '.'
                 }
             }
@@ -143,7 +143,7 @@ describe('SuffixOrderParser', () => {
                 parsed: {
                     order: [],
                     padding: [],
-                    glue: '',
+                    glue: ' ',
                     sep: '.'
                 }
             }
@@ -155,7 +155,7 @@ describe('SuffixOrderParser', () => {
                 parsed: {
                     order: [],
                     padding: [],
-                    glue: '',
+                    glue: ' ',
                     sep: '.'
                 }
             }

@@ -6,13 +6,18 @@ import {AnalyzeText} from '../commands/AnalyzeText';
 import {PrefixOrderParser, FsRefToFwInfo, PathScurryToFsRef, SuffixOrderParser} from '../parsers';
 import {FwItem} from '../FwItem';
 import {FwPermission, Permissions} from '../FwPermission';
-import {FwEmpty, FwRootItem} from '../FwInfo';
+import {FwEmptyInfo, FwRootInfo} from '../FwInfo';
 import {FsRefEmpty} from '../IFsRef';
 import {FsContentEmpty} from '../IFsContent';
 import {Path} from 'glob';
 import {FsPathToFsRef} from '../parsers/fileName/FsPathToFsRef';
+import {FwItemReplicator} from '../FwItemReplicator';
 
-export class FwItemBuilder implements IAsyncBuilder<{ path: Path | string, isFile?:boolean, isFolder?:boolean}, FwItem> {
+export class FwItemBuilder implements IAsyncBuilder<{
+    path: Path | string,
+    isFile?: boolean,
+    isFolder?: boolean
+}, FwItem> {
     constructor(
         private _loadText = new LoadTextFile(),
         private _extractMeta = new ExtractMeta(),
@@ -21,11 +26,16 @@ export class FwItemBuilder implements IAsyncBuilder<{ path: Path | string, isFil
         public fsPathToFsRef = new FsPathToFsRef(),
         public pathScurryToFsRef = new PathScurryToFsRef(),
         public fsRefToFwInfo = new FsRefToFwInfo(new PrefixOrderParser(), new SuffixOrderParser()),
-
     ) {
+
     }
 
-    public async buildAsync(input: { path: Path | string, rootFolderPaths?: string[], isFile?:boolean, isFolder?:boolean}): Promise<FwItem> {
+    public async buildAsync(input: {
+        path: Path | string,
+        rootFolderPaths?: string[],
+        isFile?: boolean,
+        isFolder?: boolean
+    }): Promise<FwItem> {
         let fsPath: string;
         let path = input.path as Path;
 
@@ -37,11 +47,11 @@ export class FwItemBuilder implements IAsyncBuilder<{ path: Path | string, isFil
             : input.path as string;
 
         if (fsPath.length === 0) {
-            return new FwItem(new FsRefEmpty(), new FsContentEmpty(), new FwEmpty());
+            return new FwItem(new FsRefEmpty(), new FsContentEmpty(), new FwEmptyInfo());
         }
 
         if (fsPath === 'root') {
-            return new FwItem(new FsRefEmpty(), new FsContentEmpty(), new FwRootItem());
+            return new FwItem(new FsRefEmpty(), new FsContentEmpty(), new FwRootInfo());
         }
 
         const fsRef = isPathScurry
@@ -62,6 +72,10 @@ export class FwItemBuilder implements IAsyncBuilder<{ path: Path | string, isFil
         };
 
         return new FwItem(fsRef, fsContent, info);
+    }
+
+    public createReplicator(item: FwItem) {
+        return new FwItemReplicator(item, this);
     }
 }
 

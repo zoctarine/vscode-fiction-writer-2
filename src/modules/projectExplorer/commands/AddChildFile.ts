@@ -12,7 +12,7 @@ import {FwItem} from '../../../core/fwFiles/FwItem';
 import {StateManager} from '../../../core/state';
 import {fwPath} from '../../../core/FwPath';
 import {FwItemFactory} from '../../../core/FwItemFactory';
-import {FwItemCloneBuilder} from '../../../core/fwFiles/FwItemCloneBuilder';
+import {FwItemReplicator} from '../../../core/fwFiles/FwItemReplicator';
 
 export class AddChildFile implements IAsyncCommand<FwItem, string | undefined> {
     constructor(private _fileManager: FwFileManager,

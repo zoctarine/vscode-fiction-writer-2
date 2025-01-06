@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import {TreeItemCheckboxState} from 'vscode';
+import {QuickPickItem, ThemeIcon, TreeItemCheckboxState} from 'vscode';
 import {
     DisposeManager,
     FactorySwitch,
@@ -7,10 +7,10 @@ import {
     FwFileManager,
     FwInfo,
     FwPermission,
-    FwProjectFileItem,
+    FwProjectFileInfo,
     FwSubType,
     FwType,
-    FwVirtualFolderItem,
+    FwVirtualFolderInfo,
     log,
     Permissions,
     TreeNode,
@@ -34,6 +34,7 @@ import {Context} from '../../core/lib/context';
 import {FwItem, FwItemRoot} from '../../core/fwFiles/FwItem';
 import {ProjectNodeViewContextBuilder} from './models/ProjectNodeViewContextBuilder';
 import {ProjectViewContextBuilder} from './models/ProjecViewContextBuilder';
+import {FwItemOption} from '../../core/inputs';
 
 
 const clone = rfdc();
@@ -244,7 +245,7 @@ export class ProjectExplorerTreeDataProvider
             .items;
 
         if (this._ctx.projectView === ProjectView.list) {
-            if (this._navigationRoot && this._navigationRoot.id!== 'root') {
+            if (this._navigationRoot && this._navigationRoot.id !== 'root') {
                 result.unshift(new BackProjectNode());
             }
         }
@@ -308,11 +309,11 @@ export class ProjectExplorerTreeDataProvider
 
     public async toggleVirtualFolder(node: ProjectNode): Promise<void> {
         if (node.data.fwItem?.info?.subType === FwSubType.ProjectFile) {
-            FwInfo.morph(node.data.fwItem.info, FwVirtualFolderItem);
+            FwInfo.morph(node.data.fwItem.info, FwVirtualFolderInfo);
             this._onDidChangeTreeData.fire();
         } else if (node.data.fwItem?.info?.subType === FwSubType.VirtualFolder) {
             if (node.children?.length === 0) {
-                FwInfo.morph(node.data.fwItem.info, FwProjectFileItem);
+                FwInfo.morph(node.data.fwItem.info, FwProjectFileInfo);
                 this._onDidChangeTreeData.fire();
             } else {
                 vscode.window.showInformationMessage("Cannot break a virtual folder with children", {
@@ -420,6 +421,13 @@ export class ProjectExplorerTreeDataProvider
     }
 
     // Drag and drop controller
+
+    public async handleDrag(source: ProjectNode[], treeDataTransfer: vscode.DataTransfer, token: vscode.CancellationToken): Promise<void> {
+        // if (!source[0]?.isDraggable) return;
+        // if (!this._isBatchOrderingEnabled) return;
+        // treeDataTransfer.set('application/vnd.code.tree.projectexplorerview', new vscode.DataTransferItem(source));
+    }
+
     public async handleDrop(target: ProjectNode | undefined, sources: vscode.DataTransfer, token: vscode.CancellationToken): Promise<void> {
         if (token.isCancellationRequested) return;
         //TODO
@@ -428,11 +436,117 @@ export class ProjectExplorerTreeDataProvider
         // const source = this._tree.getNode(transferItem.value[0]?.id ?? "");
         // const dest = this._tree.getNode(target?.id ?? "");
         // this._insert(source, dest);
+        const disposables: vscode.Disposable[] = [];
 
+        const dropActions = {
+            moveAbove: "$(arrow-small-up) Above",
+            moveBelow: "$(arrow-small-down) Below",
+            asFirstChild: "$(mdi-vertical-align-top) First",
+            asLastChild: "$(mdi-vertical-align-bottom) Last",
+            prepend: "$(mdi-splitscreen-top) Prepend",
+            append: "$(mdi-splitscreen-bottom) Append"
+        };
 
-        // if (!this._isBatchOrderingEnabled) {
-        //     this.commit();
-        // }
+        try {
+            const options = [
+                {
+                    label: "$(move) Move",
+                    description: "Move above or below",
+                    items: [
+                        {label: dropActions.moveAbove},
+                        {label: dropActions.moveBelow}
+                    ]
+                },
+                {
+                    label: "$(list-tree) As child",
+                    description: "Move inside",
+                    items: [
+                        {label: dropActions.asFirstChild, description: "Adds at the beginning"},
+                        {label: dropActions.asLastChild, description: "Adds at the end"}
+                    ]
+                },
+                {
+                    label: "$(combine) Combine",
+                    description: "Combine with target file",
+                    items: [
+                        {
+                            label: dropActions.prepend,
+                            description: "Adds the source content at the beginning of the target file"
+                        },
+                        {
+                            label: dropActions.append,
+                            description: "Adds the source content at the end of the target file"
+                        }
+                    ]
+                },
+            ];
+
+            const step1Result = await new Promise<QuickPickItem | undefined>((resolve) => {
+                const step1 = vscode.window.createQuickPick();
+                step1.items = options;
+                step1.title = "Choose action";
+                step1.placeholder = 'Action...';
+                step1.step = 1;
+                step1.totalSteps = 2;
+                step1.buttons = [{
+                    iconPath: new ThemeIcon("eye")
+                }];
+
+                step1.show();
+
+                disposables.push(
+                    step1.onDidHide(() => {
+                        resolve(undefined);
+                        step1.hide();
+                    }),
+                    step1.onDidChangeSelection((value) => {
+                        resolve(value[0]);
+                        step1.hide();
+                    }));
+            });
+
+            if (!step1Result) return;
+            const step2Options = options.find(i => i.label === step1Result.label)?.items ?? [];
+            const step2Result = await new Promise<QuickPickItem | undefined>((resolve) => {
+                const step2 = vscode.window.createQuickPick();
+                step2.items = step2Options;
+                step2.title = "Choose action";
+                step2.placeholder = step1Result.description;
+                step2.step = 2;
+                step2.totalSteps = 2;
+
+                step2.show();
+
+                disposables.push(
+                    step2.onDidHide(() => {
+                        resolve(undefined);
+                        step2.hide();
+                    }),
+                    step2.onDidChangeSelection((value) => {
+                        resolve(value[0]);
+                        step2.hide();
+                    }));
+            });
+
+            if (step2Result) {
+                switch (step2Result.label) {
+                    case dropActions.moveAbove:
+                        break;
+                    case dropActions.moveBelow:
+                        break;
+                    case dropActions.asFirstChild:
+                        break;
+                    case dropActions.asLastChild:
+                        break;
+                    case dropActions.prepend:
+                        break;
+                    case dropActions.append:
+                        break;
+                }
+            }
+        } finally {
+            disposables.forEach(d => d?.dispose());
+        }
     }
 
     // TODO
@@ -555,13 +669,6 @@ export class ProjectExplorerTreeDataProvider
     public syncWithActiveEditorOff() {
         this.setCtx({syncEditor: false}, true);
     }
-
-    public async handleDrag(source: ProjectNode[], treeDataTransfer: vscode.DataTransfer, token: vscode.CancellationToken): Promise<void> {
-        // if (!source[0]?.isDraggable) return;
-        // if (!this._isBatchOrderingEnabled) return;
-        // treeDataTransfer.set('application/vnd.code.tree.projectexplorerview', new vscode.DataTransferItem(source));
-    }
-
 
     public refresh() {
         log.tmp("REFRESHING")
@@ -794,7 +901,7 @@ export class ProjectExplorerTreeDataProvider
     }
 
     private _setNavigationRoot(node?: TreeNode<IFileState>) {
-       if (node?.data?.fwItem?.info?.type === FwType.Folder) {
+        if (node?.data?.fwItem?.info?.type === FwType.Folder) {
             this._navigationRoot = node;
         } else {
             this._navigationRoot = node?.parent;

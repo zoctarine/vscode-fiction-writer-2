@@ -16,7 +16,7 @@ export class FwExtensionParser implements IStringParser<ITokens<IFwExtension>>{
 
         if (matches) {
             const groups = matches.groups as any;
-            const {name, projectTag, data1, data2, data3} = groups;
+            const {name, projectTag, data1, data2, data3, ext} = groups;
             unparsed = name;
             parsed = {
                 projectTag: projectTag?.substring(1),

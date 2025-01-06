@@ -1,12 +1,12 @@
 import {FactorySwitch} from '../../../lib';
 import {
-    FwEmpty,
-    FwFolderItem,
+    FwEmptyInfo,
+    FwFolderInfo,
     FwInfo,
     FwOtherFileItem,
-    FwProjectFileItem,
-    FwTextFileItem,
-    FwWorkspaceFolderItem
+    FwProjectFileInfo,
+    FwTextFileInfo,
+    FwWorkspaceFolderInfo
 } from '../../FwInfo';
 import {IFsRef} from '../../IFsRef';
 import {IFwInfoParser, IOrderParser} from '../index';
@@ -28,8 +28,8 @@ export class FsRefToFwInfo implements IFwInfoParser {
     }
 
     parse(ref: IFsRef, opt: { rootFolderPaths: string[] }) {
-        if (!ref) return new FwEmpty();
-        if (!opt.rootFolderPaths) return new FwEmpty();
+        if (!ref) return new FwEmptyInfo();
+        if (!opt.rootFolderPaths) return new FwEmptyInfo();
 
         const {rootFolderPaths} = opt;
         let name = ref.fsName;
@@ -43,32 +43,31 @@ export class FsRefToFwInfo implements IFwInfoParser {
         const isTextFile = ref.fsIsFile && this._fileExtensions.includes(ref.fsExt);
         const isProjectFile = ref.fsIsFile && !!fwExtParsed.parsed.projectTag && isTextFile;
         const result = new FactorySwitch<FwInfo>()
-            .case(isWorkspaceFolder, () => new FwWorkspaceFolderItem())
-            .case(ref.fsIsFolder, () => new FwFolderItem())
-            .case(isProjectFile, () => new FwProjectFileItem())
-            .case(isTextFile, () => new FwTextFileItem())
+            .case(isWorkspaceFolder, () => new FwWorkspaceFolderInfo())
+            .case(ref.fsIsFolder, () => new FwFolderInfo())
+            .case(isProjectFile, () => new FwProjectFileInfo())
+            .case(isTextFile, () => new FwTextFileInfo())
             .default(() => new FwOtherFileItem())
             .create();
 
+        result.ext = ref.fsExt;
+        result.location = ref.fsDir;
         if (result.control === FwControl.Active) {
             result.mainOrder = mainOrderParsed.parsed;
             result.subOrder = subOrderParsed.parsed;
             result.name = name;
-            result.extension = fwExtParsed.parsed;
-
+            result.markers = fwExtParsed.parsed;
         } else {
             result.name = ref.fsName;
             result.mainOrder = new EmptyFwOrder();
             result.subOrder = new EmptyFwOrder();
-            result.extension = new EmptyFwExtension();
+            result.markers = new EmptyFwExtension();
         }
         return result;
     }
 
     serialize(input: FwInfo, opt?: {
         rootFolderPaths: string[];
-        fsDir?: string,
-        fsExt?: string,
         fsExists?: boolean,
         fsModifiedDate?: number,
     } | undefined): IFsRef {
@@ -84,11 +83,11 @@ export class FsRefToFwInfo implements IFwInfoParser {
         });
         fsName = this.fwExtensionParser.serialize({
             unparsed: fsName,
-            parsed: input.extension
+            parsed: input.markers
         });
 
-        const fsDir = opt?.fsDir ?? '';
-        const fsExt = opt?.fsExt ?? '';
+        const fsDir = input.location ?? '';
+        const fsExt = input.ext ?? '';
         const fsBaseName = `${fsName}${fsExt}`;
         const fsPath = fwPath.join(fsDir, fsBaseName);
         const fsExists = opt?.fsExists === undefined

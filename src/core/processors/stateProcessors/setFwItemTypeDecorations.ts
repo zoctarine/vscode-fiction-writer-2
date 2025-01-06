@@ -1,29 +1,28 @@
 import {IStateProcessor} from '../IProcessor';
 import {applyDecorations, IFileState} from '../../state';
 import {FwSubType} from '../../fwFiles';
-import {FaIcons} from '../../decorations';
-import {log} from '../../logging';
+import {MdiIcons} from '../../decorations';
 
 export class SetFwItemTypeDecorations implements IStateProcessor<IFileState> {
     async process(state: IFileState) {
         if (!state.fwItem) return;
 
         const icons = new Map<FwSubType,string>([
-            [FwSubType.Unknown, FaIcons.folder],
-            [FwSubType.Root, FaIcons.inbox],
-            [FwSubType.RootFolder, FaIcons.inbox],
-            [FwSubType.WorkspaceFolder, FaIcons.inbox],
-            [FwSubType.Folder, FaIcons.folder],
-            [FwSubType.VirtualFolder, FaIcons.fileLinesSolid],
-            [FwSubType.EmptyVirtualFolder, FaIcons.fileExcel],
-            [FwSubType.ProjectFile, FaIcons.fileLines],
+            [FwSubType.Unknown, MdiIcons.folder],
+            [FwSubType.Root, MdiIcons.link],
+            [FwSubType.RootFolder, MdiIcons.link],
+            [FwSubType.WorkspaceFolder, MdiIcons.link],
+            [FwSubType.Folder, MdiIcons.folder],
+            [FwSubType.VirtualFolder, MdiIcons.descriptionFill],
+            [FwSubType.EmptyVirtualFolder, MdiIcons.draft],
+            [FwSubType.ProjectFile, MdiIcons.description],
             [FwSubType.TextFile, 'file'],
             [FwSubType.OtherFile, 'file']
         ]);
 
         state.decorations = applyDecorations(
             state.decorations,
-            {icon: icons.get(state.fwItem?.info?.subType!) ?? FaIcons.folder});
+            {icon: icons.get(state.fwItem?.info?.subType!) ?? MdiIcons.folder});
 
 
         return;

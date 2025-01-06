@@ -385,104 +385,168 @@
       }
     },
     "icons": {
-      "mdi-swap-vert": {
-        "description": "swap_vert",
-        "default": {
-          "fontPath": "./media/webfonts/MaterialSymbolsSharp-subset.woff2",
-          "fontCharacter": "\\e8d5"
-        }
-      },
-      "mdi-link": {
-        "description": "link",
-        "default": {
-          "fontPath": "./media/webfonts/MaterialSymbolsSharp-subset.woff2",
-          "fontCharacter": "\\e250"
-        }
-      },
-      "mdi-link-off": {
-        "description": "link_off",
-        "default": {
-          "fontPath": "./media/webfonts/MaterialSymbolsSharp-subset.woff2",
-          "fontCharacter": "\\e16f"
-        }
-      },
       "mdi-clock-loader-10": {
         "description": "clock_loader_10",
         "default": {
-          "fontPath": "./media/webfonts/MaterialSymbolsSharp-subset.woff2",
+          "fontPath": "./media/webfonts/MaterialSymbolsRounded-subset.woff2",
           "fontCharacter": "\\f726"
         }
       },
       "mdi-clock-loader-20": {
         "description": "clock_loader_20",
         "default": {
-          "fontPath": "./media/webfonts/MaterialSymbolsSharp-subset.woff2",
+          "fontPath": "./media/webfonts/MaterialSymbolsRounded-subset.woff2",
           "fontCharacter": "\\f725"
         }
       },
       "mdi-clock-loader-40": {
         "description": "clock_loader_40",
         "default": {
-          "fontPath": "./media/webfonts/MaterialSymbolsSharp-subset.woff2",
+          "fontPath": "./media/webfonts/MaterialSymbolsRounded-subset.woff2",
           "fontCharacter": "\\f724"
         }
       },
       "mdi-clock-loader-60": {
         "description": "clock_loader_60",
         "default": {
-          "fontPath": "./media/webfonts/MaterialSymbolsSharp-subset.woff2",
+          "fontPath": "./media/webfonts/MaterialSymbolsRounded-subset.woff2",
           "fontCharacter": "\\f723"
         }
       },
       "mdi-clock-loader-80": {
         "description": "clock_loader_80",
         "default": {
-          "fontPath": "./media/webfonts/MaterialSymbolsSharp-subset.woff2",
+          "fontPath": "./media/webfonts/MaterialSymbolsRounded-subset.woff2",
           "fontCharacter": "\\f722"
         }
       },
       "mdi-clock-loader-90": {
         "description": "clock_loader_90",
         "default": {
-          "fontPath": "./media/webfonts/MaterialSymbolsSharp-subset.woff2",
+          "fontPath": "./media/webfonts/MaterialSymbolsRounded-subset.woff2",
           "fontCharacter": "\\f721"
         }
       },
-      "mdi-task-alt": {
-        "description": "task_alt",
+      "mdi-description": {
+        "description": "description",
         "default": {
-          "fontPath": "./media/webfonts/MaterialSymbolsSharp-subset.woff2",
-          "fontCharacter": "\\e2e6"
+          "fontPath": "./media/webfonts/MaterialSymbolsRounded-subset.woff2",
+          "fontCharacter": "\\e873"
         }
       },
-      "mdi-hourglass-empty": {
-        "description": "hourglass_empty",
+      "mdi-description-fill": {
+        "description": "description_fill",
         "default": {
-          "fontPath": "./media/webfonts/MaterialSymbolsSharp-subset.woff2",
-          "fontCharacter": "\\e88b"
+          "fontPath": "./media/webfonts/MaterialSymbolsRounded-subset-fill.woff2",
+          "fontCharacter": "\\e873"
         }
       },
-      "mdi-hourglass-disabled": {
-        "description": "hourglass_disabled",
+      "mdi-draft": {
+        "description": "draft",
         "default": {
-          "fontPath": "./media/webfonts/MaterialSymbolsSharp-subset.woff2",
-          "fontCharacter": "\\ef53"
+          "fontPath": "./media/webfonts/MaterialSymbolsRounded-subset.woff2",
+          "fontCharacter": "\\e66d"
+        }
+      },
+      "mdi-folder": {
+        "description": "folder",
+        "default": {
+          "fontPath": "./media/webfonts/MaterialSymbolsRounded-subset.woff2",
+          "fontCharacter": "\\e2c7"
+        }
+      },
+      "mdi-folder-open": {
+        "description": "folder_open",
+        "default": {
+          "fontPath": "./media/webfonts/MaterialSymbolsRounded-subset.woff2",
+          "fontCharacter": "\\e2c8"
         }
       },
       "mdi-format-line-spacingd": {
         "description": "format_line_spacing",
         "default": {
-          "fontPath": "./media/webfonts/MaterialSymbolsSharp-subset.woff2",
+          "fontPath": "./media/webfonts/MaterialSymbolsRounded-subset.woff2",
           "fontCharacter": "\\e240"
+        }
+      },
+      "mdi-hourglass-disabled": {
+        "description": "hourglass_disabled",
+        "default": {
+          "fontPath": "./media/webfonts/MaterialSymbolsRounded-subset.woff2",
+          "fontCharacter": "\\ef53"
+        }
+      },
+      "mdi-hourglass-empty": {
+        "description": "hourglass_empty",
+        "default": {
+          "fontPath": "./media/webfonts/MaterialSymbolsRounded-subset.woff2",
+          "fontCharacter": "\\e88b"
+        }
+      },
+      "mdi-link": {
+        "description": "link",
+        "default": {
+          "fontPath": "./media/webfonts/MaterialSymbolsRounded-subset.woff2",
+          "fontCharacter": "\\e250"
+        }
+      },
+      "mdi-link-off": {
+        "description": "link_off",
+        "default": {
+          "fontPath": "./media/webfonts/MaterialSymbolsRounded-subset.woff2",
+          "fontCharacter": "\\e16f"
+        }
+      },
+      "mdi-splitscreen-bottom": {
+        "description": "splitscreen_bottom",
+        "default": {
+          "fontPath": "./media/webfonts/MaterialSymbolsRounded-subset.woff2",
+          "fontCharacter": "\\f676"
+        }
+      },
+      "mdi-splitscreen-top": {
+        "description": "splitscreen_top",
+        "default": {
+          "fontPath": "./media/webfonts/MaterialSymbolsRounded-subset.woff2",
+          "fontCharacter": "\\f673"
+        }
+      },
+      "mdi-swap-vert": {
+        "description": "swap_vert",
+        "default": {
+          "fontPath": "./media/webfonts/MaterialSymbolsRounded-subset.woff2",
+          "fontCharacter": "\\e8d5"
+        }
+      },
+      "mdi-task-alt": {
+        "description": "task_alt",
+        "default": {
+          "fontPath": "./media/webfonts/MaterialSymbolsRounded-subset.woff2",
+          "fontCharacter": "\\e2e6"
+        }
+      },
+      "mdi-vertical-align-bottom": {
+        "description": "vertical_align_bottom",
+        "default": {
+          "fontPath": "./media/webfonts/MaterialSymbolsRounded-subset.woff2",
+          "fontCharacter": "\\e258"
+        }
+      },
+      "mdi-vertical-align-top": {
+        "description": "vertical_align_top",
+        "default": {
+          "fontPath": "./media/webfonts/MaterialSymbolsRounded-subset.woff2",
+          "fontCharacter": "\\e25a"
         }
       },
       "mdi-vertical-distribute": {
         "description": "vertical_distribute",
         "default": {
-          "fontPath": "./media/webfonts/MaterialSymbolsSharp-subset.woff2",
+          "fontPath": "./media/webfonts/MaterialSymbolsRounded-subset.woff2",
           "fontCharacter": "\\e076"
         }
       },
+
       "fa-trash-can": {
         "description": "trash-can",
         "default": {

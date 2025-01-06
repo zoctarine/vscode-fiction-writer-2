@@ -28,6 +28,8 @@ export class SuffixOrderParser extends OrderParser {
             unparsed = '';
         }
 
-        return `${unparsed}${input.parsed.glue}${order.join(input?.parsed?.sep ?? '')}`;
+        const glue = order.length === 0 ? '' : input.parsed.glue;
+
+        return `${unparsed}${glue}${order.join(input?.parsed?.sep ?? '')}`;
     }
 }

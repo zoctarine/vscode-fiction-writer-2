@@ -12,7 +12,7 @@ import vscode from 'vscode';
 import {StateManager} from '../../../core/state';
 import {fwPath} from '../../../core/FwPath';
 import {FwItemOption, fwFilenameInput, fwItemPicker} from '../../../core/inputs';
-import {FwItemCloneBuilder} from '../../../core/fwFiles/FwItemCloneBuilder';
+import {FwItemReplicator} from '../../../core/fwFiles/FwItemReplicator';
 
 /**
  * Reveals a file item in the VSCode Explorer view
@@ -45,14 +45,14 @@ export class ExtractFile implements IAsyncCommand<vscode.TextEditor, void> {
         if (lines.length === 0) return;
 
         const content = lines.reduce((acc, f) => acc + f, "");
-        const builder = new FwItemCloneBuilder(fwItem, this._fwItemBuilder);
+        const builder = new FwItemReplicator(fwItem, this._fwItemBuilder);
 
         const extracted = await builder
-            .setFilename(fwPath.toFilename(lines.join(' ')))
+            .withFilename(fwPath.toFilename(lines.join(' ')))
             .incrementMainOrder()
-            .clone();
-        const nextPath = await builder.incrementMainOrder().clone();
-        const nextOrdered = await builder.incrementSubOrder().clone();
+            .executeAsync();
+        const nextPath = await builder.incrementMainOrder().executeAsync();
+        const nextOrdered = await builder.incrementSubOrder().executeAsync();
         let selectedItem = await fwItemPicker([
             new FwItemOption(extracted, 'from selection'),
             new FwItemOption(nextPath, 'As sibling with same name'),
@@ -63,7 +63,7 @@ export class ExtractFile implements IAsyncCommand<vscode.TextEditor, void> {
         }
         const fileName = await fwFilenameInput(selectedItem);
         if (!fileName) return;
-        const newItem = await builder.setBasename(fileName).clone();
+        const newItem = await builder.withBasename(fileName).executeAsync();
         const createdFile = await this._fileManager.createFile(newItem.fsRef.fsPath, content);
         if (!createdFile) {
             notifier.warn("Could not create all file");

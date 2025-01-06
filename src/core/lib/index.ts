@@ -7,4 +7,5 @@ export * from './objectProps';
 export * from './arrayTools';
 export * from './parsers';
 export * from './retry';
+export * from './orderTools';
 export {ArrayTools} from './arrayTools';

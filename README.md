@@ -44,26 +44,64 @@ This project uses icons from [Font Awesome Free 6](https://use.fontawesome.com/r
 
 fonttools ttLib MaterialSymbolsSharp-subset.ttf --flavor woff2 -o MaterialSymbolsSharp-subset.woff2
 
-swap_vert e8d5
-link e250
-link_off e16f
 clock_loader_10 f726
 clock_loader_20 f725
 clock_loader_40 f724
 clock_loader_60 f723
 clock_loader_80 f722
 clock_loader_90 f721
-task_alt e2e6
-hourglass_empty e88b
-hourglass_disabled ef53
+description e873
+draft e66d
+folder e2c7
+folder_open e2c8
 format_line_spacing e240
+hourglass_disabled ef53
+hourglass_empty e88b
+library_books e02f
+link e250
+link_off e16f
+splitscreen_bottom f676
+splitscreen_top f673
+swap_vert e8d5
+task_alt e2e6
+vertical_align_bottom e258
+vertical_align_top e25a
 vertical_distribute e076
+
+clock_loader_10,clock_loader_20,clock_loader_40,clock_loader_60,clock_loader_80,clock_loader_90,description,draft,folder,folder_open,format_line_spacing,hourglass_disabled,hourglass_empty,library_books,link,link_off,splitscreen_bottom,splitscreen_top,swap_vert,task_alt,vertical_align_bottom,vertical_align_top,vertical_distribute
+
+description,draft
+
 ```sh
 python3 -m venv .venv
 source .venv/bin/activate
-fonttools subset MaterialSymbolsSharp.ttf \
---unicodes=5f-7a,30-39,e8d5,e250,e16f,f726,f725,f724,f723,f722,f721,e2e6,e88b,ef53,e240,e076 \
+
+fonttools varLib.instancer MaterialSymbolsRounded.ttf FILL=1 opsz=24 --output MaterialSymbolsRounded-fill.ttf
+fonttools varLib.instancer MaterialSymbolsRounded.ttf FILL=0 opsz=24 wght=400 --output MaterialSymbolsRounded-def.ttf
+
+
+fonttools subset MaterialSymbolsRounded-def.ttf \
+--unicodes=5f-7a,30-39,e8d5,e250,e16f,f726,f725,f724,f723,f722,f721,e2e6,e88b,ef53,e240,e076,e258,e25a,f676,f673,e873,e2c7,e2c8,e66d \
 --no-layout-closure \
---output-file=MaterialSymbolsSharp-subset.woff2 \
+--output-file=MaterialSymbolsRounded-subset.woff2 \
 --flavor=woff2
+
+
+fonttools subset MaterialSymbolsRounded-fill.ttf \
+--unicodes=5f-7a,30-39,e873 \
+--no-layout-closure \
+--output-file=MaterialSymbolsRounded-subset-fill.woff2 \
+--flavor=woff2 
+
+
+ttx --flavor=woff2 -o MaterialSymbolsOutlined_regular.woff2 MaterialSymbolsOutlined_regular.woff
+ttx --flavor=woff2 -o MaterialSymbolsOutlined_fill.woff2 MaterialSymbolsOutlined_fill.woff
 ```
+
+https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded&icon_names=clock_loader_10,clock_loader_20,clock_loader_40,clock_loader_60,clock_loader_80,clock_loader_90,description,draft,folder,folder_open,format_line_spacing,hourglass_disabled,hourglass_empty,library_books,link,link_off,splitscreen_bottom,splitscreen_top,swap_vert,task_alt,vertical_align_bottom,vertical_align_top,vertical_distribute
+
+https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:FILL@0..1&icon_names=clock_loader_10,clock_loader_20,clock_loader_40,clock_loader_60,clock_loader_80,clock_loader_90,description,draft,folder,folder_open,format_line_spacing,hourglass_disabled,hourglass_empty,library_books,link,link_off,splitscreen_bottom,splitscreen_top,swap_vert,task_alt,vertical_align_bottom,vertical_align_top,vertical_distribute
+
+https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:FILL@1&icon_names=description,draft&display=block
+
+

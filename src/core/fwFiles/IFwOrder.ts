@@ -9,6 +9,6 @@ export interface IFwOrder {
 export class EmptyFwOrder implements IFwOrder{
     order: number[] = [];
     padding: number[] = [];
-    glue: string = '';
+    glue: string = ' ';
     sep: string = '.';
 }

@@ -15,7 +15,7 @@ export abstract class OrderParser implements IOrderParser {
         opt = {...this.options, ...opt};
         let namePart = orderedName;
         let orderPart = '';
-        let gluePart = '';
+        let gluePart = ' ';
         let orderList: number[] = [];
         let orderPadding: number[] = [];
         const matches = orderedName.match(this.orderRegex);

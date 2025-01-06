@@ -34,7 +34,7 @@ const getFwChanges = async (currentPath: string, nextPath: string) => {
     }
     if (nextRef.fsExt !== ref.fsExt) {
         messages.push(`the file type`);
-    } else if (nextInfo.extension.projectTag !== info.extension.projectTag) {
+    } else if (nextInfo.markers.projectTag !== info.markers.projectTag) {
         messages.push(`the FictionWriter extended extension`);
     }
 

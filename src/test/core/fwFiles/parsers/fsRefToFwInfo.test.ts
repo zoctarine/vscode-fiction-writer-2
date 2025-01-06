@@ -24,20 +24,23 @@ describe('FsRefToFwInfo', () => {
                     subType: FwSubType.TextFile,
                     control: FwControl.Possible,
 
+                    location: '/root/folder',
                     name: 'file1',
+                    ext: '.txt',
+
                     mainOrder: {
-                        glue: '',
+                        glue: ' ',
                         sep: '.',
                         order: [],
                         padding: []
                     },
                     subOrder: {
-                        glue: '',
+                        glue: ' ',
                         sep: '.',
                         order: [],
                         padding: []
                     },
-                    extension: {
+                    markers: {
                         projectTag: '',
                         data: [],
                         glue: '.',
@@ -52,20 +55,23 @@ describe('FsRefToFwInfo', () => {
                     subType: FwSubType.TextFile,
                     control: FwControl.Possible,
 
+                    location: '/root/folder',
                     name: '1.0 file1',
+                    ext: '.md',
+
                     mainOrder: {
-                        glue: '',
+                        glue: ' ',
                         sep: '.',
                         order: [],
                         padding: []
                     },
                     subOrder: {
-                        glue: '',
+                        glue: ' ',
                         sep: '.',
                         order: [],
                         padding: []
                     },
-                    extension: {
+                    markers: {
                         projectTag: '',
                         data: [],
                         glue: '.',
@@ -80,20 +86,23 @@ describe('FsRefToFwInfo', () => {
                     subType: FwSubType.OtherFile,
                     control: FwControl.Never,
 
+                    location: '/root/folder',
                     name: '1.0 file 1.1',
+                    ext: '.cs',
+
                     mainOrder: {
-                        glue: '',
+                        glue: ' ',
                         sep: '.',
                         order: [],
                         padding: []
                     },
                     subOrder: {
-                        glue: '',
+                        glue: ' ',
                         sep: '.',
                         order: [],
                         padding: []
                     },
-                    extension: {
+                    markers: {
                         projectTag: '',
                         data: [],
                         glue: '.',
@@ -108,7 +117,10 @@ describe('FsRefToFwInfo', () => {
                     subType: FwSubType.ProjectFile,
                     control: FwControl.Active,
 
+                    location: '/root/folder',
                     name: 'file',
+                    ext: '.md',
+
                     mainOrder: {
                         glue: ' ',
                         sep: '.',
@@ -121,7 +133,7 @@ describe('FsRefToFwInfo', () => {
                         order: [2],
                         padding: [1]
                     },
-                    extension: {
+                    markers: {
                         projectTag: 'fw',
                         data: [],
                         glue: '.',
@@ -136,20 +148,23 @@ describe('FsRefToFwInfo', () => {
                     subType: FwSubType.Folder,
                     control: FwControl.Never,
 
+                    location: '/root/folder',
                     name: '1 Folder',
+                    ext: '',
+
                     mainOrder: {
-                        glue: '',
+                        glue: ' ',
                         sep: '.',
                         order: [],
                         padding: []
                     },
                     subOrder: {
-                        glue: '',
+                        glue: ' ',
                         sep: '.',
                         order: [],
                         padding: []
                     },
-                    extension: {
+                    markers: {
                         projectTag: '',
                         data: [],
                         glue: '.',
@@ -164,20 +179,22 @@ describe('FsRefToFwInfo', () => {
                     subType: FwSubType.WorkspaceFolder,
                     control: FwControl.Never,
 
+                    location: '/',
                     name: 'root',
+                    ext: '',
                     mainOrder: {
-                        glue: '',
+                        glue: ' ',
                         sep: '.',
                         order: [],
                         padding: []
                     },
                     subOrder: {
-                        glue: '',
+                        glue: ' ',
                         sep: '.',
                         order: [],
                         padding: []
                     },
-                    extension: {
+                    markers: {
                         projectTag: '',
                         data: [],
                         glue: '.',
@@ -191,8 +208,6 @@ describe('FsRefToFwInfo', () => {
 
             const serializedRef = sut.serialize(parsedInfo, {
                 rootFolderPaths: ['/root'],
-                fsExt: inputRef.fsExt,
-                fsDir: inputRef.fsDir,
                 fsExists: inputRef.fsExists,
                 fsModifiedDate: inputRef.fsModifiedDate,
             });

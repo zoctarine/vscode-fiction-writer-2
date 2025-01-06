@@ -26,7 +26,11 @@ export class PrefixOrderParser extends OrderParser {
         if (opt?.excludeUnparsed === true) {
             unparsed = '';
         }
+        let glue = input.parsed.glue;
+        if (order.length === 0){
+            glue = '';
+        }
 
-        return `${order.join(input.parsed.sep)}${input.parsed.glue}${unparsed}`;
+        return `${order.join(input.parsed.sep)}${glue}${unparsed}`;
     }
 }

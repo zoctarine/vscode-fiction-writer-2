@@ -1,6 +1,6 @@
 import {IBuilder, ObjectProps} from '../../lib';
 import {FwItem} from '../FwItem';
-import {FwInfo, FwVirtualFolderItem} from '../FwInfo';
+import {FwInfo, FwVirtualFolderInfo} from '../FwInfo';
 import {FwSubType} from '../FwSubType';
 
 export class FwItemHierarchyBuilder implements IBuilder<{ items: Map<string, FwItem> }, Map<string, FwItem>> {
@@ -36,7 +36,7 @@ export class FwItemHierarchyBuilder implements IBuilder<{ items: Map<string, FwI
                     const vParent = result.get(vFolderPath);
                     if (vParent) {
                         parent = vParent;
-                        FwInfo.morph(parent.info, FwVirtualFolderItem);
+                        FwInfo.morph(parent.info, FwVirtualFolderInfo);
                     }
                 }
             }

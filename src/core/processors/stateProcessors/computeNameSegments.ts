@@ -16,7 +16,7 @@ export class ComputeNameSegments implements IStateProcessor<IFileState> {
 
             const order = mainOrderParser.serialize({parsed: info.mainOrder, unparsed: ''});
             const name = subOrderParser.serialize({parsed: info.subOrder, unparsed: info.name});
-            const ext = fwExtensionParser.serialize({parsed: info.extension, unparsed: ''}) + fsRef.fsExt;
+            const ext = fwExtensionParser.serialize({parsed: info.markers, unparsed: ''}) + fsRef.fsExt;
 
             state.nameTokens = {
                 order,

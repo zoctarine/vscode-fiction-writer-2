@@ -7,7 +7,7 @@ import {
     IAsyncCommand, IFsRef, log,
     notifier, ObjectProps,
     Permissions, retryAsync,
-    SuffixOrderParser
+    SuffixOrderParser, IFwInfo, FwProjectFileInfo
 } from '../../../core';
 import {ProjectNode} from '../models/projectNode';
 import vscode, {TextDocument} from 'vscode';
@@ -35,7 +35,8 @@ export class ExtractFiles implements IAsyncCommand<vscode.TextEditor, void> {
         const fwItem = this._stateManager.get(doc.uri.fsPath)?.fwItem;
         if (!fwItem) return;
         if (!Permissions.check(fwItem?.info, FwPermission.Write)) return;
-        const newInfo = ObjectProps.deepClone(fwItem.info);
+        const newInfo = ObjectProps.deepClone(fwItem.info) as IFwInfo;
+
 
         // get next order from existing children
         const nextChildOrder = this._fwItemBuilder.fsRefToFwInfo.mainOrderParser.computeNextOrderFor(
@@ -82,22 +83,24 @@ export class ExtractFiles implements IAsyncCommand<vscode.TextEditor, void> {
         });
         if (selectedLines.length === 0) return;
 
-        const originalOrder = [...newInfo.order];
-        const parser = this._fwItemBuilder.fsRefToFwInfo;
+
+        const originalOrder = [...newInfo.mainOrder.order];
         const fileMap = new Map<string, string>();
         const filenames: string[] = [];
-        for (let line = 0; line < selectedLines.length; line++) {
-            newInfo.name = fwPath.toFilename(selectedLines[line]);
+        const originalItemReplicator = this._fwItemBuilder
+            .createReplicator(fwItem);
 
-            newInfo.order = [...originalOrder, line + nextChildOrder];
-            const newRef = parser.serialize(newInfo, {
-                rootFolderPaths: [],
-                fsDir: fwItem.fsRef.fsDir,
-                fsExt: fwItem.fsRef.fsExt
-            });
-            filenames.push(newRef.fsBaseName);
-            if (newRef) fileMap.set(newRef.fsPath, selectedLines[line]);
-            fileMap.set(newRef.fsPath, selectedLines[line]);
+        for (let line = 0; line < selectedLines.length; line++) {
+            const lineText = selectedLines[line];
+            const newItem = await originalItemReplicator
+                .withFilename(fwPath.toFilename(lineText))
+                .withMainOrder([...originalOrder, line + nextChildOrder])
+                .executeAsync();
+
+            const {fsBaseName, fsPath} = newItem.fsRef;
+
+            filenames.push(fsBaseName);
+            fileMap.set(fsPath, lineText);
         }
 
         const optionOk = 'Ok';

@@ -1,35 +1,31 @@
 /**
- * The Font Awesome Icons use in the extension
+ * The MaterialDesign Icons use in the extension
+ * A subset of: {@link https://fonts.google.com/icons}
  */
-export const FaIcons = {
-    fileLines: 'fa-file-lines',
-    fileLinesSolid: 'fa-file-lines-solid',
-    fileExcel: 'fa-file-excel',
-    folder: 'fa-folder',
-    inbox: 'fa-inbox',
-    trashCan: 'fa-trash-can',
-    filter: 'fa-filter',
-    link: 'fa-link',
-    reply: 'fa-reply',
-    magnifyingGlass: 'fa-magnifying-glass',
-    faFileArrowDown: 'fa-file-arrow-down'
-};
-
 export const MdiIcons = {
-    swapVert: 'mdi-swap-vert',
-    link: 'mdi-link',
-    linkOff: 'mdi-link_off',
     clockLoader10: 'mdi-clock-loader-10',
     clockLoader20: 'mdi-clock-loader-20',
     clockLoader40: 'mdi-clock-loader-40',
     clockLoader60: 'mdi-clock-loader-60',
     clockLoader80: 'mdi-clock-loader-80',
     clockLoader90: 'mdi-clock-loader-90',
-    taskAlt: 'mdi-task-alt',
-    hourglassEmpty: 'mdi-hourglass-empty',
-    hourglassDisabled: 'mdi-hourglass-disabled',
+    description: 'mdi-description',
+    descriptionFill: 'mdi-description-fill',
+    draft: 'mdi-draft',
+    folder: 'mdi-folder',
+    folderOpen: 'folder_open',
     formatLineSpacing: 'mdi-format-line-spacing',
-    vertical_distribute: 'mdi-vertical-distribute'
+    hourglassDisabled: 'mdi-hourglass-disabled',
+    hourglassEmpty: 'mdi-hourglass-empty',
+    link: 'mdi-link',
+    linkOff: 'mdi-link_off',
+    splitscreenBottom: 'mdi-splitscreen-bottom',
+    splitscreenTop: 'mdi-splitscreen-top',
+    swapVert: 'mdi-swap-vert',
+    taskAlt: 'mdi-task-alt',
+    verticalAlignBottom: 'mdi-vertical-align-bottom',
+    verticalAlignTop: 'mdi-vertical-align-top',
+    verticalDistribute: 'mdi-vertical-distribute',
 };
 
 export const CodeIcons = [
@@ -257,6 +253,5 @@ export const CodeIcons = [
 
 export const allKnownIcons: string[] = [
     ...Object.values(MdiIcons).map(v => v.toString()),
-    ...Object.values(FaIcons).map(v => v.toString()),
     ...CodeIcons
 ];

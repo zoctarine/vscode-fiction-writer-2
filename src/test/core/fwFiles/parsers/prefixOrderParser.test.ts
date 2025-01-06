@@ -12,7 +12,7 @@ describe('PrefixOrderParser', () => {
                 parsed:{
                     order:[],
                     padding: [],
-                    glue: '',
+                    glue: ' ',
                     sep: '.'
                 }
             }
@@ -24,7 +24,7 @@ describe('PrefixOrderParser', () => {
                 parsed:{
                     order:[],
                     padding: [],
-                    glue: '',
+                    glue: ' ',
                     sep: '.'
                 }
             }
@@ -35,7 +35,7 @@ describe('PrefixOrderParser', () => {
                 parsed:{
                     order:[],
                     padding: [],
-                    glue: '',
+                    glue: ' ',
                     sep: '.'
                 }
             }
@@ -47,7 +47,7 @@ describe('PrefixOrderParser', () => {
                 parsed:{
                     order:[],
                     padding: [],
-                    glue: '',
+                    glue: ' ',
                     sep: '.'
                 }
             }

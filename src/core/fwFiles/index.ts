@@ -9,7 +9,7 @@ export * from './IMarkdownMeta';
 export * from './IFwOrder';
 export * from './IFsRef';
 export * from './IFwExtension';
-export * from './FwItemCloneBuilder';
+export * from './FwItemReplicator';
 
 export * from './parsers';
 export * from './builders';

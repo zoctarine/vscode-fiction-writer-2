@@ -3,7 +3,6 @@ import {FictionWriter, FwPermission, FwSubType, FwType, Permissions} from '../..
 import {applyDecorations, IDecorationState, IFileState} from '../../../core/state';
 import {ProjectNode} from './projectNode';
 import {IProjectContext} from './IProjectContext';
-import {FaIcons} from '../../../core/decorations';
 
 export interface IProjectExplorerItemOptions {
     labelSelector: (segments:any) => string;
@@ -126,7 +125,7 @@ export class ProjectExplorerListItem extends ProjectExplorerTreeItem {
 export class ProjectExplorerBackItem extends vscode.TreeItem {
     constructor() {
         super("..");
-        this.iconPath = new ThemeIcon(FaIcons.reply);
+        this.iconPath = new ThemeIcon("reply");
         this.command = {
             title: '...',
             command: FictionWriter.views.projectExplorer.navigation.back,

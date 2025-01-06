@@ -10,7 +10,7 @@ import {
     WorkerMsgStart,
 
 } from './models';
-import {FwInfo, FwPermission, FwSubType, FwType, FwVirtualFolderItem, Permissions} from '../core/fwFiles';
+import {FwInfo, FwPermission, FwSubType, FwType, FwVirtualFolderInfo, Permissions} from '../core/fwFiles';
 import {FwItem} from '../core/fwFiles/FwItem';
 import {FwItemBuilder} from '../core/fwFiles/builders/FwItemBuilder';
 import {fwPath} from '../core/FwPath';
@@ -105,7 +105,7 @@ export class FileWorkerServer {
 
             let finishedOperations = 0;
             for (const fsPath of this._rootFolders) {
-                const allPaths = await fwPath.getAllAsync(fsPath);
+                const allPaths = await fwPath.getChildrenRecursiveAsync(fsPath);
 
                 for (const p of allPaths) {
                     const value = await this._fwBuilder.buildAsync({path: p, rootFolderPaths: this._rootFolders});
