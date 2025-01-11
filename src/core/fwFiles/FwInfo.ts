@@ -24,7 +24,7 @@ export interface IFwInfo {
 }
 
 /**
- * The FwItem class represents a disk resource handled by FictionWriter
+ * The FwInfo class represents a disk resource handled by FictionWriter
  */
 export class FwInfo implements IFwInfo {
     type: FwType = FwType.Unknown;

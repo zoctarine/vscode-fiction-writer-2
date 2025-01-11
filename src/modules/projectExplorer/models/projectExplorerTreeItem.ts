@@ -25,8 +25,9 @@ export class ProjectExplorerTreeItem extends vscode.TreeItem {
 
         const nodeType = node.data.fwItem?.info?.subType ?? FwSubType.Unknown;
         const {data} = node;
+        const hasChildren = node.children?.length > 0;
 
-        this.collapsibleState = data.fwItem?.info?.type === FwType.Folder
+        this.collapsibleState = data.fwItem?.info?.type === FwType.Folder && hasChildren
             ? options?.expanded
                 ? vscode.TreeItemCollapsibleState.Expanded
                 : vscode.TreeItemCollapsibleState.Collapsed

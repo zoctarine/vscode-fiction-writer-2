@@ -12,6 +12,8 @@ import {FsContentEmpty} from '../IFsContent';
 import {Path} from 'glob';
 import {FsPathToFsRef} from '../parsers/fileName/FsPathToFsRef';
 import {FwItemReplicator} from '../FwItemReplicator';
+import {FwFormatting, FwMarkdownFileFormat} from '../../markdown/formatting';
+import {ComputeFormatting} from '../commands/ComputeFormatting';
 
 export class FwItemBuilder implements IAsyncBuilder<{
     path: Path | string,
@@ -23,6 +25,7 @@ export class FwItemBuilder implements IAsyncBuilder<{
         private _extractMeta = new ExtractMeta(),
         private _computeHash = new ComputeHash(),
         private _analyzeText = new AnalyzeText(),
+        private _computeFormatting = new ComputeFormatting(),
         public fsPathToFsRef = new FsPathToFsRef(),
         public pathScurryToFsRef = new PathScurryToFsRef(),
         public fsRefToFwInfo = new FsRefToFwInfo(new PrefixOrderParser(), new SuffixOrderParser()),
@@ -69,6 +72,7 @@ export class FwItemBuilder implements IAsyncBuilder<{
             hash: this._computeHash.run(fullText),
             stats: this._analyzeText.run(sections?.text),
             meta: sections?.meta,
+            format: this._computeFormatting.run(info)
         };
 
         return new FwItem(fsRef, fsContent, info);

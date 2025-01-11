@@ -2,6 +2,7 @@ import {FwControl, FwItemBuilder, FwItemReplicator, FwSubType, FwType} from '../
 import {FwItem} from '../../../core/fwFiles/FwItem';
 import * as assert from 'assert';
 import {ObjectProps} from '../../../core/lib';
+import {FwMarkdownFileFormat} from '../../../core/markdown/formatting';
 
 describe("FwItemCloneBuilder", () => {
     const itemBuilder = new FwItemBuilder();
@@ -23,6 +24,7 @@ describe("FwItemCloneBuilder", () => {
                 hash: undefined,
                 meta: undefined,
                 stats: undefined,
+                format: FwMarkdownFileFormat.Default,
             },
             {
                 subType: FwSubType.ProjectFile,
@@ -122,6 +124,7 @@ describe("FwItemCloneBuilder", () => {
             expected.info.control = FwControl.Never;
             expected.info.subType = FwSubType.OtherFile;
             expected.info.markers.projectTag = '';
+            expected.fsContent.format = undefined;
 
             const result = await new FwItemReplicator(item, itemBuilder)
                 .withExt(".cs")
@@ -143,6 +146,8 @@ describe("FwItemCloneBuilder", () => {
             expected.info.name = 'other';
             expected.info.ext = '.md';
             expected.info.markers.data = ['i', 'd'];
+            expected.fsContent.format = FwMarkdownFileFormat.IndentFirstLine;
+
             const result = await new FwItemReplicator(item, itemBuilder)
                 .withBasename("other.fw.i.d.md")
                 .executeAsync();
@@ -165,6 +170,7 @@ describe("FwItemCloneBuilder", () => {
             expected.info.control = FwControl.Never;
             expected.info.subType = FwSubType.OtherFile;
             expected.info.markers.projectTag = '';
+            expected.fsContent.format = undefined;
 
             const result = await new FwItemReplicator(item, itemBuilder)
                 .withBasename("other.xls")
@@ -188,6 +194,7 @@ describe("FwItemCloneBuilder", () => {
             expected.info.control = FwControl.Never;
             expected.info.subType = FwSubType.OtherFile;
             expected.info.markers.projectTag = '';
+            expected.fsContent.format = undefined;
 
             const result = await new FwItemReplicator(item, itemBuilder)
                 .withBasename('other')
@@ -333,6 +340,38 @@ describe("FwItemCloneBuilder", () => {
             const result = await new FwItemReplicator(item, itemBuilder)
                 .withSubOrder([1, 2])
                 .withSubOrder([])
+                .executeAsync();
+
+            assert.deepEqual(result, expected);
+        });
+
+        test('setFormat([i]) updates formatting markers', async () => {
+            const expected: FwItem = ObjectProps.deepClone(item);
+
+            expected.fsRef = {
+                ...expected.fsRef,
+                fsBaseName: 'file.fw.i.md',
+                fsName: 'file.fw.i',
+                fsPath: 'some/test/path/file.fw.i.md',
+                fsExt: '.md'
+            };
+            expected.fsContent.format = FwMarkdownFileFormat.IndentFirstLine;
+            expected.info.markers.data = ['i'];
+
+            const result = await new FwItemReplicator(item, itemBuilder)
+                .withFormat(FwMarkdownFileFormat.IndentFirstLine)
+                .executeAsync();
+
+            assert.deepEqual(result, expected);
+        });
+
+        test('setFormat([]) removes formatting markers', async () => {
+            const expected: FwItem = ObjectProps.deepClone(item);
+
+
+            let result = await new FwItemReplicator(item, itemBuilder)
+                .withFormat(FwMarkdownFileFormat.IndentFirstLine)
+                .withFormat()
                 .executeAsync();
 
             assert.deepEqual(result, expected);

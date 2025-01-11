@@ -55,33 +55,7 @@ class FormattingModule extends DisposeManager {
     }
 
     register(): vscode.Disposable {
-        this.manageDisposable(vscode.languages.registerDocumentFormattingEditProvider('fwmarkdown', {
-
-            provideDocumentFormattingEdits(document: vscode.TextDocument): vscode.TextEdit[] {
-
-                let edits: vscode.TextEdit[] = [];
-                const markdownContent = document.getText();
-
-
-                try {
-                    let x = unified()
-                        .use(remarkParse)
-                        .use(remarkFrontmatter, ['yaml'])
-                        .use(remarkStringify)
-                        .use(convertHardParagraphsToIndented)
-                        .use(printAllNodes)
-                        .processSync(markdownContent);
-
-                    edits.push(new TextEdit(
-                        new vscode.Range(0, 0, document.lineCount, 0),
-                        String(x)));
-
-                } catch (err) {
-                    console.error(err);
-                }
-                return edits;
-            }
-        }));
+        this.manageDisposable();
 
         return vscode.Disposable.from(this);
     }

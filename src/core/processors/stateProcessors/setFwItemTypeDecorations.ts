@@ -9,9 +9,9 @@ export class SetFwItemTypeDecorations implements IStateProcessor<IFileState> {
 
         const icons = new Map<FwSubType,string>([
             [FwSubType.Unknown, MdiIcons.folder],
-            [FwSubType.Root, MdiIcons.link],
-            [FwSubType.RootFolder, MdiIcons.link],
-            [FwSubType.WorkspaceFolder, MdiIcons.link],
+            [FwSubType.Root, 'book'],
+            [FwSubType.RootFolder, 'repo'],
+            [FwSubType.WorkspaceFolder, 'repo'],
             [FwSubType.Folder, MdiIcons.folder],
             [FwSubType.VirtualFolder, MdiIcons.descriptionFill],
             [FwSubType.EmptyVirtualFolder, MdiIcons.draft],

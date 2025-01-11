@@ -1,5 +1,6 @@
 import {FwPermission} from '../fwFiles';
 import {FwItem} from '../fwFiles/FwItem';
+import {FwMarkdownFileFormat} from '../markdown/formatting';
 
 export interface IMetaState  {
     [key: string]: any;

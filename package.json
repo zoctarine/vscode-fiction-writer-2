@@ -5,7 +5,7 @@
   "version": "0.0.1",
   "publisher": "vsc-zoctarine",
   "engines": {
-    "vscode": "^1.94.0"
+    "vscode": "^1.96.0"
   },
   "categories": [
     "Other"
@@ -546,7 +546,6 @@
           "fontCharacter": "\\e076"
         }
       },
-
       "fa-trash-can": {
         "description": "trash-can",
         "default": {
@@ -1622,7 +1621,7 @@
     "@types/mocha": "^10.0.7",
     "@types/node": "20.x",
     "@types/sinon": "^17.0.3",
-    "@types/vscode": "^1.92.0",
+    "@types/vscode": "^1.96.0",
     "@typescript-eslint/eslint-plugin": "^7.14.1",
     "@typescript-eslint/parser": "^7.11.0",
     "@vscode/test-cli": "^0.0.9",

@@ -7,7 +7,7 @@ export class SetDateTimeDecorations implements IStateProcessor<IFileState> {
     async process(state: IFileState) {
         const decorations: Partial<IDecorationState> =
             {
-                description: `${state.fwItem?.fsRef?.fsModifiedDate?.toLocaleString()}`,
+                description: `${new Date(state.fwItem?.fsRef?.fsModifiedDate??0).toLocaleString()}`,
             };
 
         state.datetimeDecorations = {

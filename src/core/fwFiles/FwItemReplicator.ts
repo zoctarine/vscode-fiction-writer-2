@@ -2,6 +2,7 @@ import {FwItemBuilder} from './builders';
 import {ObjectProps} from '../lib';
 import {fwPath} from '../FwPath';
 import {FwItem} from './FwItem';
+import {FwFormatting, FwMarkdownFileFormat} from '../markdown/formatting';
 
 export class FwItemReplicator {
     private _cloned: FwItem;
@@ -73,6 +74,17 @@ export class FwItemReplicator {
         return this;
     }
 
+    withFormat(format?: FwMarkdownFileFormat): FwItemReplicator {
+        let data: string[] = [];
+        if (format && format !== FwFormatting.defaultFormat) {
+            const mark = FwFormatting.toMark(format);
+            if (mark) data = [mark];
+        }
+        this._cloned.info.markers.data = data;
+        this._update();
+        return this;
+    }
+
     async executeAsync(): Promise<FwItem> {
         const result = await this._fwItemBuilder.buildAsync({
             path: this._cloned.fsRef.fsPath,
@@ -89,7 +101,7 @@ export class FwItemReplicator {
         return this;
     }
 
-    _update(){
+    _update() {
         this._cloned.fsRef = this._fwItemBuilder.fsRefToFwInfo.serialize(this._cloned.info, {
             rootFolderPaths: []
         });
