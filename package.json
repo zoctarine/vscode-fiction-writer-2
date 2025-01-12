@@ -940,11 +940,6 @@
           "group": "1_fictionWriter_project@2"
         },
         {
-          "command": "fictionWriter.views.projectExplorer.changeFormatting",
-          "when": "view == fictionWriter.views.projectExplorer && (viewItem == file || viewItem == virtualFolder) && !fictionWriter.ctx.projectExplorer",
-          "group": "8_fictionWriter_formatting@1"
-        },
-        {
           "command": "fictionWriter.views.projectExplorer.toggleVirtualFolder",
           "when": "view == fictionWriter.views.projectExplorer && viewItem =~ /\\btoggleVirtual\\b/ && !listMultiSelection",
           "group": "3_fictionWriter_virtual@1"
@@ -1115,12 +1110,6 @@
         "command": "fictionWriter.views.projectExplorer.navigation.back",
         "title": "Back",
         "icon": "$(arrow-left)",
-        "category": "Markdown Fiction Writer"
-      },
-      {
-        "command": "fictionWriter.views.projectExplorer.changeFormatting",
-        "title": "Change Formatting...",
-        "icon": "$(format)",
         "category": "Markdown Fiction Writer"
       },
       {
@@ -1447,14 +1436,9 @@
         "category": "Markdown Fiction Writer"
       },
       {
-        "command": "fictionWriter.formatter.convertToCustom",
-        "title": "Convert to idented",
-        "enablement": "editorLangId == fwmarkdown",
-        "category": "Markdown Fiction Writer"
-      },
-      {
-        "command": "fictionWriter.formatter.convertToStandard",
-        "title": "Convert to standard",
+        "command": "fictionWriter.formatting.reformat",
+        "title": "Reformat content...",
+        "icon": "$(format)",
         "enablement": "editorLangId == fwmarkdown",
         "category": "Markdown Fiction Writer"
       }
@@ -1556,11 +1540,11 @@
           ".fw.md",
           ".fw.h.md",
           ".fw.i.md",
-          ".fw.l.md",
+          ".fw.s.md",
           ".fw.txt",
           ".fw.h.txt",
           ".fw.i.txt",
-          ".fw.l.txt"
+          ".fw.s.txt"
         ],
         "configuration": "./language-configuration.json"
       }

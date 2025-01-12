@@ -57,7 +57,7 @@ export class CoreModule extends DisposeManager {
             this.fileManager,
             this.projectsOptions,
             this.activeDocumentMonitor,
-            registerMarkdownFormatters(this.stateManager),
+            registerMarkdownFormatters(this.stateManager, this.fileManager),
             this.fileManager.onFilesChanged(files => {
                 log.debug("fileManager: filesChanged", files.size);
                 return this.stateManager.reload(files, false);

@@ -22,7 +22,7 @@ export const FwFormatOptions = new Map<FwMarkdownFileFormat | undefined, IFwForm
     [FwMarkdownFileFormat.SingleBreakForNewParagraph, {
         value: FwMarkdownFileFormat.SingleBreakForNewParagraph,
         name: FwMarkdownFileFormat[FwMarkdownFileFormat.SingleBreakForNewParagraph],
-        label: "Forced Paragraph",
+        label: "Hard Paragraphs",
         description: "Every line break (return) is a new paragraph (one hard line break)."
     }],
     [FwMarkdownFileFormat.IndentFirstLine, {
@@ -48,7 +48,7 @@ export class FwFormatting {
     static {
         const entries: [string, FwMarkdownFileFormat][] = [
             ['d', FwMarkdownFileFormat.Default],
-            ['p', FwMarkdownFileFormat.SingleBreakForNewParagraph],
+            ['h', FwMarkdownFileFormat.SingleBreakForNewParagraph],
             ['i', FwMarkdownFileFormat.IndentFirstLine],
             ['s', FwMarkdownFileFormat.OneSentencePerLine],
         ];

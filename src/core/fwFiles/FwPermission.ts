@@ -127,9 +127,9 @@ export class Permissions {
     static check(item?: IFwInfo | FwItem, permission?: FwPermission): boolean {
         if (!permission) return false;
 
-        if (item instanceof FwItem) item = item.info;
+        const info = (item as FwItem)?.info ?? item;
 
-        const allowed = Permissions.get(item);
+        const allowed = Permissions.get(info);
 
         if (!allowed) return false;
 

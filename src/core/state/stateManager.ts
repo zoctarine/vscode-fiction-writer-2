@@ -31,6 +31,7 @@ export class StateManager extends DisposeManager {
     private _onFilesStateChanged = new vscode.EventEmitter<FwStateChangedEvent>();
     private _textProcessor;
 
+
     constructor(private _processorFactory: IStateProcessorFactory<IFileState>) {
         super();
         this._textProcessor = _processorFactory.crateStateProcessor();

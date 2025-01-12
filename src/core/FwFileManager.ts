@@ -78,8 +78,7 @@ export class FwFileManager extends DisposeManager {
 
         return new Promise((resolve, reject) => {
             if (!fwPath.exists(oldPath) || fwPath.exists(newPath)) {
-                notifier.warn(`Could not rename file ${oldPath} to ${newPath}`);
-                resolve();
+                reject(`Path '${newPath}' already exists`);
             } else {
                 vscode.workspace.fs.rename(vscode.Uri.parse(oldPath), vscode.Uri.parse(newPath), {
                     overwrite: false,

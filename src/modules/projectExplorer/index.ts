@@ -15,6 +15,7 @@ import {RevealInExplorer} from './commands/RevealInExplorer';
 import {AddChildFolder} from './commands/AddChildFolder';
 import {AddChildFile} from './commands/AddChildFile';
 import {ProjectView} from './models/IProjectContext';
+import {RenameFileOnDisk} from '../../core/markdown/commands/RenameFileOnDisk';
 
 export class ProjectsModule extends DisposeManager {
     active = false;
@@ -116,10 +117,14 @@ export class ProjectsModule extends DisposeManager {
                 }
             }),
             addCommand(FictionWriter.views.projectExplorer.rename, async (node: ProjectNode) => {
-                const newName = await new RenameNode(this.core.fileManager, this.core.fwItemBuilder).runAsync(node);
+                if (!node?.data?.fwItem) return;
+
+                const newName = await new RenameFileOnDisk(this.core.fileManager)
+                    .runAsync({item: node.data.fwItem});
+
                 if (newName) {
                     this.projectExplorerDataProvider?.onNextRefresh(async () => {
-                        return (await this.projectExplorerDataProvider?.reveal(newName, true)) ?? true;
+                        return (await this.projectExplorerDataProvider?.reveal(newName.fsRef.fsPath, true)) ?? true;
                     });
                 }
             }),

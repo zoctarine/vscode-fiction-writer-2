@@ -3,6 +3,7 @@ const ViewsMetadata = 'fictionWriter.views.metadata';
 const Security = 'fictionWriter.security';
 const Compile = 'fictionWriter.compile';
 const Files = 'fictionWriter.files';
+const Formatting = 'fictionWriter.formatting';
 
 
 export const FictionWriter = {
@@ -14,6 +15,12 @@ export const FictionWriter = {
         combine: `${Files}.combine`,
         extract: `${Files}.extract`,
         extractMultiple: `${Files}.extractMultiple`,
+    },
+    formatting: {
+        reformat: `${Formatting}.reformat`,
+        statusBar: {
+            click: `${Formatting}.statusBar.click`,
+        }
     },
     views: {
         projectExplorer: {
