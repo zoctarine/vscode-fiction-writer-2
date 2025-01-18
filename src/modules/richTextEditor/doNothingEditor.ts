@@ -3,44 +3,44 @@ import {getNonce} from '../../core';
 
 export class DoNothingEditor implements vscode.CustomTextEditorProvider {
 
-    public static register(): vscode.Disposable {
-        const provider = new DoNothingEditor();
+	public static register(): vscode.Disposable {
+		const provider = new DoNothingEditor();
 
-        return vscode.window.registerCustomEditorProvider(
-            DoNothingEditor.viewType,
-            provider, {
-                webviewOptions: {
-                    retainContextWhenHidden: false,
-                    enableFindWidget: false,
-                },
-                supportsMultipleEditorsPerDocument: false,
-            });
-    }
+		return vscode.window.registerCustomEditorProvider(
+			DoNothingEditor.viewType,
+			provider, {
+				webviewOptions: {
+					retainContextWhenHidden: false,
+					enableFindWidget: false,
+				},
+				supportsMultipleEditorsPerDocument: false,
+			});
+	}
 
-    public static readonly viewType = 'fictionWriter.editors.proseMirror';
+	public static readonly viewType = 'fictionWriter.editors.proseMirror';
 
-    /**
-     * Called when our custom editor is opened.
-     */
-    public async resolveCustomTextEditor(
-        document: vscode.TextDocument,
-        webviewPanel: vscode.WebviewPanel,
-        _token: vscode.CancellationToken
-    ): Promise<void> {
-        webviewPanel.webview.options = {
-            enableScripts: true,
-            enableCommandUris: true,
-        };
-        webviewPanel.webview.html = this.getHtmlForWebview(webviewPanel.webview);
-    }
+	/**
+	 * Called when our custom editor is opened.
+	 */
+	public async resolveCustomTextEditor(
+		document: vscode.TextDocument,
+		webviewPanel: vscode.WebviewPanel,
+		_token: vscode.CancellationToken
+	): Promise<void> {
+		webviewPanel.webview.options = {
+			enableScripts: true,
+			enableCommandUris: true,
+		};
+		webviewPanel.webview.html = this.getHtmlForWebview(webviewPanel.webview);
+	}
 
-    /**
-     * Get the static html used for the editor webviews.
-     */
-    private getHtmlForWebview(webview: vscode.Webview): string {
-        const settingsUri = 'command:workbench.action.openSettings?%5B%22fictionWriter.editors.richTextEditor.enabled%22%5D';
-        const nonce = getNonce();
-        return /* html */`
+	/**
+	 * Get the static html used for the editor webviews.
+	 */
+	private getHtmlForWebview(webview: vscode.Webview): string {
+		const settingsUri = 'command:workbench.action.openSettings?%5B%22fictionWriter.editors.richTextEditor.enabled%22%5D';
+		const nonce = getNonce();
+		return /* html */`
 			<!DOCTYPE html>
 			<html lang="en">
 			<head >
@@ -58,6 +58,6 @@ export class DoNothingEditor implements vscode.CustomTextEditorProvider {
 				<p>You can enable it in <a href="${settingsUri}">settings</a></p>
 			</body>
 			</html>`;
-    }
+	}
 
 }

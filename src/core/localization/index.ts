@@ -1,3 +1,3 @@
-export function t(section: string, key: string){
-    return key;
+export function t(section: string, key: string) {
+	return key;
 }

@@ -2,7 +2,7 @@ import {
 	schema
 } from "prosemirror-markdown";
 
-import { Node, Mark } from "prosemirror-model";
+import {Node, Mark} from "prosemirror-model";
 
 class TextFileParser {
 

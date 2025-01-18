@@ -13,14 +13,14 @@
 		"strict": true,
 		"esModuleInterop": true,
 		"removeComments": true,
-		"moduleResolution" : "Bundler",
+		"moduleResolution" : "node",
 		/* Enables emit interoperability between CommonJS and ES Modules via creation of namespace objects for all imports. Implies 'allowSyntheticDefaultImports'. */
 		/* enable all strict type-checking options */
-//		"typeRoots": [
-//			"./@types",
-//			"./node_modules/@types",
-//			"./node_modules/@types/vscode"
-//		]
+		"typeRoots": [
+			"./@types",
+			"./node_modules/@types",
+			"./node_modules/@types/vscode",
+		]
 		/* Additional Checks */
 		// "noImplicitReturns": true, /* Report error when not allk code paths in function return a value. */
 		// "noFallthroughCasesInSwitch": true, /* Report errors for fallthrough cases in switch statement. */
@@ -31,5 +31,6 @@
 		".vscode-test",
 		"out",
 		"dist"
-	]
+	],
+
 }

@@ -1,5 +1,5 @@
 export interface RetryOptions {
-    maxRetries: number;
+	maxRetries: number;
 
 }
 
@@ -11,27 +11,27 @@ export interface RetryOptions {
 const RETRY_MAX_CAP = 10;
 
 function getMaxRetries(opt: RetryOptions): number {
-    return Math.min(opt.maxRetries, RETRY_MAX_CAP);
+	return Math.min(opt.maxRetries, RETRY_MAX_CAP);
 }
 
 export function retry<T>(fn: (retryCount: number) => T | undefined, opt: RetryOptions = {maxRetries: 10}): T | undefined {
-    const maxRetries = getMaxRetries(opt);
-    for (let retryCount = 0; retryCount < maxRetries; retryCount++) {
-        const result = fn(retryCount);
-        if (result !== undefined) {
-            return result;
-        }
-    }
-    return undefined;
+	const maxRetries = getMaxRetries(opt);
+	for (let retryCount = 0; retryCount < maxRetries; retryCount++) {
+		const result = fn(retryCount);
+		if (result !== undefined) {
+			return result;
+		}
+	}
+	return undefined;
 }
 
 export async function retryAsync<T>(fn: (retryCount: number) => Promise<T | undefined>, opt: RetryOptions = {maxRetries: 10}): Promise<T | undefined> {
-    const maxRetries = getMaxRetries(opt);
-    for (let retryCount = 0; retryCount < maxRetries; retryCount++) {
-        const result = await fn(retryCount);
-        if (result !== undefined) {
-            return result;
-        }
-    }
-    return undefined;
+	const maxRetries = getMaxRetries(opt);
+	for (let retryCount = 0; retryCount < maxRetries; retryCount++) {
+		const result = await fn(retryCount);
+		if (result !== undefined) {
+			return result;
+		}
+	}
+	return undefined;
 }

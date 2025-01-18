@@ -5,61 +5,64 @@ import {IParserOptions} from '../../../lib';
 import {IFwExtension} from '../../IFwExtension';
 
 export abstract class OrderParser implements IOrderParser {
-    protected options: IOrderOptions;
+	protected options: IOrderOptions;
 
-    protected constructor(protected orderRegex: RegExp, options: Partial<IOrderOptions> = {}) {
-        this.options = {...defaultOrderOptions, ...options};
-    }
+	protected constructor(protected orderRegex: RegExp, options: Partial<IOrderOptions> = {}) {
+		this.options = {...defaultOrderOptions, ...options};
+	}
 
-    parse(orderedName: string, opt?: IParserOptions<string, ITokens<IFwOrder>>): ITokens<IFwOrder> {
-        opt = {...this.options, ...opt};
-        let namePart = orderedName;
-        let orderPart = '';
-        let gluePart = ' ';
-        let orderList: number[] = [];
-        let orderPadding: number[] = [];
-        const matches = orderedName.match(this.orderRegex);
-        if (matches?.groups) {
-            const {order, name, glue} = matches.groups;
-            gluePart = glue ?? '';
-            orderPart = order ?? '';
-            orderList = orderPart?.split(opt.separator).map((o, idx) => {
-                const order = parseInt(o, 10);
-                orderPadding.splice(idx, 0, o.length);
-                return Number.isNaN(order) ? 0 : order;
-            }) ?? [];
-            namePart = name ?? '';
-        }
+	parse(orderedName: string, opt?: IParserOptions<string, ITokens<IFwOrder>>): ITokens<IFwOrder> {
+		opt = {...this.options, ...opt};
+		let namePart = orderedName;
+		let orderPart = '';
+		let gluePart = ' ';
+		let orderList: number[] = [];
+		let orderPadding: number[] = [];
+		const matches = orderedName.match(this.orderRegex);
+		if (matches?.groups) {
+			const {order, name, glue} = matches.groups;
+			gluePart = glue ?? '';
+			orderPart = order ?? '';
+			orderList = orderPart?.split(opt.separator).map((o, idx) => {
+				const order = parseInt(o, 10);
+				orderPadding.splice(idx, 0, o.length);
+				return Number.isNaN(order) ? 0 : order;
+			}) ?? [];
+			namePart = name ?? '';
+		}
 
-        const result = {
-            unparsed: namePart,
-            parsed: {
-                order: orderList,
-                padding: orderPadding,
-                glue: gluePart,
-                sep: opt.separator
-            }
-        };
+		const result = {
+			unparsed: namePart,
+			parsed: {
+				order: orderList,
+				padding: orderPadding,
+				glue: gluePart,
+				sep: opt.separator
+			}
+		};
 
-        if (opt?.onParse) {
-            opt.onParse(result);
-        }
+		if (opt?.onParse) {
+			opt.onParse(result);
+		}
 
-        return result;
-    }
-    abstract serialize(parsed: ITokens<IFwOrder>, opt?: IParserOptions<string, ITokens<IFwOrder>> & {excludeUnparsed?:boolean}): string;
+		return result;
+	}
 
-    computeNextOrderFor(orderedNames: string[], parentOrder: number[]): number {
-        parentOrder ??= [];
+	abstract serialize(parsed: ITokens<IFwOrder>, opt?: IParserOptions<string, ITokens<IFwOrder>> & {
+		excludeUnparsed?: boolean
+	}): string;
 
-        const maxOrder = orderedNames
-            .filter(n => n !== undefined)
-            .map(n => this.parse(n)?.parsed?.order ?? [])
-            .filter(o => o?.join('.').startsWith(parentOrder.join('.'))) // only orders that are in same level
-            .map(o => o?.slice(parentOrder.length))// remove the array
-            .filter(o => o?.length > 0)
-            .reduce((max, crt) => Math.max(max, crt[0]), 0);
+	computeNextOrderFor(orderedNames: string[], parentOrder: number[]): number {
+		parentOrder ??= [];
 
-        return maxOrder + 1;
-    }
+		const maxOrder = orderedNames
+			.filter(n => n !== undefined)
+			.map(n => this.parse(n)?.parsed?.order ?? [])
+			.filter(o => o?.join('.').startsWith(parentOrder.join('.'))) // only orders that are in same level
+			.map(o => o?.slice(parentOrder.length))// remove the array
+			.filter(o => o?.length > 0)
+			.reduce((max, crt) => Math.max(max, crt[0]), 0);
+
+		return maxOrder + 1;
+	}
 }

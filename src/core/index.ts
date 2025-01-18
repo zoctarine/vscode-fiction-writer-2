@@ -32,78 +32,78 @@ export * from './lib';
 export * from './FwItemFactory';
 
 export class CoreModule extends DisposeManager {
-    stateManager: StateManager;
-    fileManager: FwFileManager;
-    contextManager: ContextManager;
-    projectsOptions = new ProjectsOptions();
-    activeDocumentMonitor: ActiveDocumentMonitor;
-    fwItemFactory: FwItemFactory;
+	stateManager: StateManager;
+	fileManager: FwFileManager;
+	contextManager: ContextManager;
+	projectsOptions = new ProjectsOptions();
+	activeDocumentMonitor: ActiveDocumentMonitor;
+	fwItemFactory: FwItemFactory;
 
-    constructor(context: vscode.ExtensionContext,
-                public fileWorkerClient: FileWorkerClient,
-                public fwItemBuilder: FwItemBuilder,
-                public processorFactory: IStateProcessorFactory<IFileState>) {
-        super();
-        this.stateManager = new StateManager(this.processorFactory);
-        this.fileManager = new FwFileManager(this.projectsOptions, this.fileWorkerClient);
-        this.fwItemFactory = new FwItemFactory(this.stateManager, this.fwItemBuilder);
-        this.contextManager = new ContextManager(context);
-        this.activeDocumentMonitor = new ActiveDocumentMonitor();
+	constructor(context: vscode.ExtensionContext,
+				public fileWorkerClient: FileWorkerClient,
+				public fwItemBuilder: FwItemBuilder,
+				public processorFactory: IStateProcessorFactory<IFileState>) {
+		super();
+		this.stateManager = new StateManager(this.processorFactory);
+		this.fileManager = new FwFileManager(this.projectsOptions, this.fileWorkerClient);
+		this.fwItemFactory = new FwItemFactory(this.stateManager, this.fwItemBuilder);
+		this.contextManager = new ContextManager(context);
+		this.activeDocumentMonitor = new ActiveDocumentMonitor();
 
-        this.fileManager.loadFiles();
+		this.fileManager.loadFiles();
 
-        this.manageDisposable(
-            this.stateManager,
-            this.fileManager,
-            this.projectsOptions,
-            this.activeDocumentMonitor,
-            registerMarkdownFormatters(this.stateManager, this.fileManager),
-            this.fileManager.onFilesChanged(files => {
-                log.debug("fileManager: filesChanged", files.size);
-                return this.stateManager.reload(files, false);
-            }),
+		this.manageDisposable(
+			this.stateManager,
+			this.fileManager,
+			this.projectsOptions,
+			this.activeDocumentMonitor,
+			registerMarkdownFormatters(this.stateManager, this.fileManager),
+			this.fileManager.onFilesChanged(files => {
+				log.debug("fileManager: filesChanged", files.size);
+				return this.stateManager.reload(files, false);
+			}),
 
-            this.fileManager.onFilesReloaded(files => {
-                log.debug("fileManager: filesReloaded", files.size);
-                return this.stateManager.reload(files);
-            }),
+			this.fileManager.onFilesReloaded(files => {
+				log.debug("fileManager: filesReloaded", files.size);
+				return this.stateManager.reload(files);
+			}),
 
-            this.stateManager.onFilesStateChanged(e => {
-                log.debug("stateManager: filesChanged", e.files.length);
-            }),
+			this.stateManager.onFilesStateChanged(e => {
+				log.debug("stateManager: filesChanged", e.files.length);
+			}),
 
 
-            addCommand(FictionWriter.files.split, async () => {
-               return new SplitActiveFile(
-                    this.fileManager,
-                    this.stateManager,
-                    this.fwItemFactory
-                ).runAsync(
-                    vscode.window.activeTextEditor,
-                );
-            }),
+			addCommand(FictionWriter.files.split, async () => {
+				return new SplitActiveFile(
+					this.fileManager,
+					this.stateManager,
+					this.fwItemFactory
+				).runAsync(
+					vscode.window.activeTextEditor,
+				);
+			}),
 
-            addCommand(FictionWriter.files.extract, async () => {
-                return new ExtractFile(
-                    this.fileManager,
-                    this.stateManager,
-                    this.fwItemBuilder
-                ).runAsync(
-                    vscode.window.activeTextEditor,
-                );
-            }),
+			addCommand(FictionWriter.files.extract, async () => {
+				return new ExtractFile(
+					this.fileManager,
+					this.stateManager,
+					this.fwItemBuilder
+				).runAsync(
+					vscode.window.activeTextEditor,
+				);
+			}),
 
-            addCommand(FictionWriter.files.extractMultiple, async () => {
-                return new ExtractFiles(
-                    this.fileManager,
-                    this.stateManager,
-                    this.fwItemBuilder
-                ).runAsync(
-                    vscode.window.activeTextEditor,
-                );
-            }),
-        );
-    }
+			addCommand(FictionWriter.files.extractMultiple, async () => {
+				return new ExtractFiles(
+					this.fileManager,
+					this.stateManager,
+					this.fwItemBuilder
+				).runAsync(
+					vscode.window.activeTextEditor,
+				);
+			}),
+		);
+	}
 }
 
 export {RegEx} from './regEx';

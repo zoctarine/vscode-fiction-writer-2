@@ -1,5 +1,6 @@
-import { textFileParser, textFileSerializer } from "./textfileExtensions";
-import { markdownParser, markdownSerializer } from "./markdownExtensions";
+import {textFileParser, textFileSerializer} from "./textfileExtensions";
+import {markdownParser, markdownSerializer} from "./markdownExtensions";
+
 export {schema} from "prosemirror-markdown";
 
 const useMarkdown = true;

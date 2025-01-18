@@ -1,4 +1,1 @@
-
-export const Constants = {
-
-};
+export const Constants = {};

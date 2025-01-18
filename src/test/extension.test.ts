@@ -39,10 +39,10 @@ This is another paragraph.`;
 
 						if (fragments.length > 1) {
 							// Replace the current text token with multiple tokens to handle multiple empty lines
-							let newTokens:any[] = [];
+							let newTokens: any[] = [];
 							fragments.forEach((fragment, idx) => {
 								if (fragment) {
-									newTokens.push({ ...child, content: fragment });
+									newTokens.push({...child, content: fragment});
 								}
 								if (idx < fragments.length - 1) {
 									// Add an empty paragraph
@@ -59,10 +59,10 @@ This is another paragraph.`;
 				}
 			}
 		});
-console.log(md.core.ruler.disable('text_join'));
-console.log(md.core.ruler.disable('linkify'));
-console.log(md.core.ruler.disable('replacements'));
-console.log(md.core.ruler.disable('smartquotes'));
+		console.log(md.core.ruler.disable('text_join'));
+		console.log(md.core.ruler.disable('linkify'));
+		console.log(md.core.ruler.disable('replacements'));
+		console.log(md.core.ruler.disable('smartquotes'));
 		const tokens = md.parse(inputMarkdown, {});
 		console.log(md.render(inputMarkdown));
 	});

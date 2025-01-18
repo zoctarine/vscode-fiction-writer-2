@@ -1,11 +1,11 @@
 import {
-    PrefixOrderParser,
-    FwFileManager,
-    FwItemBuilder,
-    FwPermission,
-    IAsyncCommand,
-    notifier,
-    Permissions
+	PrefixOrderParser,
+	FwFileManager,
+	FwItemBuilder,
+	FwPermission,
+	IAsyncCommand,
+	notifier,
+	Permissions
 } from '../../../core';
 import {ProjectNode} from '../models/projectNode';
 import vscode from 'vscode';
@@ -17,60 +17,62 @@ import {FwItem} from '../../../core/fwFiles/FwItem';
  * @param items
  */
 export class ExcludeFromProject implements IAsyncCommand<FwItem[], void> {
-    constructor(private _fileManager: FwFileManager) {
-    };
+	constructor(private _fileManager: FwFileManager) {
+	};
 
-    async runAsync(items: FwItem[]) {
-        const optionSkip = 'Skip this file';
-        const renameMap = new Map<string, string>();
+	async runAsync(items: FwItem[]) {
+		const optionSkip = 'Skip this file';
+		const renameMap = new Map<string, string>();
 
-        for (const item of items) {
-            if (!item) continue;
+		for (const item of items) {
+			if (!item) continue;
 
-            if (!Permissions.check(item?.info, FwPermission.RemoveFromProject)) {
-                notifier.warn(`Cannot exclude ${item.fsRef.fsBaseName} to project`);
-                continue;
-            }
+			if (!Permissions.check(item?.info, FwPermission.RemoveFromProject)) {
+				notifier.warn(`Cannot exclude ${item.fsRef.fsBaseName} to project`);
+				continue;
+			}
 
-            const op = new PrefixOrderParser();
-            const oldName = item.info.name;
-            const parsed = fwPath.parse(item.fsRef.fsPath);
-            const newName = parsed.name.replace(/\.fw$/i, '');
-            let unparsed = '';
-            const orderedName = op.parse(newName, {onParse: (parsed) => {
-                }});
+			const op = new PrefixOrderParser();
+			const oldName = item.info.name;
+			const parsed = fwPath.parse(item.fsRef.fsPath);
+			const newName = parsed.name.replace(/\.fw$/i, '');
+			let unparsed = '';
+			const orderedName = op.parse(newName, {
+				onParse: (parsed) => {
+				}
+			});
 
-            const options: string[] = [];
-            options.push(`${newName}${parsed.ext}`);
+			const options: string[] = [];
+			options.push(`${newName}${parsed.ext}`);
 
-            if (orderedName?.parsed.order && orderedName.parsed.order.length > 0) {
-                options.push(`${unparsed}${parsed.ext}`);
-            }
-            options.push(optionSkip);
-            const value = await vscode.window.showWarningMessage(
-                `Exclude ${oldName}?`,
-                {
-                    modal: true,
-                    detail:
-                        `Excluding ${oldName} from the project will change it's name on disk:\n\n` +
-                        `Choose new name:`
-                },
-                ...options);
+			if (orderedName?.parsed.order && orderedName.parsed.order.length > 0) {
+				options.push(`${unparsed}${parsed.ext}`);
+			}
+			options.push(optionSkip);
+			const value = await vscode.window.showWarningMessage(
+				`Exclude ${oldName}?`,
+				{
+					modal: true,
+					detail:
+						`Excluding ${oldName} from the project will change it's name on disk:\n\n` +
+						`Choose new name:`
+				},
+				...options);
 
-            if (!value) return;
+			if (!value) return;
 
-            if (value !== optionSkip) {
-                const newUri = fwPath.join(parsed.dir, value);
-                renameMap.set(item.fsRef.fsPath, newUri);
-            }
-        }
+			if (value !== optionSkip) {
+				const newUri = fwPath.join(parsed.dir, value);
+				renameMap.set(item.fsRef.fsPath, newUri);
+			}
+		}
 
-        try {
-            await this._fileManager.batchRenameFiles(renameMap);
-        } catch (err) {
-            notifier.warn(`Could not add all files to project`, err);
-        }
-    }
+		try {
+			await this._fileManager.batchRenameFiles(renameMap);
+		} catch (err) {
+			notifier.warn(`Could not add all files to project`, err);
+		}
+	}
 
 
 }

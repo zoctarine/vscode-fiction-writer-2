@@ -1,12 +1,12 @@
 import {
-    FwFileManager,
-    FwItemBuilder,
-    FwPermission,
-    FwType,
-    IAsyncCommand,
-    log,
-    Permissions,
-    SuffixOrderParser
+	FwFileManager,
+	FwItemBuilder,
+	FwPermission,
+	FwType,
+	IAsyncCommand,
+	log,
+	Permissions,
+	SuffixOrderParser
 } from '../../../core';
 import {FwItem} from '../../../core/fwFiles/FwItem';
 import {StateManager} from '../../../core/state';
@@ -15,25 +15,25 @@ import {FwItemFactory} from '../../../core/FwItemFactory';
 import {FwItemReplicator} from '../../../core/fwFiles/FwItemReplicator';
 
 export class AddChildFile implements IAsyncCommand<FwItem, string | undefined> {
-    constructor(private _fileManager: FwFileManager,
-                private _itemFactory: FwItemFactory) {
-    };
+	constructor(private _fileManager: FwFileManager,
+				private _itemFactory: FwItemFactory) {
+	};
 
-    async runAsync(item?: FwItem) {
-        if (!item) return;
+	async runAsync(item?: FwItem) {
+		if (!item) return;
 
-        let newItem = await this._itemFactory.createChildItem(item)
-            ?? await this._itemFactory.createVirtualChildItem(item)
-            ?? await this._itemFactory.createSiblingItem(item);
+		let newItem = await this._itemFactory.createChildItem(item)
+			?? await this._itemFactory.createVirtualChildItem(item)
+			?? await this._itemFactory.createSiblingItem(item);
 
-        if (!newItem) return;
+		if (!newItem) return;
 
-        if (await this._fileManager.createFile(newItem.fsRef.fsPath, '')) {
-            return newItem.fsRef.fsPath;
-        } else {
-            console.error(`Cannot create ${newItem.fsRef.fsPath}`);
-        }
+		if (await this._fileManager.createFile(newItem.fsRef.fsPath, '')) {
+			return newItem.fsRef.fsPath;
+		} else {
+			console.error(`Cannot create ${newItem.fsRef.fsPath}`);
+		}
 
-        return undefined;
-    }
+		return undefined;
+	}
 }

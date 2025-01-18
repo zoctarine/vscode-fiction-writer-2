@@ -1,8 +1,8 @@
 export interface IMarkdownMeta {
-    markers: {
-        begin: string
-        end: string
-    };
-    yaml?: string;
-    value?: any;
+	markers: {
+		begin: string
+		end: string
+	};
+	yaml?: string;
+	value?: any;
 }

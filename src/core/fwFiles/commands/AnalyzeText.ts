@@ -5,9 +5,9 @@ import {ITextStatistics, TextAnalyzer} from '../../../modules/textAnalysis/textA
 
 export class AnalyzeText implements ICommand<string, ITextStatistics | undefined> {
 
-    run(text?: string) {
-        if (!text || text.length === 0) return;
+	run(text?: string) {
+		if (!text || text.length === 0) return;
 
-        return TextAnalyzer.analyze(text);
-    }
+		return TextAnalyzer.analyze(text);
+	}
 }

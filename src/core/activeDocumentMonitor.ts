@@ -5,43 +5,43 @@ import path from 'path';
 
 export class ActiveDocumentMonitor extends DisposeManager {
 
-    private _activeDocument?: vscode.TextDocument;
-    private _onActiveDocumentChanged = new vscode.EventEmitter<vscode.TextDocument | undefined>();
+	private _activeDocument?: vscode.TextDocument;
+	private _onActiveDocumentChanged = new vscode.EventEmitter<vscode.TextDocument | undefined>();
 
-    constructor() {
-        super();
-        this.activeDocument = vscode.window.activeTextEditor?.document;
-        this.manageDisposable(
-            this._onActiveDocumentChanged,
+	constructor() {
+		super();
+		this.activeDocument = vscode.window.activeTextEditor?.document;
+		this.manageDisposable(
+			this._onActiveDocumentChanged,
 
-            vscode.window.onDidChangeActiveTextEditor(e =>{
-                if (e) {
-                    this.activeDocument = e?.document;
-                }
-            })
-        );
-    }
+			vscode.window.onDidChangeActiveTextEditor(e => {
+				if (e) {
+					this.activeDocument = e?.document;
+				}
+			})
+		);
+	}
 
-    set activeDocument(value: vscode.TextDocument | undefined) {
-        let fPath = value?.uri.path;
-        if (fPath) {
-            let base = vscode.workspace.getWorkspaceFolder(value!.uri)?.uri?.fsPath ?? '';
-            fPath = path.posix.relative(base, fPath);
-        }
-        this._activeDocument = value;
-        this._onActiveDocumentChanged.fire(value);
-    }
+	set activeDocument(value: vscode.TextDocument | undefined) {
+		let fPath = value?.uri.path;
+		if (fPath) {
+			let base = vscode.workspace.getWorkspaceFolder(value!.uri)?.uri?.fsPath ?? '';
+			fPath = path.posix.relative(base, fPath);
+		}
+		this._activeDocument = value;
+		this._onActiveDocumentChanged.fire(value);
+	}
 
-    get activeDocument() {
-        return this._activeDocument;
-    }
+	get activeDocument() {
+		return this._activeDocument;
+	}
 
-    get onActiveDocumentChanged(){
-        return this._onActiveDocumentChanged.event;
-    }
+	get onActiveDocumentChanged() {
+		return this._onActiveDocumentChanged.event;
+	}
 
-    public dispose(): void {
-        super.dispose();
-        this._activeDocument = undefined;
-    }
+	public dispose(): void {
+		super.dispose();
+		this._activeDocument = undefined;
+	}
 }

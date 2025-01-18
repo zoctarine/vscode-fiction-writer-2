@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import { getNonce, getWebviewRootUri } from '../../core/nonce';
+import {getNonce, getWebviewRootUri} from '../../core/nonce';
 
-import { ChangeSet, EditorState } from '@codemirror/state';
+import {ChangeSet, EditorState} from '@codemirror/state';
 
 export class CodeMirrorEditorProvider implements vscode.CustomTextEditorProvider {
 	private static readonly viewType = 'fictionWriter.editors.codeMirror';
@@ -11,16 +11,17 @@ export class CodeMirrorEditorProvider implements vscode.CustomTextEditorProvider
 		const providerRegistration = vscode.window.registerCustomEditorProvider(
 			CodeMirrorEditorProvider.viewType,
 			provider, {
-			webviewOptions: {
-				retainContextWhenHidden: true,
-			},
-		});
+				webviewOptions: {
+					retainContextWhenHidden: true,
+				},
+			});
 		return providerRegistration;
 	}
 
 	constructor(
 		private readonly context: vscode.ExtensionContext
-	) { }
+	) {
+	}
 
 	/**
 	 * Called when our custom editor is opened.
@@ -52,7 +53,6 @@ export class CodeMirrorEditorProvider implements vscode.CustomTextEditorProvider
 			});
 
 
-
 			function updateWebview() {
 				try {
 					const text = document.getText();
@@ -70,7 +70,9 @@ export class CodeMirrorEditorProvider implements vscode.CustomTextEditorProvider
 			}
 
 			subscriptions.push(vscode.workspace.onWillSaveTextDocument(e => {
-				if (document.uri.toString() !== document.uri.toString()) { return; }
+				if (document.uri.toString() !== document.uri.toString()) {
+					return;
+				}
 				console.log('onWillSaveTextDocument:');
 
 				if (document.version === lastVersion) {
@@ -79,13 +81,17 @@ export class CodeMirrorEditorProvider implements vscode.CustomTextEditorProvider
 			}));
 
 			subscriptions.push(vscode.workspace.onDidSaveTextDocument(e => {
-				if (document.uri.toString() !== document.uri.toString()) { return; }
+				if (document.uri.toString() !== document.uri.toString()) {
+					return;
+				}
 				console.log('onDidSaveTextDocument');
 				updateWebview();
 			}));
 
 			subscriptions.push(vscode.workspace.onDidChangeTextDocument(e => {
-				if (e.document.uri.toString() !== document.uri.toString()) { return; }
+				if (e.document.uri.toString() !== document.uri.toString()) {
+					return;
+				}
 				console.log('onDidChangeTextDocument');
 
 				// Only update the webview if the document is view is not active.
@@ -114,9 +120,10 @@ export class CodeMirrorEditorProvider implements vscode.CustomTextEditorProvider
 							const changes = [];
 							for (let i = 0; i < e.text.length; i++) {
 								changes.push(ChangeSet.fromJSON(e.text[i]));
-							};
+							}
+							;
 
-							editorView = editorView.update({ changes }).state;
+							editorView = editorView.update({changes}).state;
 
 							// This is a time consumig operation, so we can't run it on each
 							// small change. We only update the document once, if it's not dirty,

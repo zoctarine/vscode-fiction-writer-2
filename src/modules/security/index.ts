@@ -4,45 +4,45 @@ import vscode from 'vscode';
 import {FileEncryptor} from './fileEncryptor';
 
 class SecurityModule extends DisposeManager {
-    options = new SecurityOptions();
-    fileEncryptor = new FileEncryptor(this.options);
+	options = new SecurityOptions();
+	fileEncryptor = new FileEncryptor(this.options);
 
-    constructor() {
-        super();
-    }
+	constructor() {
+		super();
+	}
 
-    activate(): void {
+	activate(): void {
 
-        this.manageDisposable(
-            addCommand('security.encryptCurrentFile',() =>{
-                this.fileEncryptor.encryptDocument(vscode.window.activeTextEditor?.document?.uri);
-            }),
-            addCommand('security.decryptCurrentFile',() =>{
-                this.fileEncryptor.decryptDocument(vscode.window.activeTextEditor?.document?.uri);
-            }),
-            addCommand(FictionWriter.security.exportKeys,() =>{
-                vscode.window.showInformationMessage("Copy and store the encryption key(s) below so you don't loose access to your encrypted files.", {
-                    modal: true,
-                    detail: this.options.globalPassword.value
-                });
-            }),
-        );
-    };
+		this.manageDisposable(
+			addCommand('security.encryptCurrentFile', () => {
+				this.fileEncryptor.encryptDocument(vscode.window.activeTextEditor?.document?.uri);
+			}),
+			addCommand('security.decryptCurrentFile', () => {
+				this.fileEncryptor.decryptDocument(vscode.window.activeTextEditor?.document?.uri);
+			}),
+			addCommand(FictionWriter.security.exportKeys, () => {
+				vscode.window.showInformationMessage("Copy and store the encryption key(s) below so you don't loose access to your encrypted files.", {
+					modal: true,
+					detail: this.options.globalPassword.value
+				});
+			}),
+		);
+	};
 
-    deactivate(): void {
-        this.dispose();
-    };
+	deactivate(): void {
+		this.dispose();
+	};
 
-    private updateState(enabled: boolean) {
-        return enabled
-            ? this.activate()
-            : this.deactivate();
-    }
+	private updateState(enabled: boolean) {
+		return enabled
+			? this.activate()
+			: this.deactivate();
+	}
 
-    register(): vscode.Disposable {
-        this.activate();
-        return vscode.Disposable.from(this);
-    }
+	register(): vscode.Disposable {
+		this.activate();
+		return vscode.Disposable.from(this);
+	}
 }
 
 export const securityModule = new SecurityModule();

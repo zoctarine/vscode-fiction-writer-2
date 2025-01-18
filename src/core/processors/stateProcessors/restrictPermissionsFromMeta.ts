@@ -5,17 +5,17 @@ import {FwPermission, Permissions} from '../../fwFiles';
 import {log} from '../../logging';
 
 export class RestrictPermissionsFromMeta implements IStateProcessor<IFileState> {
-    async process(state: IFileState) {
+	async process(state: IFileState) {
 
-        if (!state.security?.permissions || !state.metadata) return;
+		if (!state.security?.permissions || !state.metadata) return;
 
-        let {permissions} = state.security;
+		let {permissions} = state.security;
 
-        if (state.metadata.compile === 'exclude') {
-            permissions = permissions & ~FwPermission.Compile;
-        }
+		if (state.metadata.compile === 'exclude') {
+			permissions = permissions & ~FwPermission.Compile;
+		}
 
-        state.security = {...state.security};
-        state.security.permissions = permissions;
-    }
+		state.security = {...state.security};
+		state.security.permissions = permissions;
+	}
 }

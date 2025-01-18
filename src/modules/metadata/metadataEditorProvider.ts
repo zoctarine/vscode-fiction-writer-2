@@ -2,55 +2,55 @@ import * as vscode from "vscode";
 import {getNonce, getWebviewRootUri} from "../../core/nonce";
 
 export class MetadataEditorProvider implements vscode.WebviewViewProvider {
-    public static readonly viewType = 'fictionWriter.views.metadata';
-    private _view?: vscode.WebviewView;
+	public static readonly viewType = 'fictionWriter.views.metadata';
+	private _view?: vscode.WebviewView;
 
-    private _disposables: vscode.Disposable[] = [];
+	private _disposables: vscode.Disposable[] = [];
 
-    public static register(context: vscode.ExtensionContext): vscode.Disposable {
-        return vscode.window.registerWebviewViewProvider(
-            MetadataEditorProvider.viewType,
-            new MetadataEditorProvider(context),
-        );
-    }
+	public static register(context: vscode.ExtensionContext): vscode.Disposable {
+		return vscode.window.registerWebviewViewProvider(
+			MetadataEditorProvider.viewType,
+			new MetadataEditorProvider(context),
+		);
+	}
 
-    private constructor(private readonly context: vscode.ExtensionContext) {
-    }
+	private constructor(private readonly context: vscode.ExtensionContext) {
+	}
 
-    public resolveWebviewView(
-        webviewView: vscode.WebviewView,
-        _context: vscode.WebviewViewResolveContext,
-        _token: vscode.CancellationToken
-    ) {
-        this._view = webviewView;
-        webviewView.webview.options = {
-            enableScripts: true,
-            localResourceRoots: [
-                getWebviewRootUri(this.context),
-                vscode.Uri.joinPath(this.context.extensionUri, 'media', 'styles'),
-                vscode.Uri.joinPath(this.context.extensionUri, 'media', 'webfonts'),
-                vscode.Uri.joinPath(this.context.extensionUri, 'media'),
-            ]
-        };
+	public resolveWebviewView(
+		webviewView: vscode.WebviewView,
+		_context: vscode.WebviewViewResolveContext,
+		_token: vscode.CancellationToken
+	) {
+		this._view = webviewView;
+		webviewView.webview.options = {
+			enableScripts: true,
+			localResourceRoots: [
+				getWebviewRootUri(this.context),
+				vscode.Uri.joinPath(this.context.extensionUri, 'media', 'styles'),
+				vscode.Uri.joinPath(this.context.extensionUri, 'media', 'webfonts'),
+				vscode.Uri.joinPath(this.context.extensionUri, 'media'),
+			]
+		};
 
-        webviewView.webview.html = this._getWebviewContent(webviewView.webview);
-        webviewView.onDidDispose(() => this.dispose(), null, this._disposables);
-    }
+		webviewView.webview.html = this._getWebviewContent(webviewView.webview);
+		webviewView.onDidDispose(() => this.dispose(), null, this._disposables);
+	}
 
-    public dispose() {
-        while (this._disposables.length) {
-            const disposable = this._disposables.pop();
-            if (disposable) {
-                disposable.dispose();
-            }
-        }
-    }
+	public dispose() {
+		while (this._disposables.length) {
+			const disposable = this._disposables.pop();
+			if (disposable) {
+				disposable.dispose();
+			}
+		}
+	}
 
-    private _getWebviewContent(webview: vscode.Webview) {
-        const webviewUri = webview.asWebviewUri(getWebviewRootUri(this.context, 'metadataEditorClient.js'));
-        const cssUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'media','styles','fontawesome.all.min.css'));
-        const nonce = getNonce();
-        return /*html*/ `
+	private _getWebviewContent(webview: vscode.Webview) {
+		const webviewUri = webview.asWebviewUri(getWebviewRootUri(this.context, 'metadataEditorClient.js'));
+		const cssUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'media', 'styles', 'fontawesome.all.min.css'));
+		const nonce = getNonce();
+		return /*html*/ `
       <!DOCTYPE html>
       <html lang="en">
         <head>
@@ -75,5 +75,5 @@ export class MetadataEditorProvider implements vscode.WebviewViewProvider {
         </body>
       </html>
     `;
-    }
+	}
 }

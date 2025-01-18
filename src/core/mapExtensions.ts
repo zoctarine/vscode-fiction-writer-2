@@ -4,11 +4,11 @@
  * @returns The resulting plain JavaScript object.
  */
 export function mapToObject<V>(map: Map<string, V>): { [key: string]: V } {
-    const obj: { [key: string]: V } = {};
-    for (const [key, value] of map.entries()) {
-        obj[key] = value;
-    }
-    return obj;
+	const obj: { [key: string]: V } = {};
+	for (const [key, value] of map.entries()) {
+		obj[key] = value;
+	}
+	return obj;
 }
 
 /**
@@ -17,9 +17,9 @@ export function mapToObject<V>(map: Map<string, V>): { [key: string]: V } {
  * @returns The resulting Map.
  */
 export function objectToMap<V>(obj: { [key: string]: V }): Map<string, V> {
-    const map = new Map<string, V>();
-    for (const [key, value] of Object.entries(obj)) {
-    map.set(key, value);
-}
-return map;
+	const map = new Map<string, V>();
+	for (const [key, value] of Object.entries(obj)) {
+		map.set(key, value);
+	}
+	return map;
 }

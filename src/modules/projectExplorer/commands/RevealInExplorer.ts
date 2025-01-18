@@ -8,14 +8,14 @@ import {FwItem} from '../../../core/fwFiles/FwItem';
  */
 export class RevealInExplorer implements IAsyncCommand<FwItem, void> {
 
-    async runAsync(item?: FwItem):Promise<void> {
-        if (!item) return;
+	async runAsync(item?: FwItem): Promise<void> {
+		if (!item) return;
 
-        if (!item?.fsRef?.fsPath) return;
+		if (!item?.fsRef?.fsPath) return;
 
-        const uri = vscode.Uri.file(item.fsRef.fsPath);
-        const options = {reveal: true};
+		const uri = vscode.Uri.file(item.fsRef.fsPath);
+		const options = {reveal: true};
 
-        return vscode.commands.executeCommand('revealInExplorer', uri, options);
-    }
+		return vscode.commands.executeCommand('revealInExplorer', uri, options);
+	}
 }

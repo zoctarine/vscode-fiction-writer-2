@@ -1,5 +1,5 @@
 const glob = {
-    Path: jest.fn()
+	Path: jest.fn()
 };
 
 module.exports = glob;

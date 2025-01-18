@@ -1,7 +1,7 @@
 export interface Collections<T> {
-    sort(): Collections<T>;
+	sort(): Collections<T>;
 
-    filter(): Collections<T>;
+	filter(): Collections<T>;
 
-    items: T[];
+	items: T[];
 }

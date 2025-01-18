@@ -5,10 +5,11 @@ import {FwSubType} from '../FwSubType';
 
 export class ComputeFormatting implements ICommand<IFwInfo, FwMarkdownFileFormat | undefined> {
 
-    run(info?: IFwInfo) {
-        if (info?.subType === FwSubType.ProjectFile)
-            return FwFormatting.fromMark(info?.markers?.data);
+	run(info?: IFwInfo) {
+		if (info?.subType === FwSubType.ProjectFile) {
+			return FwFormatting.fromMark(info?.markers?.data);
+		}
 
-        return undefined;
-    }
+		return undefined;
+	}
 }
