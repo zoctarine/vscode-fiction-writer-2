@@ -4,17 +4,19 @@ import fs from 'fs';
 import path from 'path';
 import {remarkKeepEmptyLines} from '../../../../core/markdown/plugins/remarkKeepEmptyLines';
 import {
-	ITextProcessor, MdIndentToStandard, TextProcessor
+	ITextProcessor, TextProcessor
 } from '../../../../core/markdown/processors/TextProcessors';
 import {RemarkProcessor} from '../../../../core/markdown/processors/RemarkProcessor';
 import {remarkIndented} from '../../../../core/markdown/plugins/remarkIndented';
 import {remarkParagraphsToCodeBlock} from '../../../../core/markdown/plugins/mergeParagrapshToCode';
 import {remarkSplitCodeToParagraphs} from '../../../../core/markdown/plugins/splitCodeToParagraph';
+import {MdIndentToStandard} from '../../../../core/markdown/processors/MdIndentToStandard';
+import {MdStandardToIndented} from '../../../../core/markdown/processors/MdStandardToIndented';
 
 
-function assertProcessed(fileName: string, processor: ITextProcessor, ext = 'md') {
-	const fsInput = path.join(__dirname, '__data', `${fileName}.in.${ext}`);
-	const fsExpected = path.join(__dirname, '__data', `${fileName}.out.${ext}`);
+function assertProcessed(fileName: string, processor: ITextProcessor) {
+	const fsInput = path.join(__dirname, '__data', `${fileName}.in`);
+	const fsExpected = path.join(__dirname, '__data', `${fileName}.out`);
 	const dataIn = fs.readFileSync(fsInput, 'utf8');
 	const dataOut = fs.readFileSync(fsExpected, 'utf8');
 	const result = processor.process(dataIn);
@@ -60,18 +62,69 @@ describe('markdownProcessors', () => {
 				new TextProcessor()
 					.add(new MdIndentToStandard())
 					.add(new RemarkProcessor())
-				, 'txt');
+				);
 		});
 	});
 
-	describe('mdIndentToStandard', () => {
+	describe('indentToStandard', () => {
 		test.each([
-			"mdIndentToStandard.01",
+			"indented.toStd.01",
+			"indented.toStd.02",
 		])('file %s', (fileName) => {
 			assertProcessed(fileName,
 				new TextProcessor()
 					.add(new MdIndentToStandard())
-				, 'txt');
+				);
+		});
+	});
+
+	describe('standardToIndented', () => {
+		test.each([
+			"standard.toInd.01",
+			"standard.toInd.02",
+		])('file %s', (fileName) => {
+			assertProcessed(fileName,
+				new TextProcessor()
+					.add(new MdStandardToIndented())
+			);
+		});
+	});
+
+	describe('standard to indented and back to standard', () => {
+		test.each([
+			"standard.toInd.toStd.01",
+		])('file %s', (fileName) => {
+			assertProcessed(fileName,
+				new TextProcessor()
+					.add(new MdStandardToIndented())
+					.add(new MdIndentToStandard())
+			);
+		});
+	});
+
+	describe('indented to standard and back to indented', () => {
+		test.each([
+			"indented.toStd.toInd",
+		])('file %s', (fileName) => {
+			assertProcessed(fileName,
+				new TextProcessor()
+					.add(new MdIndentToStandard())
+					.add(new MdStandardToIndented())
+			);
+		});
+	});
+
+	describe('formatIndented', () => {
+		test.each([
+			"ind.format.01",
+		])('file %s', (fileName) => {
+			assertProcessed(fileName,
+				new TextProcessor()
+					.add(new MdIndentToStandard())
+					.add(new RemarkProcessor(u =>
+						u.use(remarkKeepEmptyLines)))
+					.add(new MdStandardToIndented())
+			);
 		});
 	});
 });
