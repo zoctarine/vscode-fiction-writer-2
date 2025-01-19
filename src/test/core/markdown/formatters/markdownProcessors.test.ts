@@ -2,14 +2,12 @@ import {remarkDashes} from '../../../../core/markdown/plugins/remarkDashes';
 import {expect, test} from 'vitest';
 import fs from 'fs';
 import path from 'path';
-import {remarkKeepEmptyLines} from '../../../../core/markdown/plugins/remarkKeepEmptyLines';
+import {remarkKeepAllEmptyLines} from '../../../../core/markdown/plugins/remarkKeepAllEmptyLines';
 import {
 	ITextProcessor, TextProcessor
 } from '../../../../core/markdown/processors/TextProcessors';
 import {RemarkProcessor} from '../../../../core/markdown/processors/RemarkProcessor';
 import {remarkIndented} from '../../../../core/markdown/plugins/remarkIndented';
-import {remarkParagraphsToCodeBlock} from '../../../../core/markdown/plugins/mergeParagrapshToCode';
-import {remarkSplitCodeToParagraphs} from '../../../../core/markdown/plugins/splitCodeToParagraph';
 import {MdIndentToStandard} from '../../../../core/markdown/processors/MdIndentToStandard';
 import {MdStandardToIndented} from '../../../../core/markdown/processors/MdStandardToIndented';
 
@@ -44,14 +42,70 @@ describe('markdownProcessors', () => {
 			});
 		});
 
+
+		describe('.reformat.keepEmptyLines', () => {
+			test.each([
+				["standard.03.in", "standard.03.reformat.emptyLines.out"]
+			])('from [%s] to [%s]', (input, expected) => {
+				assertProcessed({input, expected}, new RemarkProcessor(p => p
+						.use(remarkKeepAllEmptyLines)
+					)
+				);
+			});
+		});
+
+		describe('.reformat.dashes', () => {
+			test.each([
+				["standard.05.in", "standard.05.reformat.dashes.emptyLines.out"]
+			])('from [%s] to [%s]', (input, expected) => {
+				assertProcessed({input, expected}, new RemarkProcessor(p => p
+						.use(remarkKeepAllEmptyLines)
+						.use(remarkDashes)
+					)
+				);
+			});
+		});
+
+
 		describe('.toIndented', () => {
 			test.each([
+				["standard.03.in", "standard.03.toInd.out"],
 				["standard.04.in", "standard.04.toInd.out"],
-				["standard.05.in", "standard.05.toInd.out"]
-			])('file %s', (input, expected) => {
+			])('from [%s] to [%s]', (input, expected) => {
 				assertProcessed({input, expected},
 					new TextProcessor()
-						.add(new MdStandardToIndented())
+						.add(new RemarkProcessor(p => p
+							.use(remarkIndented)
+						))
+				);
+			});
+		});
+
+		describe('.toIndented.dashes', () => {
+			test.each([
+				["standard.05.in", "standard.05.toInd.dashes.out"]
+			])('from [%s] to [%s]', (input, expected) => {
+				assertProcessed({input, expected},
+					new TextProcessor()
+						.add(new RemarkProcessor(p => p
+							.use(remarkDashes)
+							.use(remarkIndented)
+						))
+				);
+			});
+		});
+
+		describe('.toIndented.emptyLines', () => {
+			test.each([
+				["standard.03.in", "standard.03.toInd.emptyLines.out"],
+				["standard.04.in", "standard.04.toInd.emptyLines.out"],
+			])('from [%s] to [%s]', (input, expected) => {
+				assertProcessed({input, expected},
+					new TextProcessor()
+						.add(new RemarkProcessor(p => p
+							.use(remarkKeepAllEmptyLines)
+							.use(remarkIndented, {keepEmptyLinesBetweenParagraphs: true})
+						))
 				);
 			});
 		});
@@ -59,30 +113,15 @@ describe('markdownProcessors', () => {
 		describe('.toIndented.toStandard', () => {
 			test.each([
 				["standard.04.in", "standard.04.toInd.toStd.out"],
-				["standard.05.in", "standard.05.in"]
-			])('file %s',(input, expected) => {
+			])('from [%s] to [%s]', (input, expected) => {
 				assertProcessed({input, expected},
 					new TextProcessor()
-						.add(new MdStandardToIndented())
+						.add(new RemarkProcessor(p => p
+							.use(remarkIndented)
+						))
 						.add(new MdIndentToStandard())
 				);
 			});
-		});
-	});
-
-	describe('remarkDashes', () => {
-		test.each([
-			"remarkDashes.01",
-		])('file %s', (fileName) => {
-			assertProcessed(fileName, new RemarkProcessor(p => p.use(remarkDashes)));
-		});
-	});
-
-	describe('remarkKeepEmptyLines', () => {
-		test.each([
-			"remarkKeepEmptyLines.01",
-		])('file %s', (fileName) => {
-			assertProcessed(fileName, new RemarkProcessor(p => p.use(remarkKeepEmptyLines)));
 		});
 	});
 
@@ -106,7 +145,9 @@ describe('markdownProcessors', () => {
 				assertProcessed({input, expected},
 					new TextProcessor()
 						.add(new MdIndentToStandard())
-						.add(new MdStandardToIndented())
+						.add(new RemarkProcessor(p => p
+							.use(remarkIndented, {keepEmptyLinesBetweenParagraphs: true})
+						))
 				);
 			});
 		});
@@ -120,26 +161,29 @@ describe('markdownProcessors', () => {
 				assertProcessed({input, expected},
 					new TextProcessor()
 						.add(new MdIndentToStandard())
-						.add(new RemarkProcessor(u =>
-							u.use(remarkKeepEmptyLines)))
-						.add(new MdStandardToIndented())
+						.add(new RemarkProcessor(p => p
+							.use(remarkKeepAllEmptyLines)
+							.use(remarkIndented, {keepEmptyLinesBetweenParagraphs: true})
+						))
 				);
 			});
-
-			describe('.format', () => {
-				test.each([
-					["indented.01.in", "indented.01.reformat.out"],
-					["indented.02.in", "indented.02.reformat.out"],
-					// ["indented.03.in" ,"indented.03.format.out"],
-				])('from [%s] to [%s]', (input, expected) => {
-					assertProcessed({input, expected},
-						new TextProcessor()
-							.add(new MdIndentToStandard())
-							.add(new RemarkProcessor())
-							.add(new MdStandardToIndented())
-					);
-				});
+		});
+		describe('.format', () => {
+			test.each([
+				["indented.01.in", "indented.01.reformat.out"],
+				["indented.02.in", "indented.02.reformat.out"],
+				// ["indented.03.in" ,"indented.03.format.out"],
+			])('from [%s] to [%s]', (input, expected) => {
+				assertProcessed({input, expected},
+					new TextProcessor()
+						.add(new MdIndentToStandard(), {onProcess: r => console.log(r)})
+						.add(new RemarkProcessor(), {onProcess: r => console.log(r)})
+						.add(new RemarkProcessor(p => p
+							.use(remarkIndented)
+						))
+				);
 			});
 		});
+
 	});
 });

@@ -22,9 +22,8 @@ export class RemarkProcessor implements ITextProcessor {
 
 		processor
 			.use(remarkStringify, {
-				fences: false,
+				// fences: false,
 				bullet: '-',
-
 			});
 
 		return processor.processSync(data).toString();

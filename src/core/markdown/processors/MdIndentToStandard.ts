@@ -8,7 +8,7 @@ export class MdIndentToStandard implements ITextProcessor {
 		return data
 			// duplicate empty lines, between paragraphs
 			// (explicitly having an empty line in an indented text means you want an empty line there)
-			.replace(/^( +|\t).*\n{1,}(?=( +|\t))/gm, (match) => {
+			.replace(/^([ \t]+).*\n{1,}(?=([ \t]+))/gm, (match) => {
 				return match + '\n';
 			})
 			// // convert hard breaks to paragraph breaks
@@ -16,6 +16,6 @@ export class MdIndentToStandard implements ITextProcessor {
 			// 	return match + '\n';
 			// })
 			//Remove the indent from all indented lines
-			.replace(/^( +|\t)/gm, '');
+			.replace(/^([ \t]+)/gm, '');
 	}
 }

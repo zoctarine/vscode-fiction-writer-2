@@ -5,7 +5,7 @@ function toMarkdownExtension() {
 	return {
 		join: [
 			(left: FlowChildren, right: FlowChildren, parent: FlowParents, state: State) => {
-				// TODO: check for specific types?
+			// TODO: check for specific types?
 				// 	if (left. type === 'definition' && right. type === 'definition') {
 				if (right.position && left.position) {
 					const diff = right.position?.start.line - left.position?.end.line - 1;
@@ -18,7 +18,8 @@ function toMarkdownExtension() {
 	};
 }
 
-export const remarkKeepEmptyLines: Plugin = function () {
+export const remarkKeepAllEmptyLines: Plugin = function () {
 	const data = this.data();
+
 	data.toMarkdownExtensions?.push(toMarkdownExtension());
 };
