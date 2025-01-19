@@ -11,7 +11,7 @@ export class MdStandardToIndented implements ITextProcessor {
 		for (let idx = 0; idx < lines.length; idx++) {
 			let crt = lines[idx];
 			// not a paragraph;
-			if (crt.match(/^(#|\* |_ |- |\*\* |---)/img)) {
+			if (crt.match(/^(#|\* |_ |- |\*\* |---|\*\*\*)/img)) {
 				result.push(crt);
 				continue;
 			}

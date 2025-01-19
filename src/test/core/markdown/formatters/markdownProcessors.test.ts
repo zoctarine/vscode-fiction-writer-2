@@ -14,9 +14,13 @@ import {MdIndentToStandard} from '../../../../core/markdown/processors/MdIndentT
 import {MdStandardToIndented} from '../../../../core/markdown/processors/MdStandardToIndented';
 
 
-function assertProcessed(fileName: string, processor: ITextProcessor) {
-	const fsInput = path.join(__dirname, '__data', `${fileName}.in`);
-	const fsExpected = path.join(__dirname, '__data', `${fileName}.out`);
+function assertProcessed(fileName: string | { input: string, expected: string }, processor: ITextProcessor) {
+	const fsInput = (typeof fileName === 'string')
+		? path.join(__dirname, '__data', `${fileName}.in`)
+		: path.join(__dirname, '__data', `${fileName.input}`);
+	const fsExpected = (typeof fileName === 'string')
+		? path.join(__dirname, '__data', `${fileName}.out`)
+		: path.join(__dirname, '__data', `${fileName.expected}`);
 	const dataIn = fs.readFileSync(fsInput, 'utf8');
 	const dataOut = fs.readFileSync(fsExpected, 'utf8');
 	const result = processor.process(dataIn);
@@ -29,12 +33,40 @@ describe('markdownProcessors', () => {
 	 * Just to have a reference on what the standard remarkParser/formatter does
 	 */
 	describe('standard', () => {
-		test.each([
-			"standard.01",
-			"standard.02.withMeta",
-			"standard.03.unformatted"
-		])('file %s', (fileName) => {
-			assertProcessed(fileName, new RemarkProcessor());
+
+		describe('.reformat', () => {
+			test.each([
+				["standard.01.in", "standard.01.reformat.out"],
+				["standard.02.in", "standard.02.reformat.out"],
+				["standard.03.in", "standard.03.reformat.out"]
+			])('from [%s] to [%s]', (input, expected) => {
+				assertProcessed({input, expected}, new RemarkProcessor());
+			});
+		});
+
+		describe('.toIndented', () => {
+			test.each([
+				["standard.04.in", "standard.04.toInd.out"],
+				["standard.05.in", "standard.05.toInd.out"]
+			])('file %s', (input, expected) => {
+				assertProcessed({input, expected},
+					new TextProcessor()
+						.add(new MdStandardToIndented())
+				);
+			});
+		});
+
+		describe('.toIndented.toStandard', () => {
+			test.each([
+				["standard.04.in", "standard.04.toInd.toStd.out"],
+				["standard.05.in", "standard.05.in"]
+			])('file %s',(input, expected) => {
+				assertProcessed({input, expected},
+					new TextProcessor()
+						.add(new MdStandardToIndented())
+						.add(new MdIndentToStandard())
+				);
+			});
 		});
 	});
 
@@ -54,77 +86,60 @@ describe('markdownProcessors', () => {
 		});
 	});
 
-	describe('remarkSplitCodeToParagraphs', () => {
-		test.each([
-			"remarkSplitCodeToParagraphs.01",
-		])('file %s', (fileName) => {
-			assertProcessed(fileName,
-				new TextProcessor()
-					.add(new MdIndentToStandard())
-					.add(new RemarkProcessor())
+	describe('indented', () => {
+		describe('.toStandard', () => {
+			test.each([
+				["indented.01.in", "indented.01.toStd.out"],
+				["indented.02.in", "indented.02.toStd.out"]
+			])('from [%s] to [%s]', (input, expected) => {
+				assertProcessed({input, expected},
+					new TextProcessor()
+						.add(new MdIndentToStandard())
 				);
+			});
 		});
-	});
 
-	describe('indentToStandard', () => {
-		test.each([
-			"indented.toStd.01",
-			"indented.toStd.02",
-		])('file %s', (fileName) => {
-			assertProcessed(fileName,
-				new TextProcessor()
-					.add(new MdIndentToStandard())
+		describe('.toStandard.ToIndented', () => {
+			test.each([
+				["indented.02.in", "indented.02.toStd.toInd.out"],
+			])('from [%s] to [%s]', (input, expected) => {
+				assertProcessed({input, expected},
+					new TextProcessor()
+						.add(new MdIndentToStandard())
+						.add(new MdStandardToIndented())
 				);
+			});
 		});
-	});
 
-	describe('standardToIndented', () => {
-		test.each([
-			"standard.toInd.01",
-			"standard.toInd.02",
-		])('file %s', (fileName) => {
-			assertProcessed(fileName,
-				new TextProcessor()
-					.add(new MdStandardToIndented())
-			);
-		});
-	});
+		describe('.format.emptyLines', () => {
+			test.each([
+				["indented.01.in", "indented.01.reformat.emptyLines.out"],
+				["indented.02.in", "indented.02.reformat.emptyLines.out"],
+				// ["indented.03.in" ,"indented.03.format.out"],
+			])('from [%s] to [%s]', (input, expected) => {
+				assertProcessed({input, expected},
+					new TextProcessor()
+						.add(new MdIndentToStandard())
+						.add(new RemarkProcessor(u =>
+							u.use(remarkKeepEmptyLines)))
+						.add(new MdStandardToIndented())
+				);
+			});
 
-	describe('standard to indented and back to standard', () => {
-		test.each([
-			"standard.toInd.toStd.01",
-		])('file %s', (fileName) => {
-			assertProcessed(fileName,
-				new TextProcessor()
-					.add(new MdStandardToIndented())
-					.add(new MdIndentToStandard())
-			);
-		});
-	});
-
-	describe('indented to standard and back to indented', () => {
-		test.each([
-			"indented.toStd.toInd",
-		])('file %s', (fileName) => {
-			assertProcessed(fileName,
-				new TextProcessor()
-					.add(new MdIndentToStandard())
-					.add(new MdStandardToIndented())
-			);
-		});
-	});
-
-	describe('formatIndented', () => {
-		test.each([
-			"ind.format.01",
-		])('file %s', (fileName) => {
-			assertProcessed(fileName,
-				new TextProcessor()
-					.add(new MdIndentToStandard())
-					.add(new RemarkProcessor(u =>
-						u.use(remarkKeepEmptyLines)))
-					.add(new MdStandardToIndented())
-			);
+			describe('.format', () => {
+				test.each([
+					["indented.01.in", "indented.01.reformat.out"],
+					["indented.02.in", "indented.02.reformat.out"],
+					// ["indented.03.in" ,"indented.03.format.out"],
+				])('from [%s] to [%s]', (input, expected) => {
+					assertProcessed({input, expected},
+						new TextProcessor()
+							.add(new MdIndentToStandard())
+							.add(new RemarkProcessor())
+							.add(new MdStandardToIndented())
+					);
+				});
+			});
 		});
 	});
 });
