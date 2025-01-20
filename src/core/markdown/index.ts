@@ -1,50 +1,17 @@
-import remarkStringify from 'remark-stringify';
-import remarkParse from 'remark-parse';
-import {unified} from 'unified';
-import remarkFrontmatter from 'remark-frontmatter';
-import {remarkKeepEmptyLines} from './plugins/remarkExpandParagraphs';
-import {remarkSplitCodeToParagraphs} from './plugins/splitCodeToParagraph';
-import {remarkParagraphsToCodeBlock} from './plugins/mergeParagrapshToCode';
-import {remarkDashes} from './plugins/remarkDashes';
-import vscode, {Disposable, QuickPickItemKind} from 'vscode';
+import vscode, {Disposable} from 'vscode';
 import {IFileState, StateManager} from '../state';
-import {FwFormatOptions, FwFormatting, FwMarkdownFileFormat} from './formatting';
+import {FwFormatOptions} from './formatting';
 import {FwFileManager} from '../FwFileManager';
 import {FictionWriter} from '../constants';
 import {RenameFileOnDisk} from './commands/RenameFileOnDisk';
+import {ITextProcessor, processorFactory} from './processors';
+import {log} from '../logging';
+import {MemFile} from '../memoryFile';
 
-function fromCustomToStandard() {
-	return unified()
-		.use(remarkParse)
-		.use(remarkFrontmatter, ['yaml'])
-		.use(remarkDashes)
-		.use(remarkKeepEmptyLines)
-		.use(remarkSplitCodeToParagraphs)
-		.use(remarkStringify, {
-			fences: false
-		});
-}
-
-function fromStandardToCustom() {
-	return unified()
-		.use(remarkParse)
-		.use(remarkFrontmatter, ['yaml'])
-		.use(() => (tree: any, file: any) => {
-			file.data.matter = {cool: "stuff"};
-		})
-		.use(remarkDashes)
-		.use(remarkKeepEmptyLines)
-		.use(remarkParagraphsToCodeBlock)
-		.use(remarkStringify, {
-			fences: false,
-			// join: [(left:any, right:any, parent:any, state:any) => (left.type === 'paragraph' && right.type==='paragraph') ? 0 : 1]
-		});
-}
-
-function applyProcessor(formatter: any) {
+function applyProcessor(formatter: ITextProcessor) {
 	if (vscode.window.activeTextEditor?.document) {
 		let doc = vscode.window.activeTextEditor.document;
-		const result = formatter.processSync(doc.getText()).toString();
+		const result = formatter.process(doc.getText()) ?? '';
 
 		const edit = new vscode.WorkspaceEdit();
 		edit.replace(
@@ -55,14 +22,19 @@ function applyProcessor(formatter: any) {
 	}
 }
 
-function getProcessor(format?: FwMarkdownFileFormat) {
-	switch (format) {
-		case FwMarkdownFileFormat.IndentFirstLine:
-			return fromStandardToCustom();
-		default:
-			return fromCustomToStandard();
+function previewProcessor(formatter: ITextProcessor) {
+	if (vscode.window.activeTextEditor?.document) {
+		let doc = vscode.window.activeTextEditor.document;
+		const content = formatter.process(doc.getText()) ?? '';
+
+		const uri = MemFile.createDocument("preview.fw.md", content);
+		const position = new vscode.Position(0, 0);
+		const location = new vscode.Location(uri, position);
+
+		vscode.commands.executeCommand('editor.action.peekLocations', doc.uri, position, [location], 'peek');
 	}
 }
+
 
 const formatStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
 
@@ -112,7 +84,7 @@ export function registerMarkdownFormatters(stateManager: StateManager, fileManag
 			// Cannot change for unknown state
 			if (item?.fsContent?.format === undefined) return;
 
-			const current = FwFormatOptions.get(item.fsContent.format);
+			const currentFormat = FwFormatOptions.get(item.fsContent.format);
 			const options = Array
 				.from(FwFormatOptions.values())
 				.map(
@@ -121,10 +93,10 @@ export function registerMarkdownFormatters(stateManager: StateManager, fileManag
 						description: o.description,
 						value: o.value
 					})
-				).filter(o => o.value !== current?.value);
+				).filter(o => o.value !== currentFormat?.value);
 			const result = await vscode.window.showQuickPick(options,
 				{
-					title: `Change \'${current?.label}\' formatting to:`,
+					title: `Change \'${currentFormat?.label}\' formatting to:`,
 					placeHolder: `Select new format...`,
 				},
 			);
@@ -155,16 +127,21 @@ export function registerMarkdownFormatters(stateManager: StateManager, fileManag
 				'File format changed. Do you want to apply the new formatting?',
 				'Yes, apply');
 			if (!shouldFormat) return;
-			applyProcessor(getProcessor(newItem.fsContent.format));
+			applyProcessor(processorFactory.create(newItem.fsContent.format, currentFormat?.value));
 		}),
 
+		/**
+		 * Reformat
+		 */
 		vscode.commands.registerCommand(FictionWriter.formatting.reformat, async () => {
 			const item = stateManager
 				.get(vscode.window.activeTextEditor?.document?.uri?.fsPath)?.fwItem;
+			if (!item) return;
+
+			const currentFormat = item.fsContent?.format;
 
 			// Cannot change for unknown state
-			if (item?.fsContent?.format === undefined) return;
-
+			if (currentFormat === undefined) return;
 			const options = Array
 				.from(FwFormatOptions.values())
 				.map(
@@ -181,10 +158,15 @@ export function registerMarkdownFormatters(stateManager: StateManager, fileManag
 			);
 
 			if (!result) return;
-			applyProcessor(getProcessor(result.value));
+			const nextFormat = result.value;
+
+			previewProcessor(processorFactory.create(nextFormat, currentFormat));
 		}),
 
-		vscode.languages.registerDocumentFormattingEditProvider('fwmarkdown', {
+		/**
+		 * Register Document Formatting Providers
+		 */
+		vscode.languages.registerDocumentFormattingEditProvider(FictionWriter.languages.FW_MARKDOWN, {
 
 			provideDocumentFormattingEdits(document: vscode.TextDocument): vscode.TextEdit[] {
 				let edits: vscode.TextEdit[] = [];
@@ -195,7 +177,7 @@ export function registerMarkdownFormatters(stateManager: StateManager, fileManag
 				const markdownContent = document.getText();
 
 				try {
-					const result = getProcessor(state.fwItem?.fsContent.format).processSync(markdownContent).toString();
+					const result = processorFactory.create(state.fwItem?.fsContent.format, state.fwItem?.fsContent.format).process(markdownContent) ?? '';
 
 					edits.push(new vscode.TextEdit(
 						new vscode.Range(0, 0, document.lineCount, 0),
@@ -209,4 +191,3 @@ export function registerMarkdownFormatters(stateManager: StateManager, fileManag
 		})
 	);
 }
-

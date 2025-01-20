@@ -1,5 +1,6 @@
 import {FwExtensionParser} from '../../../../core/fwFiles';
 import * as assert from 'assert';
+import {test, expect} from 'vitest';
 
 describe('FwExtensionParser', () => {
 	const sut = new FwExtensionParser();

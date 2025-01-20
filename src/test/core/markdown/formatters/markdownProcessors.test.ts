@@ -9,16 +9,17 @@ import {
 import {RemarkProcessor} from '../../../../core/markdown/processors/RemarkProcessor';
 import {remarkIndented} from '../../../../core/markdown/plugins/remarkIndented';
 import {MdIndentToStandard} from '../../../../core/markdown/processors/MdIndentToStandard';
-import {MdStandardToIndented} from '../../../../core/markdown/processors/MdStandardToIndented';
 
 
 function assertProcessed(fileName: string | { input: string, expected: string }, processor: ITextProcessor) {
-	const fsInput = (typeof fileName === 'string')
-		? path.join(__dirname, '__data', `${fileName}.in`)
-		: path.join(__dirname, '__data', `${fileName.input}`);
-	const fsExpected = (typeof fileName === 'string')
-		? path.join(__dirname, '__data', `${fileName}.out`)
-		: path.join(__dirname, '__data', `${fileName.expected}`);
+	const fsInput = path.join(__dirname, '__data',
+		(typeof fileName === 'string' ? `${fileName}.in` : fileName.input)
+	);
+
+	const fsExpected = path.join(__dirname, '__data',
+		(typeof fileName === 'string' ? `${fileName}.out` : fileName.expected)
+	);
+
 	const dataIn = fs.readFileSync(fsInput, 'utf8');
 	const dataOut = fs.readFileSync(fsExpected, 'utf8');
 	const result = processor.process(dataIn);

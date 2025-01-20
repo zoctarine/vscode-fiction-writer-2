@@ -1,5 +1,7 @@
+import { vi } from 'vitest';
+
 const glob = {
-	Path: jest.fn()
+	Path: vi.fn()
 };
 
 module.exports = glob;

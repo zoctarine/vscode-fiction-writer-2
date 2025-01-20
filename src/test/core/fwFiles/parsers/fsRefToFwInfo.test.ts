@@ -8,6 +8,9 @@ import {ObjectProps} from '../../../../core/lib';
 import path from 'path';
 import * as assert from 'assert';
 
+import { test } from 'vitest';
+
+
 describe('FsRefToFwInfo', () => {
 	const sut = new FsRefToFwInfo(
 		new PrefixOrderParser(),

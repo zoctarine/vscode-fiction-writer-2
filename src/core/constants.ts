@@ -7,6 +7,9 @@ const Formatting = 'fictionWriter.formatting';
 
 
 export const FictionWriter = {
+	languages: {
+		FW_MARKDOWN: 'fwmarkdown',
+	},
 	explorer: {
 		revealInProjectsView: 'explorer.revealInProjectsView',
 	},

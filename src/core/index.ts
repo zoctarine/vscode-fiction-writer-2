@@ -16,6 +16,7 @@ import {SplitActiveFile} from '../modules/projectExplorer/commands/SplitActiveFi
 import {ExtractFile} from '../modules/projectExplorer/commands/ExtractFile';
 import {ExtractFiles} from '../modules/projectExplorer/commands/ExtractFiles';
 import {FwItemFactory} from './FwItemFactory';
+import {registerMemoryFiles} from './memoryFile';
 
 export * from './FwFileManager';
 export * from './commandExtensions';
@@ -30,6 +31,7 @@ export * from './fwFiles';
 export * from './tree';
 export * from './lib';
 export * from './FwItemFactory';
+export * from './memoryFile';
 
 export class CoreModule extends DisposeManager {
 	stateManager: StateManager;
@@ -57,6 +59,7 @@ export class CoreModule extends DisposeManager {
 			this.fileManager,
 			this.projectsOptions,
 			this.activeDocumentMonitor,
+			registerMemoryFiles(),
 			registerMarkdownFormatters(this.stateManager, this.fileManager),
 			this.fileManager.onFilesChanged(files => {
 				log.debug("fileManager: filesChanged", files.size);

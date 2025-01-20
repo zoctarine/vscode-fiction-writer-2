@@ -1,5 +1,6 @@
 import {SuffixOrderParser} from '../../../../core/fwFiles';
 import * as assert from 'assert';
+import {test, expect} from 'vitest';
 
 describe('SuffixOrderParser', () => {
 	const sut = new SuffixOrderParser();

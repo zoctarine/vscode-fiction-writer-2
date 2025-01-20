@@ -1,5 +1,8 @@
 import {ITextProcessor} from './TextProcessors';
 
+/**
+ * @obsolete Use the {@link remarkIndented} micromark plugin
+ */
 export class MdStandardToIndented implements ITextProcessor {
 
 	process(data?: string | undefined): string | undefined {

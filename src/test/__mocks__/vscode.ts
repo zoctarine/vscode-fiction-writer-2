@@ -1,3 +1,5 @@
+import { vi } from 'vitest';
+
 /**
  * Module mock for 'vscode'.
  * Add here all vscode.* members that are used by codebase under test
@@ -9,11 +11,11 @@
 
 const vscode = {
 	Uri: {
-		parse: jest.fn().mockImplementation((uri: string) => {
+		parse: vi.fn().mockImplementation((uri: string) => {
 			return {scheme: 'file', path: uri, fsPath: uri};
 		}),
 	},
-	EventEmitter: jest.fn(() => {
+	EventEmitter: vi.fn(() => {
 		const subscribers: ((event: any) => void)[] = [];
 		return ({
 			fire: (event: any) => {
@@ -30,27 +32,27 @@ const vscode = {
 		});
 	}),
 	workspace: {
-		getConfiguration: jest.fn(),
-		onDidChangeConfiguration: jest.fn(),
-		openTextDocument: jest.fn(),
+		getConfiguration: vi.fn(),
+		onDidChangeConfiguration: vi.fn(),
+		openTextDocument: vi.fn(),
 		createFileSystemWatcher: {
-			onDidChange: jest.fn().mockReturnValue({
+			onDidChange: vi.fn().mockReturnValue({
 				dispose: () => {
 				}
 			}),
-			onDidCreate: jest.fn().mockReturnValue({
+			onDidCreate: vi.fn().mockReturnValue({
 				dispose: () => {
 				}
 			}),
-			onDidDelete: jest.fn().mockReturnValue({
+			onDidDelete: vi.fn().mockReturnValue({
 				dispose: () => {
 				}
 			}),
 		}
 	},
 	window: {
-		showInformationMessage: jest.fn(),
-		createOutputChannel: jest.fn(),
+		showInformationMessage: vi.fn(),
+		createOutputChannel: vi.fn(),
 	},
 
 };
