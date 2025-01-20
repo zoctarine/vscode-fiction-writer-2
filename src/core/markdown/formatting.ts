@@ -40,6 +40,9 @@ export const FwFormatOptions = new Map<FwMarkdownFileFormat | undefined, IFwForm
 ]);
 
 export class FwFormatting {
+	public static Regex = {
+		NotAParagraph: /^(#|\* |_ |- |\*\* |---|\*\*\*)/img
+	};
 	private static markToFormat: Map<string, FwMarkdownFileFormat> = new Map();
 	private static formatToMark: Map<FwMarkdownFileFormat, string> = new Map();
 	public static defaultFormat = FwMarkdownFileFormat.Default;

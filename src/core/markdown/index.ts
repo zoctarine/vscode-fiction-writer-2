@@ -1,6 +1,6 @@
 import vscode, {Disposable} from 'vscode';
 import {IFileState, StateManager} from '../state';
-import {FwFormatOptions} from './formatting';
+import {FwFormatOptions, FwFormatting, FwMarkdownFileFormat} from './formatting';
 import {FwFileManager} from '../FwFileManager';
 import {FictionWriter} from '../constants';
 import {RenameFileOnDisk} from './commands/RenameFileOnDisk';
@@ -22,16 +22,23 @@ function applyProcessor(formatter: ITextProcessor) {
 	}
 }
 
-function previewProcessor(formatter: ITextProcessor) {
+function previewProcessor(formatter: ITextProcessor, currentFormat: FwMarkdownFileFormat) {
 	if (vscode.window.activeTextEditor?.document) {
-		let doc = vscode.window.activeTextEditor.document;
-		const content = formatter.process(doc.getText()) ?? '';
+		const doc = vscode.window.activeTextEditor.document;
+		const text = doc.getText() ?? '';
+		const locations: vscode.Location[] = [];
 
-		const uri = MemFile.createDocument("preview.fw.md", content);
-		const position = new vscode.Position(0, 0);
-		const location = new vscode.Location(uri, position);
+		for (const format of Array.from(FwFormatOptions.values())) {
+			const processor = processorFactory.create(format.value, currentFormat);
+			if (processor) {
+				const content = processor.process(text) ?? '';
+				const uri = MemFile.createDocument(`${format.label}.fw.md`, content);
+				const position = new vscode.Position(0, 0);
+				locations.push(new vscode.Location(uri, position));
+			}
+		}
 
-		vscode.commands.executeCommand('editor.action.peekLocations', doc.uri, position, [location], 'peek');
+		vscode.commands.executeCommand('editor.action.peekLocations', doc.uri, new vscode.Position(0, 0), locations, 'peek');
 	}
 }
 
@@ -160,7 +167,7 @@ export function registerMarkdownFormatters(stateManager: StateManager, fileManag
 			if (!result) return;
 			const nextFormat = result.value;
 
-			previewProcessor(processorFactory.create(nextFormat, currentFormat));
+			previewProcessor(processorFactory.create(nextFormat, currentFormat), currentFormat);
 		}),
 
 		/**
@@ -177,7 +184,10 @@ export function registerMarkdownFormatters(stateManager: StateManager, fileManag
 				const markdownContent = document.getText();
 
 				try {
-					const result = processorFactory.create(state.fwItem?.fsContent.format, state.fwItem?.fsContent.format).process(markdownContent) ?? '';
+					const result = processorFactory.create(
+						state.fwItem?.fsContent.format,
+						state.fwItem?.fsContent.format)
+					.process(markdownContent) ?? '';
 
 					edits.push(new vscode.TextEdit(
 						new vscode.Range(0, 0, document.lineCount, 0),

@@ -130,7 +130,8 @@ describe('markdownProcessors', () => {
 		describe('.toStandard', () => {
 			test.each([
 				["indented.01.in", "indented.01.toStd.out"],
-				["indented.02.in", "indented.02.toStd.out"]
+				["indented.02.in", "indented.02.toStd.out"],
+				["indented.03.in", "indented.03.toStd.out"]
 			])('from [%s] to [%s]', (input, expected) => {
 				assertProcessed({input, expected},
 					new TextProcessor()
@@ -169,6 +170,23 @@ describe('markdownProcessors', () => {
 				);
 			});
 		});
+
+		describe('.format.dashes', () => {
+			test.each([
+				["indented.03.in", "indented.03.reformat.dashes.out"],
+			])('from [%s] to [%s]', (input, expected) => {
+				assertProcessed({input, expected},
+					new TextProcessor()
+						.add(new MdIndentToStandard(), {onProcess: p => console.log(p)})
+						.add(new RemarkProcessor(p => p
+							.use(remarkKeepAllEmptyLines)
+							.use(remarkDashes)
+							.use(remarkIndented, {keepEmptyLinesBetweenParagraphs: true})
+						))
+				);
+			});
+		});
+
 		describe('.format', () => {
 			test.each([
 				["indented.01.in", "indented.01.reformat.out"],
