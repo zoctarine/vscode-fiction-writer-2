@@ -9,6 +9,8 @@ import {
 import {RemarkProcessor} from '../../../../core/markdown/processors/RemarkProcessor';
 import {remarkIndented} from '../../../../core/markdown/plugins/remarkIndented';
 import {MdIndentToStandard} from '../../../../core/markdown/processors/MdIndentToStandard';
+import remarkBreaks from 'remark-breaks';
+import {remarkSoftBreaks} from '../../../../core/markdown/plugins/remarkSoftBreaks';
 
 
 function assertProcessed(fileName: string | { input: string, expected: string }, processor: ITextProcessor) {
@@ -50,6 +52,19 @@ describe('markdownProcessors', () => {
 			])('from [%s] to [%s]', (input, expected) => {
 				assertProcessed({input, expected}, new RemarkProcessor(p => p
 						.use(remarkKeepAllEmptyLines)
+					)
+				);
+			});
+		});
+
+		describe('.reformat.softBreaks', () => {
+			test.each([
+				["standard.03.in", "standard.03.reformat.softBreaks.out"]
+			])('from [%s] to [%s]', (input, expected) => {
+				assertProcessed({input, expected},
+					new RemarkProcessor(p => p
+						.use(remarkKeepAllEmptyLines)
+						.use(remarkSoftBreaks, {remove: true})
 					)
 				);
 			});
