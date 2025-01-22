@@ -4,7 +4,7 @@ import {FwPermission, Permissions} from '../../fwFiles';
 import {CoreColors} from '../../decorations';
 
 export class SetSecurityDecorations implements IStateProcessor<IFileState> {
-	async process(state: IFileState) {
+	async run(state: IFileState) {
 		if (!state.security?.permissions) {
 			return;
 		}

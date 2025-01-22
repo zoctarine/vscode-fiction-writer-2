@@ -3,7 +3,7 @@ import {IStateProcessor} from '../IProcessor';
 import {IFileState} from '../../state';
 
 export class SetWriteTargetDecorations implements IStateProcessor<IFileState> {
-	async process(state: IFileState) {
+	async run(state: IFileState) {
 		if (!state.writeTargets) {
 			return;
 		}

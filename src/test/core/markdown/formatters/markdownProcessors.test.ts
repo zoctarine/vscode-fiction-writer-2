@@ -22,7 +22,7 @@ function assertProcessed(fileName: string | { input: string, expected: string },
 
 	const dataIn = fs.readFileSync(fsInput, 'utf8');
 	const dataOut = fs.readFileSync(fsExpected, 'utf8');
-	const result = processor.process(dataIn);
+	const result = processor.run(dataIn);
 
 	expect(result?.trimEnd()).toEqual(dataOut.trimEnd());
 }

@@ -4,7 +4,7 @@ import {FwSubType} from '../../fwFiles';
 import {MdiIcons} from '../../decorations';
 
 export class SetFwItemTypeDecorations implements IStateProcessor<IFileState> {
-	async process(state: IFileState) {
+	async run(state: IFileState) {
 		if (!state.fwItem) return;
 
 		const icons = new Map<FwSubType, string>([

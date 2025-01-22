@@ -7,7 +7,7 @@ export class ComputeNameSegments implements IStateProcessor<IFileState> {
 	constructor(private _fwItemBuilder: FwItemBuilder) {
 	}
 
-	async process(state: IFileState) {
+	async run(state: IFileState) {
 		if (!state.fwItem?.info) return;
 		const {info, fsRef} = state.fwItem;
 

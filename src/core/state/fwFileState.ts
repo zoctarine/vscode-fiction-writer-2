@@ -47,7 +47,7 @@ export class FwFileState extends DisposeManager {
 	async loadState(initialState: IFileState) {
 		this._state = initialState;
 		await this._process(stateProxy => {
-			return this._stateProcessor.process(stateProxy);
+			return this._stateProcessor.run(stateProxy);
 		});
 	}
 

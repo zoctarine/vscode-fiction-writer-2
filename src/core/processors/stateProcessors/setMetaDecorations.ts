@@ -4,7 +4,7 @@ import {log} from '../../logging';
 import {CoreColors} from '../../decorations';
 
 export class SetMetaDecorations implements IStateProcessor<IFileState> {
-	async process(state: IFileState) {
+	async run(state: IFileState) {
 		if (!state.metadata) return;
 		const metaDecorations = {
 			icon: state.metadata?.icon,

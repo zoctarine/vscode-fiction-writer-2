@@ -5,13 +5,15 @@ import {EditorState} from "prosemirror-state";
 import {Step} from "prosemirror-transform";
 import {fileParser, fileSerializer, schema} from "./utils/fileExtensions";
 import {exampleSetup} from "prosemirror-example-setup";
-import {getNonce, getWebviewRootUri} from '../../core';
-import {ContextManager} from '../../core/contextManager';
+import {getNonce, getWebviewRootUri, log} from '../../core';
 import {DisposeManager} from '../../core';
 import {RtEditorOptions} from './rtEditorOptions';
 import {ActiveDocumentMonitor} from '../../core/activeDocumentMonitor';
 import {ExtractMeta} from '../../core/fwFiles/commands/ExtractMeta';
 import {Node} from "prosemirror-model";
+import {processorFactory} from '../../core/markdown/processors';
+import {StateManager} from '../../core/state';
+import {FwMarkdownFileFormat} from '../../core/markdown/formatting';
 
 
 export class ProseMirrorEditorProvider extends DisposeManager
@@ -19,7 +21,7 @@ export class ProseMirrorEditorProvider extends DisposeManager
 
 
 	public static register(context: vscode.ExtensionContext,
-						   stateManager: ContextManager,
+						   stateManager: StateManager,
 						   activeDocumentMonitor: ActiveDocumentMonitor,
 						   options: RtEditorOptions,
 	): vscode.Disposable {
@@ -43,14 +45,14 @@ export class ProseMirrorEditorProvider extends DisposeManager
 
 	constructor(
 		private readonly _context: vscode.ExtensionContext,
-		private readonly _stateManager: ContextManager,
+		private readonly _stateManager: StateManager,
 		private readonly _options: RtEditorOptions,
 		private readonly _activeDocumentMonitor: ActiveDocumentMonitor) {
 		super();
 	}
 
 	/**
-	 * Called when our custom editor is opened.
+	 * Called when the custom editor is opened.
 	 */
 	public async resolveCustomTextEditor(
 		document: vscode.TextDocument,
@@ -65,20 +67,30 @@ export class ProseMirrorEditorProvider extends DisposeManager
 		let metadataBlock = new ExtractMeta().run(document.getText())?.meta?.yaml;
 		let showMergeEditor = this._options.showMergeEditor.value;
 		let tmpStorageLocation = this._context.storageUri;
+		let state = this._stateManager.get(document.uri.fsPath);
+		if (!state) return;
 
 		webviewPanel.webview.options = {
 			enableScripts: true,
 			localResourceRoots: [getWebviewRootUri(this._context)]
 		};
 		webviewPanel.webview.html = this.getHtmlForWebview(webviewPanel.webview);
+		const convert = {
+			toStandard: processorFactory.create({
+				format: FwMarkdownFileFormat.Default,
+				convertFrom: state?.fwItem?.fsContent?.format
+			}),
+			toOriginal: processorFactory.create({
+				format: state?.fwItem?.fsContent?.format,
+				convertFrom: FwMarkdownFileFormat.Default
+			})
+		};
 
 		function updateWebview(options?: {}) {
 			if (isDisposed) return;
 			if (!webviewPanel || !webviewPanel.active) return;
+			const text = convert.toStandard.run(document.getText()) ?? '';
 
-			// TODO(a)
-			// const text = processInputFile(document.getText());
-			const text = document.getText();
 			editorState = EditorState.create({
 				doc: fileParser.parse(text),
 				plugins: exampleSetup({schema: schema}),
@@ -122,7 +134,7 @@ export class ProseMirrorEditorProvider extends DisposeManager
 			// When user switches out of the editor, we sync the unsaved changes
 			// to the document, so they can be persisted on the next save.
 			if (!e.webviewPanel.active) {
-				this.updateTextDocument(document, metadataBlock, editorState);
+				updateTextDocument(document, metadataBlock, editorState);
 			}
 
 			if (e.webviewPanel.active) {
@@ -146,7 +158,7 @@ export class ProseMirrorEditorProvider extends DisposeManager
 			}
 
 			if (document.version === lastVersion) {
-				this.updateTextDocument(document, metadataBlock, editorState);
+				updateTextDocument(document, metadataBlock, editorState);
 			}
 		}, subscriptions);
 
@@ -195,7 +207,7 @@ export class ProseMirrorEditorProvider extends DisposeManager
 						// The actual document sync happends on willSaveTextDocument.
 
 						if (!document.isDirty) {
-							this.updateTextDocument(document, metadataBlock, editorState);
+							updateTextDocument(document, metadataBlock, editorState);
 						}
 
 						lastVersion = document.version;
@@ -252,6 +264,20 @@ export class ProseMirrorEditorProvider extends DisposeManager
 		}
 		this._activeDocumentMonitor.activeDocument = document;
 		updateWebview(this.getWebViewOptions());
+
+		function updateTextDocument(document: vscode.TextDocument, metadataBlock?: string, editorState?: EditorState) {
+			const edit = new vscode.WorkspaceEdit();
+
+			// Just replace the entire document.
+			// For long documents, this might not be the most efficient, so use it only
+			// when necessary.
+			edit.replace(
+				document.uri,
+				new vscode.Range(0, 0, document.lineCount, 0),
+				metadataBlock ?? '' + convert.toOriginal.run(fileSerializer.serialize(editorState?.doc ?? new Node())));
+
+			return vscode.workspace.applyEdit(edit);
+		}
 	}
 
 	private getWebViewOptions() {
@@ -293,21 +319,6 @@ export class ProseMirrorEditorProvider extends DisposeManager
 				<script nonce="${nonce}" src="${scriptUri}"></script>
 			</body>
 			</html>`;
-	}
-
-
-	private updateTextDocument(document: vscode.TextDocument, metadataBlock?: string, editorState?: EditorState) {
-		const edit = new vscode.WorkspaceEdit();
-
-		// Just replace the entire document.
-		// For long documents, this might not be the most efficient, so use it only
-		// when necessary.
-		edit.replace(
-			document.uri,
-			new vscode.Range(0, 0, document.lineCount, 0),
-			metadataBlock + fileSerializer.serialize(editorState?.doc ?? new Node()));
-
-		return vscode.workspace.applyEdit(edit);
 	}
 
 

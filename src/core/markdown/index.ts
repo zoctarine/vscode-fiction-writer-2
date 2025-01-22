@@ -11,7 +11,7 @@ import {MemFile} from '../memoryFile';
 function applyProcessor(formatter: ITextProcessor) {
 	if (vscode.window.activeTextEditor?.document) {
 		let doc = vscode.window.activeTextEditor.document;
-		const result = formatter.process(doc.getText()) ?? '';
+		const result = formatter.run(doc.getText()) ?? '';
 
 		const edit = new vscode.WorkspaceEdit();
 		edit.replace(
@@ -29,9 +29,9 @@ function previewProcessor(formatter: ITextProcessor, currentFormat: FwMarkdownFi
 		const locations: vscode.Location[] = [];
 
 		for (const format of Array.from(FwFormatOptions.values())) {
-			const processor = processorFactory.create(format.value, currentFormat);
+			const processor = processorFactory.create({format:format.value, convertFrom: currentFormat});
 			if (processor) {
-				const content = processor.process(text) ?? '';
+				const content = processor.run(text) ?? '';
 				const uri = MemFile.createDocument(`${format.label}.fw.md`, content);
 				const position = new vscode.Position(0, 0);
 				locations.push(new vscode.Location(uri, position));
@@ -131,10 +131,12 @@ export function registerMarkdownFormatters(stateManager: StateManager, fileManag
 
 			// TODO: Ask if reformat?
 			const shouldFormat = await vscode.window.showInformationMessage(
-				'File format changed. Do you want to apply the new formatting?',
-				'Yes, apply');
+				'File format changed. Do you want to apply the new formatting?', {
+					modal: true,
+				},
+				'Yes, apply', );
 			if (!shouldFormat) return;
-			applyProcessor(processorFactory.create(newItem.fsContent.format, currentFormat?.value));
+			applyProcessor(processorFactory.create({format:newItem.fsContent.format, convertFrom:currentFormat?.value}));
 		}),
 
 		/**
@@ -167,7 +169,7 @@ export function registerMarkdownFormatters(stateManager: StateManager, fileManag
 			if (!result) return;
 			const nextFormat = result.value;
 
-			previewProcessor(processorFactory.create(nextFormat, currentFormat), currentFormat);
+			previewProcessor(processorFactory.create({format: nextFormat, convertFrom: currentFormat}), currentFormat);
 		}),
 
 		/**
@@ -184,10 +186,8 @@ export function registerMarkdownFormatters(stateManager: StateManager, fileManag
 				const markdownContent = document.getText();
 
 				try {
-					const result = processorFactory.create(
-						state.fwItem?.fsContent.format,
-						state.fwItem?.fsContent.format)
-					.process(markdownContent) ?? '';
+					const result = processorFactory.create({format: state.fwItem?.fsContent.format})
+					.run(markdownContent) ?? '';
 
 					edits.push(new vscode.TextEdit(
 						new vscode.Range(0, 0, document.lineCount, 0),

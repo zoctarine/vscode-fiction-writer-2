@@ -11,10 +11,14 @@ export * from './MdIndentToStandard';
 export * from './RemarkProcessor';
 export * from './TextProcessors';
 
-function create(formatTo?: FwMarkdownFileFormat, formatFrom?: FwMarkdownFileFormat): ITextProcessor {
-	formatTo = formatTo || FwFormatting.defaultFormat;
-	formatFrom = formatFrom || formatTo;
-log.tmp("FORMAT", {formatFrom, formatTo});
+export interface IFormatterFactoryOptions{
+	format?: FwMarkdownFileFormat;
+	convertFrom?: FwMarkdownFileFormat;
+}
+function create(options: Partial<IFormatterFactoryOptions>): ITextProcessor {
+	const formatTo = options.format || FwFormatting.defaultFormat;
+	const formatFrom = options.convertFrom || formatTo;
+
 	const processor = new TextProcessor();
 	if (formatFrom === FwMarkdownFileFormat.IndentFirstLine) {
 		processor.add(new MdIndentToStandard());
@@ -34,5 +38,5 @@ log.tmp("FORMAT", {formatFrom, formatTo});
 }
 
 export const processorFactory = {
-	create,
+	create: create,
 }

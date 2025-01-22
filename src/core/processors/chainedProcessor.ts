@@ -13,9 +13,9 @@ export class ChainedProcessor<T> implements IStateProcessor<T> {
 		return this;
 	}
 
-	async process(state: T) {
+	async run(state: T) {
 		for (const processor of this._processors) {
-			await processor.process(state);
+			await processor.run(state);
 		}
 	}
 }

@@ -2,7 +2,7 @@ import {IStateProcessor} from '../IProcessor';
 import {IFileState} from '../../state/states';
 
 export class ComputeWriteTarget implements IStateProcessor<IFileState> {
-	async process(state: IFileState) {
+	async run(state: IFileState) {
 		if (!state.metadata?.target) return;
 		if (!state.fwItem?.fsContent?.stats) return;
 

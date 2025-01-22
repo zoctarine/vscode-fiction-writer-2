@@ -2,7 +2,7 @@ import {ITextProcessor} from './TextProcessors';
 import {FwFormatting} from '../formatting';
 export class MdIndentToStandard implements ITextProcessor {
 
-	process(data?: string | undefined): string | undefined {
+	run(data?: string | undefined): string | undefined {
 		if (!data) return data;
 
 		const lines = data.split('\n');

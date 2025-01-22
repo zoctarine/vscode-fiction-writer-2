@@ -14,9 +14,9 @@ export class TextProcessor implements ITextProcessor {
 	constructor() {
 	}
 
-	process(data?: string | undefined): string | undefined {
+	run(data?: string | undefined): string | undefined {
 		for (const item of this._processors) {
-			data = item.processor.process(data);
+			data = item.processor.run(data);
 			if (item.options?.onProcess){
 				item.options.onProcess(data);
 			}

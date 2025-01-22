@@ -147,7 +147,7 @@ export class StateManager extends DisposeManager {
 					if (stat.type === vscode.FileType.File) {
 						// const doc = await vscode.workspace.openTextDocument(path);
 						// const content = doc.getText();
-						await stateProcessor(this._processorFactory).process(item);
+						await stateProcessor(this._processorFactory).run(item);
 						// TODO: need it?
 						// if (newContent !== content) {
 						//     const edit = new WorkspaceEdit();
@@ -235,6 +235,6 @@ export class StateManager extends DisposeManager {
 	 * This method handles independent states that are outside the regular tracking scope.
 	 */
 	processUnmanaged(state: IFileState): Promise<void> {
-		return this._textProcessor.process(state);
+		return this._textProcessor.run(state);
 	}
 }

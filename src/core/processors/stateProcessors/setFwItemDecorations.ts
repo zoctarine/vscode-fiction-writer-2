@@ -5,7 +5,7 @@ import {log} from '../../logging';
 import {CoreColors} from '../../decorations';
 
 export class SetFwItemDecorations implements IStateProcessor<IFileState> {
-	async process(state: IFileState) {
+	async run(state: IFileState) {
 		if (!state.fwItem) return;
 
 		let newData: Partial<IDecorationState> = {};

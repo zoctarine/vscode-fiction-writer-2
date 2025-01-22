@@ -9,7 +9,7 @@ export class RemarkProcessor implements ITextProcessor {
 	constructor(private remarkConfig?: (processor: any) => any) {
 	}
 
-	process(data?: string): string | undefined {
+	run(data?: string): string | undefined {
 		data ??= '';
 
 		let processor = unified()
