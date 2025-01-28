@@ -9,7 +9,7 @@ import {remarkOneSentencePerLine} from '../plugins/remarkOneSentencePerLine';
 import {remarkSoftBreaksRemove} from '../plugins/remarkSoftBreaksRemove';
 import {remarkBreaksToParagraphs} from '../plugins/remarkBreaksToParagraphs';
 import {remarkDisableCodeIndented} from '../plugins/remarkDisable';
-import {remarkParagraphsAsHardBreaks} from '../plugins/remarkParagraphsAsHardBreaks';
+import {remarkParagraphsAsBreaks} from '../plugins/remarkParagraphsAsBreaks';
 
 export * from './MdIndentToStandard';
 export * from './RemarkProcessor';
@@ -20,59 +20,76 @@ export interface IFormatterFactoryOptions {
 	convertFrom?: FwMarkdownFileFormat;
 }
 
+const from: Map<FwMarkdownFileFormat, (processor: any) => any> = new Map();
+const to: Map<FwMarkdownFileFormat, (processor: any) => any> = new Map();
+
+/**
+ * INDENT FIRST LINE
+ */
+
+to.set(FwMarkdownFileFormat.IndentFirstLine, p => p
+	.use(remarkDisableCodeIndented)
+	// .use(remarkBreaksToParagraphs)
+	.use(remarkIndented));
+
+from.set(FwMarkdownFileFormat.IndentFirstLine, p => p
+	.use(remarkDisableCodeIndented)
+	.use(remarkBreaksToParagraphs));
+
+/**
+ *  ONE SENTENCE PER LINE
+ */
+
+to.set(FwMarkdownFileFormat.OneSentencePerLine, p => p
+	.use(remarkOneSentencePerLine));
+
+from.set(FwMarkdownFileFormat.OneSentencePerLine, p => p
+	.use(remarkSoftBreaksRemove));
+
+/**
+ * SINGLE PARAGRAPH BREAK
+ */
+to.set(FwMarkdownFileFormat.SingleBreakForNewParagraph, p => p
+	.use(remarkParagraphsAsBreaks));
+
+from.set(FwMarkdownFileFormat.SingleBreakForNewParagraph, p => p
+	.use(remarkBreaksToParagraphs));
+
+
+/**
+ * Create Format Converter/Processor
+ * @param options
+ */
 function create(options: Partial<IFormatterFactoryOptions>): ITextProcessor {
 	const formatTo = options.format || FwFormatting.defaultFormat;
 	const formatFrom = options.convertFrom || formatTo;
 
-	const fromCustomToStandard: TextProcessor = new TextProcessor();
+	const common = (processor: any) => processor
+		.use(remarkDashes)
+		.use(remarkKeepAllEmptyLines);
 
+	const fromCustomToStandard = new TextProcessor()
+		.add(new RemarkProcessor(processor => {
+				common(processor);
+				const enhance = from.get(formatFrom);
+				if (enhance) enhance(processor);
+			})
+		);
 
-	fromCustomToStandard.add(new RemarkProcessor(p => {
-			p
-				.use(remarkDashes)
-				.use(remarkKeepAllEmptyLines);
+	const fromStandardToCustom = new TextProcessor();
 
-			if (formatFrom === FwMarkdownFileFormat.IndentFirstLine) {
-				p
-					.use(remarkDisableCodeIndented)
-					.use(remarkBreaksToParagraphs);
-			} else if (formatFrom === FwMarkdownFileFormat.OneSentencePerLine) {
-				p
-					.use(remarkSoftBreaksRemove);
-			} else if (formatFrom === FwMarkdownFileFormat.SingleBreakForNewParagraph) {
-				p
-					.use(remarkBreaksToParagraphs);
-			}
-		})
-	);
-
-	const fromStandardToCustom: TextProcessor = new TextProcessor();
-	if (formatTo !== FwMarkdownFileFormat.Default) {
-		fromStandardToCustom.add(new RemarkProcessor(p => {
-				p
-					.use(remarkDashes)
-					.use(remarkKeepAllEmptyLines);
-
-				if (formatTo === FwMarkdownFileFormat.IndentFirstLine) {
-					p
-						.use(remarkDisableCodeIndented)
-						// .use(remarkBreaksToParagraphs)
-						.use(remarkIndented);
-				} else if (formatTo === FwMarkdownFileFormat.OneSentencePerLine) {
-					p
-						.use(remarkOneSentencePerLine);
-				} else if (formatTo === FwMarkdownFileFormat.SingleBreakForNewParagraph) {
-					p
-						.use(remarkParagraphsAsHardBreaks);
+	if (formatTo !==  FwFormatting.defaultFormat) {
+		fromStandardToCustom
+			.add(new RemarkProcessor(processor => {
+					common(processor);
+					const enhance = to.get(formatTo);
+					if (enhance) enhance(processor);
 				}
-			}
-		));
+			));
 	}
-
 	return new TextProcessor()
 		.add(fromCustomToStandard)
 		.add(fromStandardToCustom);
-
 }
 
 export const processorFactory = {

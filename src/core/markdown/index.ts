@@ -186,9 +186,9 @@ export function registerMarkdownFormatters(stateManager: StateManager, fileManag
 				const markdownContent = document.getText();
 
 				try {
-					const result = processorFactory.create({format: state.fwItem?.fsContent.format})
+					const result = processorFactory
+						.create({format: state.fwItem?.fsContent.format})
 					.run(markdownContent) ?? '';
-
 					edits.push(new vscode.TextEdit(
 						new vscode.Range(0, 0, document.lineCount, 0),
 						result));

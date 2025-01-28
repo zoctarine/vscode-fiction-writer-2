@@ -32,7 +32,7 @@ function toMarkdownParagraphAsHardBreaks(ctx?: ITextProcessorContext) {
 	};
 }
 
-export const remarkParagraphsAsHardBreaks: Plugin = function () {
+export const remarkParagraphsAsBreaks: Plugin = function () {
 	const data = this.data();
 
 	const context = (data as any).context;

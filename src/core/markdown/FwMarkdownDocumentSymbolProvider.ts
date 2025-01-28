@@ -1,14 +1,10 @@
 import vscode from 'vscode';
 import {FictionWriter} from '../constants';
-import {processorFactory} from './processors';
 import {StateManager} from '../state';
-import {FwMarkdownFileFormat} from './formatting';
 import {unified} from 'unified';
 import remarkParse from 'remark-parse';
 import remarkFrontmatter from 'remark-frontmatter';
-import {visit} from 'unist-util-visit';
 import {log} from '../logging';
-import remarkStringify from 'remark-stringify';
 
 export class MarkdownSymbolProvider implements vscode.DocumentSymbolProvider {
 	constructor(private stateManager: StateManager) {
@@ -27,7 +23,7 @@ export class MarkdownSymbolProvider implements vscode.DocumentSymbolProvider {
 				} else {
 					resolve(this.generateSymbols(document));
 				}
-			}, 1000); // 300ms delay
+			}, 5000); //TODO(A): replace this with a rolling delay while typing
 		});
 	}
 
@@ -39,6 +35,7 @@ export class MarkdownSymbolProvider implements vscode.DocumentSymbolProvider {
 			.use(remarkParse)
 			.use(remarkFrontmatter, ['yaml'])
 			.parse(document.getText());
+		// TODO(A): use the specific format parser?
 
 		const symbols: vscode.DocumentSymbol[] = [];
 

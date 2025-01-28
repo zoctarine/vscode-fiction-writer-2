@@ -12,7 +12,7 @@ import {MdIndentToStandard} from '../../../../core/markdown/processors/MdIndentT
 import {remarkSoftBreaksRemove} from '../../../../core/markdown/plugins/remarkSoftBreaksRemove';
 import {remarkOneSentencePerLine} from '../../../../core/markdown/plugins/remarkOneSentencePerLine';
 import {remarkBreaksToParagraphs} from '../../../../core/markdown/plugins/remarkBreaksToParagraphs';
-import {remarkParagraphsAsHardBreaks} from '../../../../core/markdown/plugins/remarkParagraphsAsHardBreaks';
+import {remarkParagraphsAsBreaks} from '../../../../core/markdown/plugins/remarkParagraphsAsBreaks';
 
 
 function assertProcessed(
@@ -103,7 +103,7 @@ describe('markdownProcessors', () => {
 					new TextProcessor()
 						.add(new RemarkProcessor(p => p
 							.use(remarkDashes)
-							.use(remarkParagraphsAsHardBreaks)
+							.use(remarkParagraphsAsBreaks)
 						))
 				);
 			});
@@ -118,7 +118,7 @@ describe('markdownProcessors', () => {
 						.add(new RemarkProcessor(p => p
 							.use(remarkDashes)
 							.use(remarkKeepAllEmptyLines)
-							.use(remarkParagraphsAsHardBreaks)
+							.use(remarkParagraphsAsBreaks)
 						))
 				);
 			});
@@ -323,7 +323,7 @@ describe('markdownProcessors', () => {
 					new TextProcessor()
 						.add(new RemarkProcessor(p => p
 								.use(remarkKeepAllEmptyLines)
-								.use(remarkParagraphsAsHardBreaks)
+								.use(remarkParagraphsAsBreaks)
 							)
 						)
 				]);
