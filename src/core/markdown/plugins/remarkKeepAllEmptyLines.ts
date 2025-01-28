@@ -1,5 +1,7 @@
-import {Plugin} from 'unified';
+import {Plugin, Settings} from 'unified';
+// @ts-ignore
 import {FlowChildren, FlowParents, State} from 'mdast-util-to-markdown/lib/types';
+import {ITextProcessorContext} from '../processors';
 
 function toMarkdownExtension() {
 	return {
@@ -20,6 +22,11 @@ function toMarkdownExtension() {
 
 export const remarkKeepAllEmptyLines: Plugin = function () {
 	const data = this.data();
+
+	const context = (data as any).context as ITextProcessorContext;
+
+	if (context)
+		context.keepEmptyLinesBetweenParagraphs = true;
 
 	data.toMarkdownExtensions?.push(toMarkdownExtension());
 };

@@ -1,0 +1,252 @@
+import {Plugin} from 'unified';
+import {visit} from 'unist-util-visit';
+import {defaultHandlers} from "mdast-util-to-markdown";
+import {codes} from 'micromark-util-symbol';
+import {types} from 'micromark-util-symbol';
+import {constants} from 'micromark-util-symbol';
+import {Construct, Effects, State, TokenType} from 'micromark-util-types';
+import {markdownLineEnding, markdownSpace} from 'micromark-util-character';
+import {factorySpace} from 'micromark-factory-space';
+import {Token} from 'mdast-util-from-markdown';
+import {Root, Paragraph} from 'mdast-util-from-markdown/lib/index';
+
+export const fwMdTypes = {
+	indent: 'fwIndent',
+	hardBreak: 'fwHardBreak',
+} as const;
+
+function parse() {
+	return {};
+}
+
+export const fwParagraphIndentExtension: Construct = {
+	name: fwMdTypes.indent,
+	add: 'before',
+
+	tokenize: tokenizeFwParagraphIndent,
+};
+
+function tokenizeFwParagraphIndent(effects: Effects, ok: State, nok: State): State {
+	const self = this;
+	let size = 0;
+	let marker = ' ';
+
+	return start;
+
+	function start(code: any): State | undefined {
+		if (!self.previous || markdownLineEnding(self.previous))
+			return nextToken(code);
+
+		return nok(code);
+	}
+
+	function nextToken(code: any): State | undefined {
+		if (!code || markdownLineEnding(code)) return nok(code);
+
+		if (code === codes.underscore) {
+			if (size === 0) effects.enter(fwMdTypes.indent as TokenType);
+			size++;
+			effects.consume(code);
+			return nextToken;
+		} else {
+			effects.exit(fwMdTypes.indent as TokenType);
+			return ok(code);
+		}
+	}
+
+
+
+	//
+	// function count(code: any): State | undefined {
+	// 	//const self = this;
+	// 	if (code === codes.underscore) {
+	// 		if (code.)
+	// 			effects.enter(fwMdTypes.indent as TokenType);
+	// 		effects.consume(code);
+	// 		effects.exit(fwMdTypes.indent as TokenType);
+	// 		return ok(code);
+	// 	}
+	// }
+
+	//
+	// function afterPrefix(code: any): State | undefined{
+	//
+	// 	// const tail = self.events[self.events.length - 1]
+	// 	// return tail &&
+	// 	// tail[1].type === types.linePrefix &&
+	// 	// tail[2].sliceSerialize(tail[1], true).length >= constants.tabSize
+	// 	// 	? ok(code)
+	// 	// 	: markdownLineEnding(code)
+	// 	// 		? furtherStart(code)
+	// 	// 		: nok(code)
+	// }
+}
+
+export const fwHardBreaksExtension = {
+	name: fwMdTypes.hardBreak,
+	tokenize: tokenizeHardBreaks
+};
+function tokenizeHardBreaks(effects: Effects, ok: State, nok: State): State {
+	const self = this;
+	let size = 0;
+	let marker = ' ';
+
+	return start;
+
+	function start(code: any): State | undefined {
+
+		if (!code || markdownLineEnding(code)) return nok(code);
+		if (size === 0 && self.previous && !markdownLineEnding(self.previous)) return nok(code);
+		if (size === 0){
+
+		}
+		if (code === codes.underscore) {
+			if (size === 0) effects.enter(fwMdTypes.indent as TokenType);
+			size++;
+			effects.consume(code);
+			return start;
+		} else {
+			effects.exit(fwMdTypes.indent as TokenType);
+			return ok(code);
+		}
+	}
+
+
+
+	//
+	// function count(code: any): State | undefined {
+	// 	//const self = this;
+	// 	if (code === codes.underscore) {
+	// 		if (code.)
+	// 			effects.enter(fwMdTypes.indent as TokenType);
+	// 		effects.consume(code);
+	// 		effects.exit(fwMdTypes.indent as TokenType);
+	// 		return ok(code);
+	// 	}
+	// }
+
+	//
+	// function afterPrefix(code: any): State | undefined{
+	//
+	// 	// const tail = self.events[self.events.length - 1]
+	// 	// return tail &&
+	// 	// tail[1].type === types.linePrefix &&
+	// 	// tail[2].sliceSerialize(tail[1], true).length >= constants.tabSize
+	// 	// 	? ok(code)
+	// 	// 	: markdownLineEnding(code)
+	// 	// 		? furtherStart(code)
+	// 	// 		: nok(code)
+	// }
+}
+
+export interface IRemarkPluginOptions {
+	keepEmptyLinesBetweenParagraphs: boolean;
+}
+
+export const remarkIndented2: Plugin<IRemarkPluginOptions[]> = function (options?: IRemarkPluginOptions) {
+	const data = this.data();
+	if (!data.micromarkExtensions) {
+		data.micromarkExtensions = [];
+	}
+	if (!data.fromMarkdownExtensions) {
+		data.fromMarkdownExtensions = [];
+	}
+
+
+	data.micromarkExtensions.push({
+		flow: {
+			[codes.space]: [fwParagraphIndentExtension]
+		},
+		flowInitial: {
+			[codes.space]: [fwParagraphIndentExtension]
+		},
+		text: {
+			// [codes.nul]: fwParagraphIndentExtension,
+			// [codes.space]: fwParagraphIndentExtension,
+			// [codes.virtualSpace]: fwParagraphIndentExtension,
+			// [codes.horizontalTab]: fwParagraphIndentExtension,
+			// [codes.ht]: fwParagraphIndentExtension
+			[codes.space]: [fwParagraphIndentExtension]
+		},
+		disable:{null: ['codeIndented']}
+	});
+
+	data.fromMarkdownExtensions.push({
+		transforms:[
+			(tree: Root) => {
+				visit(tree, 'paragraph', (node, index, parent)=>{
+					for (let idx = 0; idx<node.children.length; idx++) {
+						const crt = node.children[idx];
+						if (crt.type === fwMdTypes.indent) {
+							if(idx > 0) {
+								const lastHalf = node.children.slice(idx+1);
+								node.children.splice(idx);
+							//	node.children.shift();
+
+								parent.children.splice(index+1,0,{
+									type: 'paragraph',
+									children: lastHalf,
+									position: {
+										start: crt.position.end,
+										end: node.position.end
+									}
+								});
+								node.position.end = crt.position.start;
+
+								if (node.children?.length>0 && node.children[node.children.length-1].type === 'text') {
+									node.children[node.children.length-1].value = node.children[node.children.length-1].value.replace(/\r?\n$/i, '')
+								}
+								return;
+							} else {
+								node.children.splice(idx, 1);
+							}
+						}
+					}
+
+				} );
+				return tree;
+			},
+		],
+		enter: {
+			lineBreak(token: Token){
+
+			},
+			fwIndent(token: Token) {
+				const node = this.stack[this.stack.length - 1] as any;
+				if (node.type !== 'paragraph') return;
+				node.children.push({
+					type: 'fwIndent',
+					value: this.sliceSerialize(token),
+					position: {
+						start: {
+							line: token.start.line,
+							column: token.start.column,
+							offset: token.start.offset,
+						}, end: {
+							line: token.end.line,
+							column: token.end.column,
+							offset: token.end.offset,
+						}
+					}
+				});
+
+			}
+		},
+		exit: {
+			fwIndent(token: Token) {
+				// const node = this.stack.pop();
+				// (node as any).value = this.sliceSerialize(token);
+				// this.stack[this.stack.length - 1].children.push(node);
+			}
+		}
+	});
+
+	return (tree) => {
+		console.log(tree);
+		// visit(tree, 'code', (node: any, index:any, parent:any) => {
+		// 	// if (node.children.length > 0 && parent === tree){
+		// 	// 	node.children[0].value = FormatTokens.PARAGRAPH_INDENT + node.children[0].value;
+		// 	// }
+		// });
+	};
+};

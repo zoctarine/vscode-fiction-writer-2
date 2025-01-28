@@ -1,11 +1,16 @@
 import {IProcessor} from '../../processors';
 
-export interface ITextProcessor extends IProcessor<string, string | undefined> {
+export interface ITextProcessor extends IProcessor<string, string | undefined, ITextProcessorContext> {
 
 }
 
 export interface ITextProcessorOptions{
 	onProcess: (result?: string) => void;
+}
+
+export interface ITextProcessorContext {
+	[key: string]: any;
+	keepEmptyLinesBetweenParagraphs: boolean;
 }
 
 export class TextProcessor implements ITextProcessor {
@@ -14,9 +19,9 @@ export class TextProcessor implements ITextProcessor {
 	constructor() {
 	}
 
-	run(data?: string | undefined): string | undefined {
+	run(data?: string | undefined, context?:ITextProcessorContext): string | undefined {
 		for (const item of this._processors) {
-			data = item.processor.run(data);
+			data = item.processor.run(data, context);
 			if (item.options?.onProcess){
 				item.options.onProcess(data);
 			}

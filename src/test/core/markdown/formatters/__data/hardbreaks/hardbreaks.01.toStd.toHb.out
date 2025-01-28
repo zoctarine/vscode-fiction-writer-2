@@ -1,0 +1,22 @@
+This is a file with multiple empty lines.
+This should be a new *paragraph*
+And this should be a new paragraph as **well**.
+
+
+Normal paragraphs are still paragraphs.
+
+
+But, if keep empty lines is set.
+The spaces between should be kept.
+
+
+- Lists
+- Are not parsed
+- differently
+
+# Not the headers
+
+## Or subheaders
+
+> Note elements are the same
+> No one should change them

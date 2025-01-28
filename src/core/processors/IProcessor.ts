@@ -1,8 +1,8 @@
-export interface IProcessor<TIn, TOut> {
-	run(data?: TIn): TOut
+export interface IProcessor<TIn, TOut, TOptions> {
+	run(data?: TIn, options?:Partial<TOptions>): TOut
 }
 
-export interface IStateProcessor<TState> extends IProcessor<TState, Promise<void>> {
+export interface IStateProcessor<TState> extends IProcessor<TState, Promise<void>, any> {
 
 }
 

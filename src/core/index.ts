@@ -17,6 +17,7 @@ import {ExtractFile} from '../modules/projectExplorer/commands/ExtractFile';
 import {ExtractFiles} from '../modules/projectExplorer/commands/ExtractFiles';
 import {FwItemFactory} from './FwItemFactory';
 import {registerMemoryFiles} from './memoryFile';
+import {registerMarkdownDocumentSymbols} from './markdown/FwMarkdownDocumentSymbolProvider';
 
 export * from './FwFileManager';
 export * from './commandExtensions';
@@ -61,6 +62,7 @@ export class CoreModule extends DisposeManager {
 			this.activeDocumentMonitor,
 			registerMemoryFiles(),
 			registerMarkdownFormatters(this.stateManager, this.fileManager),
+			registerMarkdownDocumentSymbols(this.stateManager),
 			this.fileManager.onFilesChanged(files => {
 				log.debug("fileManager: filesChanged", files.size);
 				return this.stateManager.reload(files, false);

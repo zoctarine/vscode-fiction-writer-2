@@ -1,9 +1,30 @@
 import * as assert from 'assert';
 import MarkdownIt from 'markdown-it';
+import {ITextProcessor} from '../core/markdown/processors';
+import path from 'path';
+import fs from 'fs';
+import {expect} from 'vitest';
 
 // You can import and use all API from the 'vscode' module
 // as well as import your extension to test it
 // import * as myExtension from '../../extension';
+
+function assertProcessed(fileName: string | { input: string, expected: string },
+						 processor: ITextProcessor) {
+	const fsInput = path.join(__dirname, '__data',
+		(typeof fileName === 'string' ? `${fileName}.in` : fileName.input)
+	);
+
+	const fsExpected = path.join(__dirname, '__data',
+		(typeof fileName === 'string' ? `${fileName}.out` : fileName.expected)
+	);
+
+	const dataIn = fs.readFileSync(fsInput, 'utf8');
+	const dataOut = fs.readFileSync(fsExpected, 'utf8');
+	const result = processor.run(dataIn);
+
+	expect(result?.trimEnd()).toEqual(dataOut.trimEnd());
+}
 
 describe('Extension Test Suite', () => {
 
