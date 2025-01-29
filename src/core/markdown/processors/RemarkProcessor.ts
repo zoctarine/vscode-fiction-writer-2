@@ -13,7 +13,6 @@ export class RemarkProcessor implements ITextProcessor {
 		data ??= '';
 
 		let processor = unified()
-			// @ts-ignore
 			.data('context', {})
 			.use(remarkParse)
 			.use(remarkFrontmatter, ['yaml']);

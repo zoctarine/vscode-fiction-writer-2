@@ -29,7 +29,7 @@ function previewProcessor(formatter: ITextProcessor, currentFormat: FwMarkdownFi
 		const locations: vscode.Location[] = [];
 
 		for (const format of Array.from(FwFormatOptions.values())) {
-			const processor = processorFactory.create({format:format.value, convertFrom: currentFormat});
+			const processor = processorFactory.create({format: format.value, convertFrom: currentFormat});
 			if (processor) {
 				const content = processor.run(text) ?? '';
 				const uri = MemFile.createDocument(`${format.label}.fw.md`, content);
@@ -134,9 +134,12 @@ export function registerMarkdownFormatters(stateManager: StateManager, fileManag
 				'File format changed. Do you want to apply the new formatting?', {
 					modal: true,
 				},
-				'Yes, apply', );
+				'Yes, apply',);
 			if (!shouldFormat) return;
-			applyProcessor(processorFactory.create({format:newItem.fsContent.format, convertFrom:currentFormat?.value}));
+			applyProcessor(processorFactory.create({
+				format: newItem.fsContent.format,
+				convertFrom: currentFormat?.value
+			}));
 		}),
 
 		/**
@@ -188,7 +191,8 @@ export function registerMarkdownFormatters(stateManager: StateManager, fileManag
 				try {
 					const result = processorFactory
 						.create({format: state.fwItem?.fsContent.format})
-					.run(markdownContent) ?? '';
+						.run(markdownContent) ?? '';
+
 					edits.push(new vscode.TextEdit(
 						new vscode.Range(0, 0, document.lineCount, 0),
 						result));

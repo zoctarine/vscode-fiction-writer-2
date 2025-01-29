@@ -13,6 +13,7 @@ import {remarkSoftBreaksRemove} from '../../../../core/markdown/plugins/remarkSo
 import {remarkOneSentencePerLine} from '../../../../core/markdown/plugins/remarkOneSentencePerLine';
 import {remarkBreaksToParagraphs} from '../../../../core/markdown/plugins/remarkBreaksToParagraphs';
 import {remarkParagraphsAsBreaks} from '../../../../core/markdown/plugins/remarkParagraphsAsBreaks';
+import {remarkDisableCodeIndented} from '../../../../core/markdown/plugins/remarkDisable';
 
 
 function assertProcessed(
@@ -176,7 +177,10 @@ describe('markdownProcessors', () => {
 						.add(new RemarkProcessor(p => p
 							.use(remarkIndented)
 						))
-						.add(new MdIndentToStandard())
+						.add(new RemarkProcessor(p => p
+							.use(remarkDisableCodeIndented)
+							.use(remarkBreaksToParagraphs)
+						))
 				);
 			});
 		});
@@ -207,7 +211,11 @@ describe('markdownProcessors', () => {
 			])('from [%s] to [%s]', (input, expected) => {
 				assertProcessed({input, expected},
 					new TextProcessor()
-						.add(new MdIndentToStandard())
+						.add(new RemarkProcessor(p => p
+							.use(remarkDisableCodeIndented)
+							.use(remarkKeepAllEmptyLines)
+							.use(remarkBreaksToParagraphs)
+						))
 				);
 			});
 		});
