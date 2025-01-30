@@ -1,5 +1,9 @@
 import {ITextProcessor} from './TextProcessors';
 import {FwFormatting} from '../formatting';
+
+/**
+ * @obsolete
+ */
 export class MdIndentToStandard implements ITextProcessor {
 
 	run(data?: string | undefined): string | undefined {

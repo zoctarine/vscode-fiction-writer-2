@@ -1,10 +1,9 @@
 import {visit} from 'unist-util-visit';
 import {Root} from 'mdast';
 import {Plugin} from 'unified';
-import {codes, constants, types} from 'micromark-util-symbol';
 import {Paragraph} from 'mdast';
+// @ts-ignore
 import {FlowChildren, FlowParents, State} from 'mdast-util-to-markdown/lib/types';
-import {ITextProcessorContext} from '../processors';
 
 function toMarkdownExtension(context?: any) {
 	return {
@@ -27,7 +26,9 @@ const mdastBreaksToParagraphs = {
 		(tree: Root) => {
 			let prev: Paragraph|undefined = undefined;
 			visit(tree, 'paragraph', (node, index, parent) => {
-				if (!parent || parent.type !== 'root' || index === undefined) return;
+				if (!parent || parent.type !== 'root' || index === undefined) {
+					return;
+				}
 				// let prevBlockEnd = 0;
 				// if (prev && node.position){
 				// 	prevBlockEnd = prev.position?.end?.line ?? 0;
@@ -49,7 +50,7 @@ const mdastBreaksToParagraphs = {
 						const match = crt.value.match(regex);
 
 						if (!match) {
-							 // crt.value = crt.position?.start.line + " " + crt.value;
+						//	 crt.value = crt.position?.start.line + " " + crt.value;
 							continue;
 						}
 						const [_, firstLine, allOtherLines] = match;

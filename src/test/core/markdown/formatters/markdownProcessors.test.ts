@@ -1,19 +1,19 @@
-import {remarkDashes} from '../../../../core/markdown/plugins/remarkDashes';
 import {expect, test} from 'vitest';
 import fs from 'fs';
 import path from 'path';
-import {remarkKeepAllEmptyLines} from '../../../../core/markdown/plugins/remarkKeepAllEmptyLines';
 import {
-	ITextProcessor, TextProcessor
-} from '../../../../core/markdown/processors/TextProcessors';
-import {RemarkProcessor} from '../../../../core/markdown/processors/RemarkProcessor';
-import {remarkIndented} from '../../../../core/markdown/plugins/remarkIndented';
-import {MdIndentToStandard} from '../../../../core/markdown/processors/MdIndentToStandard';
-import {remarkSoftBreaksRemove} from '../../../../core/markdown/plugins/remarkSoftBreaksRemove';
-import {remarkOneSentencePerLine} from '../../../../core/markdown/plugins/remarkOneSentencePerLine';
-import {remarkBreaksToParagraphs} from '../../../../core/markdown/plugins/remarkBreaksToParagraphs';
-import {remarkParagraphsAsBreaks} from '../../../../core/markdown/plugins/remarkParagraphsAsBreaks';
-import {remarkDisableCodeIndented} from '../../../../core/markdown/plugins/remarkDisable';
+	ITextProcessor, TextProcessor, RemarkProcessor
+} from '../../../../core/markdown/processors';
+import {
+	remarkDashes,
+	remarkIndented,
+	remarkSoftBreaksRemove,
+	remarkOneSentencePerLine,
+	remarkBreaksToParagraphs,
+	remarkParagraphsAsBreaks,
+	remarkDisableCodeIndented,
+	remarkKeepAllEmptyLines
+} from '../../../../core/markdown/plugins';
 
 
 function assertProcessed(
@@ -224,13 +224,19 @@ describe('markdownProcessors', () => {
 			test.each([
 				["./indented/indented.02.in", "./indented/indented.02.toStd.toInd.out"],
 			])('from [%s] to [%s]', (input, expected) => {
-				assertProcessed({input, expected},
-					new TextProcessor()
-						.add(new MdIndentToStandard())
-						.add(new RemarkProcessor(p => p
-							.use(remarkKeepAllEmptyLines)
-							.use(remarkIndented)
-						))
+				assertProcessed({input, expected}, [
+						new TextProcessor()
+							.add(new RemarkProcessor(p => p
+								.use(remarkDisableCodeIndented)
+								.use(remarkKeepAllEmptyLines)
+								.use(remarkBreaksToParagraphs)
+							)),
+						new TextProcessor()
+							.add(new RemarkProcessor(p => p
+								.use(remarkKeepAllEmptyLines)
+								.use(remarkIndented)
+							))
+					]
 				);
 			});
 		});
@@ -243,7 +249,11 @@ describe('markdownProcessors', () => {
 			])('from [%s] to [%s]', (input, expected) => {
 				assertProcessed({input, expected},
 					new TextProcessor()
-						.add(new MdIndentToStandard())
+						.add(new RemarkProcessor(p => p
+							.use(remarkDisableCodeIndented)
+							.use(remarkKeepAllEmptyLines)
+							.use(remarkBreaksToParagraphs)
+						))
 						.add(new RemarkProcessor(p => p
 							.use(remarkKeepAllEmptyLines)
 							.use(remarkIndented)
@@ -258,7 +268,11 @@ describe('markdownProcessors', () => {
 			])('from [%s] to [%s]', (input, expected) => {
 				assertProcessed({input, expected},
 					new TextProcessor()
-						.add(new MdIndentToStandard())
+						.add(new RemarkProcessor(p => p
+							.use(remarkDisableCodeIndented)
+							.use(remarkKeepAllEmptyLines)
+							.use(remarkBreaksToParagraphs)
+						))
 						.add(new RemarkProcessor(p => p
 							.use(remarkKeepAllEmptyLines)
 							.use(remarkDashes)
@@ -276,7 +290,11 @@ describe('markdownProcessors', () => {
 			])('from [%s] to [%s]', (input, expected) => {
 				assertProcessed({input, expected},
 					new TextProcessor()
-						.add(new MdIndentToStandard())
+						.add(new RemarkProcessor(p => p
+							.use(remarkDisableCodeIndented)
+							.use(remarkKeepAllEmptyLines)
+							.use(remarkBreaksToParagraphs)
+						))
 						.add(new RemarkProcessor())
 						.add(new RemarkProcessor(p => p
 							.use(remarkIndented)

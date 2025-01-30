@@ -1,5 +1,8 @@
 import {visit} from 'unist-util-visit';
 
+/**
+ * @obsolete
+  */
 export function remarkParagraphsToCodeBlock() {
 	function transformer(tree: any) {
 		let next: any[] = [];

@@ -19,9 +19,17 @@ function toMarkdownExtension(ctx?: ITextProcessorContext) {
 		join: [
 			(left: FlowChildren, right: FlowChildren, parent: FlowParents, state: State) => {
 				if (left.type === 'paragraph' && right.type === 'paragraph' && right.position && left.position) {
-					return ctx?.keepEmptyLinesBetweenParagraphs === true
-						?  Math.max(0, right.position?.start.line - left.position?.end.line - 2)
-						: 0;
+					if (ctx?.keepEmptyLinesBetweenParagraphs === true) {
+						const diff = right.position?.start.line - left.position?.end.line;
+						if (diff > 3) {
+							return diff - 1;
+						} else {
+							return diff - 2;
+						}
+					} else {
+						return 0;
+					}
+
 				}
 			}
 		]
@@ -36,10 +44,6 @@ export const remarkIndented: Plugin = function () {
 	data.toMarkdownExtensions?.push(toMarkdownExtension(context));
 
 	return (tree) => {
-		visit(tree, 'code', (node: any, index:any, parent:any) => {
-			// if (node.children.length > 0 && parent === tree){
-			// 	node.children[0].value = FormatTokens.PARAGRAPH_INDENT + node.children[0].value;
-			// }
-		});
+
 	};
 };

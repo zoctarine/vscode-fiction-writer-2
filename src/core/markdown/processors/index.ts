@@ -1,15 +1,16 @@
 import {FwFormatting, FwMarkdownFileFormat} from '../formatting';
 import {ITextProcessor, TextProcessor} from './TextProcessors';
-import {MdIndentToStandard} from './MdIndentToStandard';
 import {RemarkProcessor} from './RemarkProcessor';
-import {remarkDashes} from '../plugins/remarkDashes';
-import {remarkKeepAllEmptyLines} from '../plugins/remarkKeepAllEmptyLines';
-import {remarkIndented} from '../plugins/remarkIndented';
-import {remarkOneSentencePerLine} from '../plugins/remarkOneSentencePerLine';
-import {remarkSoftBreaksRemove} from '../plugins/remarkSoftBreaksRemove';
-import {remarkBreaksToParagraphs} from '../plugins/remarkBreaksToParagraphs';
-import {remarkDisableCodeIndented} from '../plugins/remarkDisable';
-import {remarkParagraphsAsBreaks} from '../plugins/remarkParagraphsAsBreaks';
+import {
+	remarkDashes,
+	remarkKeepAllEmptyLines,
+	remarkIndented,
+	remarkOneSentencePerLine,
+	remarkSoftBreaksRemove,
+	remarkBreaksToParagraphs,
+	remarkDisableCodeIndented,
+	remarkParagraphsAsBreaks
+} from '../plugins';
 
 export * from './MdIndentToStandard';
 export * from './RemarkProcessor';
@@ -78,7 +79,7 @@ function create(options: Partial<IFormatterFactoryOptions>): ITextProcessor {
 
 	const fromStandardToCustom = new TextProcessor();
 
-	if (formatTo !==  FwFormatting.defaultFormat) {
+	if (formatTo !== FwFormatting.defaultFormat) {
 		fromStandardToCustom
 			.add(new RemarkProcessor(processor => {
 					common(processor);

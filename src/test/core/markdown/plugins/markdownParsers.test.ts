@@ -6,18 +6,12 @@ import {remarkKeepAllEmptyLines} from '../../../../core/markdown/plugins/remarkK
 import {
 	ITextProcessor, TextProcessor
 } from '../../../../core/markdown/processors/TextProcessors';
-import {RemarkProcessor} from '../../../../core/markdown/processors/RemarkProcessor';
 import {remarkIndented} from '../../../../core/markdown/plugins/remarkIndented';
-import {MdIndentToStandard} from '../../../../core/markdown/processors/MdIndentToStandard';
-import remarkBreaks from 'remark-breaks';
-import {remarkSoftBreaksRemove} from '../../../../core/markdown/plugins/remarkSoftBreaksRemove';
-import {remarkOneSentencePerLine} from '../../../../core/markdown/plugins/remarkOneSentencePerLine';
 import {Processor, unified} from 'unified';
 import remarkParse from 'remark-parse';
 import remarkFrontmatter from 'remark-frontmatter';
 import remarkStringify from 'remark-stringify';
-import {remarkBreaksToParagraphs} from '../../../../core/markdown/plugins/remarkBreaksToParagraphs';
-import {remarkDisableCodeIndented} from '../../../../core/markdown/plugins/remarkDisable';
+import {remarkBreaksToParagraphs, remarkDisableCodeIndented} from '../../../../core/markdown/plugins';
 
 
 function run(fileName: string | { input: string, expected: string }, plugin: (p:Processor) => any) {
