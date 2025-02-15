@@ -1562,11 +1562,11 @@
         "scopeName": "text.fwmarkdown",
         "path": "./grammars/fw.markdown.tmGrammar.json",
         "injectTo": [
-          "text.html.markdown"
+		  "text.html.markdown"
         ],
         "embeddedLanguages": {
           "meta.embedded.block.markdown": "markdown"
-        }
+		}
       },
       {
         "scopeName": "markdown-fictionWriter.injection",
@@ -1589,7 +1589,7 @@
     "watch": "npm-run-all -p watch:*",
     "watch:esbuild": "node esbuild.js --watch",
     "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
-    "start": "npm run compile && code --extensionDevelopmentPath=$(pwd) --inspect-extensions=9229 --disable-extensions",
+    "start": "npm run compile && code --extensionDevelopmentPath=$(pwd) --inspect-extensions=9229 --profile Writer",
     "package": "npm run check-types && npm run lint && node esbuild.js --production",
     "compile-tests": "tsc -p . --outDir out",
     "watch-tests": "tsc -p . -w --outDir out",

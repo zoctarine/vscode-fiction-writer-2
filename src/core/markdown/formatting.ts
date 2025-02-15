@@ -1,5 +1,5 @@
 export enum FwMarkdownFileFormat {
-	Default,  // Default (two hard breaks)
+	Standard,  // Default (two hard breaks)
 	SingleBreakForNewParagraph, // Hard line break means new paragraph  - force paragraph       (fw.p)
 	IndentFirstLine, // One hard break and indent the first line of paragraph (fw.i)
 	OneSentencePerLine // One sentence per line, and two hard breaks between paragraphs (fw.s)
@@ -13,9 +13,9 @@ export interface IFwFormatOption {
 }
 
 export const FwFormatOptions = new Map<FwMarkdownFileFormat | undefined, IFwFormatOption>([
-	[FwMarkdownFileFormat.Default, {
-		value: FwMarkdownFileFormat.Default,
-		name: FwMarkdownFileFormat[FwMarkdownFileFormat.Default],
+	[FwMarkdownFileFormat.Standard, {
+		value: FwMarkdownFileFormat.Standard,
+		name: FwMarkdownFileFormat[FwMarkdownFileFormat.Standard],
 		label: "Default",
 		description: "Default Markdown Format. One empty line between paragraphs (two hard line breaks)."
 	}],
@@ -45,12 +45,12 @@ export class FwFormatting {
 	};
 	private static markToFormat: Map<string, FwMarkdownFileFormat> = new Map();
 	private static formatToMark: Map<FwMarkdownFileFormat, string> = new Map();
-	public static defaultFormat = FwMarkdownFileFormat.Default;
+	public static defaultFormat = FwMarkdownFileFormat.Standard;
 
 	// Initialize maps
 	static {
 		const entries: [string, FwMarkdownFileFormat][] = [
-			['d', FwMarkdownFileFormat.Default],
+			['d', FwMarkdownFileFormat.Standard],
 			['h', FwMarkdownFileFormat.SingleBreakForNewParagraph],
 			['i', FwMarkdownFileFormat.IndentFirstLine],
 			['s', FwMarkdownFileFormat.OneSentencePerLine],

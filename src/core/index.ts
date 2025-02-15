@@ -18,6 +18,7 @@ import {ExtractFiles} from '../modules/projectExplorer/commands/ExtractFiles';
 import {FwItemFactory} from './FwItemFactory';
 import {registerMemoryFiles} from './memoryFile';
 import {registerMarkdownDocumentSymbols} from './markdown/FwMarkdownDocumentSymbolProvider';
+import {registerAutoReplace} from './autoreplace';
 
 export * from './FwFileManager';
 export * from './commandExtensions';
@@ -60,6 +61,7 @@ export class CoreModule extends DisposeManager {
 			this.fileManager,
 			this.projectsOptions,
 			this.activeDocumentMonitor,
+			registerAutoReplace(),
 			registerMemoryFiles(),
 			registerMarkdownFormatters(this.stateManager, this.fileManager),
 			registerMarkdownDocumentSymbols(this.stateManager),

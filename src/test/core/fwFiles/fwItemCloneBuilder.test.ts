@@ -24,7 +24,7 @@ describe("FwItemCloneBuilder", () => {
 				hash: undefined,
 				meta: undefined,
 				stats: undefined,
-				format: FwMarkdownFileFormat.Default,
+				format: FwMarkdownFileFormat.Standard,
 			},
 			{
 				subType: FwSubType.ProjectFile,

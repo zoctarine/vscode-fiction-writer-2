@@ -19,6 +19,7 @@ export * from './TextProcessors';
 export interface IFormatterFactoryOptions {
 	format?: FwMarkdownFileFormat;
 	convertFrom?: FwMarkdownFileFormat;
+	settings? : { keepEmptyLines?: boolean }
 }
 
 const from: Map<FwMarkdownFileFormat, (processor: any) => any> = new Map();
@@ -30,7 +31,6 @@ const to: Map<FwMarkdownFileFormat, (processor: any) => any> = new Map();
 
 to.set(FwMarkdownFileFormat.IndentFirstLine, p => p
 	.use(remarkDisableCodeIndented)
-	// .use(remarkBreaksToParagraphs)
 	.use(remarkIndented));
 
 from.set(FwMarkdownFileFormat.IndentFirstLine, p => p
@@ -62,12 +62,17 @@ from.set(FwMarkdownFileFormat.SingleBreakForNewParagraph, p => p
  * @param options
  */
 function create(options: Partial<IFormatterFactoryOptions>): ITextProcessor {
+	const processor = new TextProcessor();
 	const formatTo = options.format || FwFormatting.defaultFormat;
 	const formatFrom = options.convertFrom || formatTo;
 
-	const common = (processor: any) => processor
-		.use(remarkDashes)
-		.use(remarkKeepAllEmptyLines);
+	const common = (processor: any) => {
+		processor.use(remarkDashes);
+
+		if (options.settings?.keepEmptyLines === true)
+			processor.use(remarkKeepAllEmptyLines);
+	};
+
 
 	const fromCustomToStandard = new TextProcessor()
 		.add(new RemarkProcessor(processor => {
@@ -76,21 +81,21 @@ function create(options: Partial<IFormatterFactoryOptions>): ITextProcessor {
 				if (enhance) enhance(processor);
 			})
 		);
+	processor.add(fromCustomToStandard);
 
-	const fromStandardToCustom = new TextProcessor();
+	if (formatTo !== FwMarkdownFileFormat.Standard) {
 
-	if (formatTo !== FwFormatting.defaultFormat) {
-		fromStandardToCustom
+		const fromStandardToCustom = new TextProcessor()
 			.add(new RemarkProcessor(processor => {
 					common(processor);
 					const enhance = to.get(formatTo);
 					if (enhance) enhance(processor);
 				}
 			));
+		processor.add(fromStandardToCustom);
 	}
-	return new TextProcessor()
-		.add(fromCustomToStandard)
-		.add(fromStandardToCustom);
+
+	return processor;
 }
 
 export const processorFactory = {

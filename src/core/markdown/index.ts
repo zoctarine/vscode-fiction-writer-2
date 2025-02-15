@@ -1,4 +1,4 @@
-import vscode, {Disposable} from 'vscode';
+import vscode, {Disposable, QuickPickItemKind} from 'vscode';
 import {IFileState, StateManager} from '../state';
 import {FwFormatOptions, FwFormatting, FwMarkdownFileFormat} from './formatting';
 import {FwFileManager} from '../FwFileManager';
@@ -8,7 +8,7 @@ import {ITextProcessor, processorFactory} from './processors';
 import {log} from '../logging';
 import {MemFile} from '../memoryFile';
 
-function applyProcessor(formatter: ITextProcessor) {
+async function applyProcessor(formatter: ITextProcessor) {
 	if (vscode.window.activeTextEditor?.document) {
 		let doc = vscode.window.activeTextEditor.document;
 		const result = formatter.run(doc.getText()) ?? '';
@@ -18,7 +18,7 @@ function applyProcessor(formatter: ITextProcessor) {
 			doc.uri,
 			new vscode.Range(0, 0, doc.lineCount, 0),
 			result);
-		vscode.workspace.applyEdit(edit);
+		await vscode.workspace.applyEdit(edit);
 	}
 }
 
@@ -91,28 +91,28 @@ export function registerMarkdownFormatters(stateManager: StateManager, fileManag
 			// Cannot change for unknown state
 			if (item?.fsContent?.format === undefined) return;
 
-			const currentFormat = FwFormatOptions.get(item.fsContent.format);
+			const currentFormat = FwFormatOptions.get(item.fsContent.format) ?? FwFormatOptions.get(FwMarkdownFileFormat.Standard)!;
 			const options = Array
 				.from(FwFormatOptions.values())
 				.map(
 					o => ({
 						label: o.label,
 						description: o.description,
-						value: o.value
+						value: o.value,
+						kind: vscode.QuickPickItemKind.Default,
 					})
-				).filter(o => o.value !== currentFormat?.value);
-			const result = await vscode.window.showQuickPick(options,
+				).filter(o => o.value !== currentFormat.value);
+			const resultTo = await vscode.window.showQuickPick(options,
 				{
-					title: `Change \'${currentFormat?.label}\' formatting to:`,
+					title: `Change formatting to:`,
 					placeHolder: `Select new format...`,
 				},
 			);
+			if (!resultTo || resultTo?.value === item.fsContent.format) return;
 
-			// don't do anything if nothing changed
-			if (!result || result?.value === item.fsContent.format) return;
 
 			const ok = await vscode.window.showWarningMessage(
-				'Are you sure you want to convert format?',
+				`Are you sure you want to convert from '${currentFormat.label}' to '${resultTo.label}'?`,
 				{
 					modal: true,
 					detail: 'Changing format results in renaming file on disc',
@@ -120,26 +120,38 @@ export function registerMarkdownFormatters(stateManager: StateManager, fileManag
 				'Yes. Change format and rename file');
 			if (!ok) return;
 
+
 			await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
 			const newItem = await new RenameFileOnDisk(fileManager).runAsync({
 				item,
-				update: (builder) => builder.withFormat(result?.value),
+				update: (builder) => builder.withFormat(resultTo?.value),
 				skipConfirmation: true
 			});
 			if (!newItem) return;
 			await vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(newItem.fsRef.fsPath));
 
-			// TODO: Ask if reformat?
-			const shouldFormat = await vscode.window.showInformationMessage(
-				'File format changed. Do you want to apply the new formatting?', {
-					modal: true,
+			let optionsFrom = options.map(o => ({...o, label: `Converting from ${o.label}`, description:'' }));
+			optionsFrom.splice(0,0,
+				{label:"current", kind: vscode.QuickPickItemKind.Separator, description: 'desc', value: currentFormat.value},
+				{...currentFormat, label: `Converting from ${currentFormat.label}`, description:'', kind: vscode.QuickPickItemKind.Default},);
+
+			const resultFrom = await vscode.window.showQuickPick(optionsFrom,
+				{
+					title: `Apply new format`,
+					placeHolder: `Make sure the previous format is properly selected. Detected: ${currentFormat.label}`,
 				},
-				'Yes, apply',);
-			if (!shouldFormat) return;
-			applyProcessor(processorFactory.create({
-				format: newItem.fsContent.format,
-				convertFrom: currentFormat?.value
+			);
+
+			// don't do anything if nothing changed
+			if (!resultFrom) return;
+
+			await applyProcessor(processorFactory.create({
+				format: resultTo.value,
+				convertFrom: resultFrom.value
 			}));
+
+			await vscode.window.activeTextEditor?.document?.save();
+
 		}),
 
 		/**
@@ -180,7 +192,16 @@ export function registerMarkdownFormatters(stateManager: StateManager, fileManag
 		 */
 		vscode.languages.registerDocumentFormattingEditProvider(FictionWriter.languages.FW_MARKDOWN, {
 
-			provideDocumentFormattingEdits(document: vscode.TextDocument): vscode.TextEdit[] {
+			async provideDocumentFormattingEdits(document: vscode.TextDocument): Promise<vscode.TextEdit[]> {
+				const options = [
+					'Try to keep all empty lines',
+					'Use standard Markdown formatting'
+				];
+
+				const answer = await vscode.window.showQuickPick(options);
+
+				if (!answer) return [];
+
 				let edits: vscode.TextEdit[] = [];
 
 				const state = stateManager.get(document?.uri?.fsPath);
@@ -190,7 +211,9 @@ export function registerMarkdownFormatters(stateManager: StateManager, fileManag
 
 				try {
 					const result = processorFactory
-						.create({format: state.fwItem?.fsContent.format})
+						.create({format: state.fwItem?.fsContent.format, settings: {
+								keepEmptyLines: answer === options[0]
+							}})
 						.run(markdownContent) ?? '';
 
 					edits.push(new vscode.TextEdit(

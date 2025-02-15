@@ -1,50 +1,78 @@
 {
   "scopeName": "text.fwmarkdown",
   "patterns": [
-    {
-      "name": "punctuation.definition.list.begin.markdown",
-      "match": "^\\s*(-|--|–|—)\\s"
-    },
-    {
-      "name": "fictionWriter.html.todo",
-      "begin": "<!--",
-      "beginCaptures": {
-        "0": {
-          "name": "comment"
-        }
-      },
-      "end": "-->",
-      "endCaptures": {
-        "0": {
-          "name": "comment"
-        }
-      },
-      "patterns": [
-        {
-          "begin": "\\bTODO(:)?\\b",
-          "beginCaptures": {
-            "0": {
-              "name": "keyword.other.todo"
-            }
-          },
-          "end": "(?=-->)",
-          "name": "comment",
-          "patterns": [
-            {
-              "match": "^[\\s\\S]*$",
-              "name": "comment"
-            }
-          ]
-        }
-        ]
-    },
-    {
-      "name": "comment",
-      "match": "^//\\s(.*)$"
-    },
-    {
-      "include": "text.html.markdown"
-    }
+	{
+	  "name": "text.fwmarkdown.indentedCodeBlock",
+	  "begin": "^AAAA(?:    |\\t)",
+	  "beginCaptures": {
+		"0": {
+		  "name": "meta.block.indented.markdown"
+		}
+	  },
+	  "end": "(?=^(?!    |\\t))",
+	  "patterns": [
+		{
+		  "name": "markup.inline.markdown",
+		  "patterns": [
+			{
+			  "name": "markup.bold",
+			  "match": "\\*\\*(.+?)\\*\\*",
+			  "captures": {
+				"1": {
+				  "name": "markup.bold.markdown"
+				}
+			  }
+			},
+			{
+			  "name": "markup.italic",
+			  "match": "\\*(.+?)\\*",
+			  "captures": {
+				"1": {
+				  "name": "markup.italic.markdown"
+				}
+			  }
+			},
+			{
+			  "name": "markup.link",
+			  "match": "\\[(.+?)\\]\\((.+?)\\)",
+			  "captures": {
+				"1": {
+				  "name": "markup.link.text"
+				},
+				"2": {
+				  "name": "markup.link.url"
+				}
+			  }
+			}
+		  ]
+		}
+	  ]
+	},
+	{
+	  "name": "comment",
+	  "match": "^//\\s(.*)$"
+	},
+	{
+	  "name": "meta.paragraph.markdown.fwIndented",
+	  "begin": "^(?: {4}|\\t)",
+	  "end": "(?=^(?! {4}|\\t))",
+	  "patterns": [
+		{
+		  "include": "text.html.markdown#inline"
+		}
+	  ]
+	},
+	{
+	  "include": "text.html.markdown"
+	}
   ],
-  "repository": {}
+  "repository": {
+	"inlineMarkdown": {
+	  "patterns": [
+		{
+		  "include": "text.html.markdown"
+		}
+	  ]
+	}
+  }
 }

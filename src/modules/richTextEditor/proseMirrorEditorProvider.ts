@@ -77,12 +77,12 @@ export class ProseMirrorEditorProvider extends DisposeManager
 		webviewPanel.webview.html = this.getHtmlForWebview(webviewPanel.webview);
 		const convert = {
 			toStandard: processorFactory.create({
-				format: FwMarkdownFileFormat.Default,
+				format: FwMarkdownFileFormat.Standard,
 				convertFrom: state?.fwItem?.fsContent?.format
 			}),
 			toOriginal: processorFactory.create({
 				format: state?.fwItem?.fsContent?.format,
-				convertFrom: FwMarkdownFileFormat.Default
+				convertFrom: FwMarkdownFileFormat.Standard
 			})
 		};
 

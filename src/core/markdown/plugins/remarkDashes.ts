@@ -7,12 +7,14 @@ export function remarkDashes() {
 
 				if (node.children[i].type === 'paragraph') {
 					visit(node.children[i], 'text', (node: any) => {
-						if (node.value?.startsWith('-- ')) {
-							node.value = node.value.replace('-- ', '— ');
-						}
-						if (node.value) {
-							node.value = node.value.replaceAll('\n-- ', '\n— ');
-						}
+						if (!node.value) return;
+
+						node.value = node.value.replace(
+							/^(\s*)(--|---) /m,
+							(_: any, whitespace: string, dashes: string) => {
+								return `${whitespace}— `;
+							}
+						);
 					});
 				}
 			}
