@@ -1,5 +1,8 @@
 # Welcome to version 2 of the Fiction Writer extension for Visual Studio Code
 
+> [!CAUTION]
+> This is an early WIP. DO NOT USE IT in this state. Will let you know when is in preview
+
 
 ## Why Fiction Writer 2?
 
