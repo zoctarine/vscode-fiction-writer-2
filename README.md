@@ -1,7 +1,7 @@
 # Welcome to version 2 of the Fiction Writer extension for Visual Studio Code
 
 > [!CAUTION]
-> This is an early WIP. DO NOT USE IT in this state. Will let you know when is in preview
+> This is an early WIP. **DO NOT USE IT** in this state. Will let you know when is in preview
 
 
 ## Why Fiction Writer 2?
@@ -31,7 +31,7 @@ This is the README for 2.0
 
 **Enjoy!**
 
-## Combile
+## Compile
 
 `code --extensionDevelopmentPath=$(pwd) --disable-extensions --inspect-extensions=9229`
 ## License
@@ -44,7 +44,7 @@ This project uses icons from [Material Design Icons](https://github.com/google/m
 
 This project uses icons from [Font Awesome Free 6](https://use.fontawesome.com/releases/v6.6.0/fontawesome-free-6.6.0-web.zip), distributed under the [SIL OFL license](https://scripts.sil.org/OFL)
 
-
+<!--
 fonttools ttLib MaterialSymbolsSharp-subset.ttf --flavor woff2 -o MaterialSymbolsSharp-subset.woff2
 
 clock_loader_10 f726
@@ -107,4 +107,4 @@ https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:FILL@0..1&icon
 
 https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:FILL@1&icon_names=description,draft&display=block
 
-
+-->
